@@ -1,0 +1,31 @@
+/* style.css */
+.block-container {
+    padding-top: 3rem;
+    margin-top: -2rem;
+}
+
+/* header {
+    visibility: hidden;
+    height: 0px;
+} */
+
+/* คุณสามารถเพิ่มการตกแต่งอื่นๆ ได้ที่นี่ เช่น เปลี่ยนฟอนต์ หรือสีปุ่ม */
+div.stButton > button[kind="primary"] {
+    background-color: #FFFFFF; /* พื้นหลังสีขาว */
+    color: #000000;            /* ตัวอักษรสีดำ */
+    border: 1px solid #DEDEDE; /* เพิ่มขอบเทาอ่อนๆ ให้ปุ่มดูมีมิติบนพื้นขาว */
+}
+
+/* เอฟเฟกต์ตอนเอาเมาส์ไปชี้ (Hover) เพื่อให้ผู้ใช้รู้ว่ากดได้ */
+div.stButton > button[kind="primary"]:hover {
+    background-color: #F0F2F6; /* เปลี่ยนเป็นสีเทาอ่อนมากตอน hover */
+    color: #000000;
+    border: 1px solid #000000;
+    cursor: pointer;
+}
+
+/* เอฟเฟกต์ตอนคลิก (Active/Focus) */
+div.stButton > button[kind="primary"]:active {
+    background-color: #FFFFFF;
+    color: #000000;
+}
