@@ -260,7 +260,7 @@ def render_cleaning():
                 st.query_params["step"] = "eda"
                 st.rerun()
             if not confirmed:
-                st.caption("กด Confirm & Save ก่อนไปขั้นตอนถัดไป")
+                st.caption("กด Confirm & Save ก่อนไปขั้นตอนถัดไป", width="content", text_alignment="center")
 
     else:
         st.query_params["step"] = "upload"
