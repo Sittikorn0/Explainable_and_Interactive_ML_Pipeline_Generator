@@ -1,2 +1,7 @@
-__pycache__/
 .env
+temp_cache/*.csv
+temp_cache/*.parquet
+temp_cache/*.txt
+
+interface/__pycache__/
+features/__pycache__/
