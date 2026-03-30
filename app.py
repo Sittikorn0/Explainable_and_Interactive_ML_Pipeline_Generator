@@ -39,7 +39,6 @@ def main():
             st.session_state["main_df"] = recovered_df
             st.session_state["last_uploaded_file"] = recover_name
 
-    # Navigation State
     url_step = st.query_params.get("step", "upload")
     # Make sure got correct navigation
     if url_step in ("cleaning", "eda") and st.session_state.get("main_df") is None:
