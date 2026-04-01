@@ -183,7 +183,7 @@ def render_eda():
                 st.rerun()
         with col2:
             if st.button("Next Step", type="primary", width="stretch"):
-                st.query_params["step"] = "next"
+                st.query_params["step"] = "transformation"
                 st.rerun()
             
     else:

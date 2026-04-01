@@ -243,24 +243,24 @@ def render_cleaning():
         col1, space, col2 = st.columns([0.8, 8, 0.8])
         with col1:
             if st.button("Back", type="secondary", width="stretch"):
-                # clear working_df เมื่อกด Back
-                # เพื่อให้กลับมา Cleaning แล้วเริ่มใหม่จาก main_df ปัจจุบัน
                 st.session_state.pop("working_df", None)
                 st.session_state.pop("working_df_source_shape", None)
                 st.session_state.pop("cleaning_confirmed", None)
                 st.query_params["step"] = "upload"
                 st.rerun()
         with col2:
-            # บังคับ Confirm & Save ก่อน Next ได้
             confirmed = st.session_state.get("cleaning_confirmed", False)
-            if st.button(
-                "Next Step", type="primary", width="stretch",
-                disabled=not confirmed,
-            ):
+            if st.button("Next Step", type="primary", width="stretch"):
+                # ถ้ายังไม่ได้ Confirm → auto-save ด้วย working_df ปัจจุบัน
+                if not confirmed:
+                    original_filename = st.session_state.get("last_uploaded_file", "dataset.csv")
+                    save_cleaned_data(
+                        st.session_state["working_df"].copy(),
+                        original_filename,
+                    )
+                    st.session_state["cleaning_confirmed"] = True
                 st.query_params["step"] = "eda"
                 st.rerun()
-            if not confirmed:
-                st.caption("กด Confirm & Save ก่อนไปขั้นตอนถัดไป", width="content", text_alignment="center")
 
     else:
         st.query_params["step"] = "upload"

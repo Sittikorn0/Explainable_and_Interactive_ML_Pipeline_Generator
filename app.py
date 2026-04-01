@@ -1,3 +1,14 @@
+import sys
+import os
+from pathlib import Path
+
+# ── Fix sys.path ให้ชี้มาที่ project root เสมอ ───────────────
+# ทำก่อนทุก import เพื่อให้ ml_process, features, interface หาเจอ
+_ROOT = str(Path(__file__).resolve().parent)
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+os.chdir(_ROOT)  # ทำให้ open("interface/styles/app.css") ทำงานได้
+
 import streamlit as st
 from features.loading_data import load_from_local
 
@@ -6,7 +17,7 @@ MONO = "'JetBrains Mono','DM Mono',monospace"
 SANS = "'DM Sans','Sarabun',sans-serif"
 
 def load_css(file_name):
-    with open(file_name) as f:
+    with open(file_name, encoding="utf-8") as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 load_css("interface/styles/app.css")
 
@@ -40,8 +51,9 @@ def main():
             st.session_state["last_uploaded_file"] = recover_name
 
     url_step = st.query_params.get("step", "upload")
+
     # Make sure got correct navigation
-    if url_step in ("cleaning", "eda") and st.session_state.get("main_df") is None:
+    if url_step in ("cleaning", "eda", "transformation", "ml_process") and st.session_state.get("main_df") is None:
         url_step = "upload"
         st.query_params["step"] = "upload"
 
@@ -52,6 +64,12 @@ def main():
     elif url_step == "eda":
         from interface.eda import render_eda
         render_eda()
+    elif url_step == "transformation":
+        from ml_process.transformation.page import render_transformation
+        render_transformation()
+    elif url_step == "ml_process":
+        from ml_process.code import render_ml_process
+        render_ml_process()
     else:
         from interface.upload import render_upload
         render_upload()
