@@ -77,11 +77,13 @@ def render_eda():
         st.rerun()
         return
 
-    df = st.session_state["main_df"]
+    has_working_df = "working_df" in st.session_state
+    df = st.session_state["working_df"] if has_working_df else st.session_state["main_df"]
     file_name = st.session_state.get("last_uploaded_file", "Unknown File")
+    is_cleaned = has_working_df and st.session_state.get("cleaning_confirmed")
 
-    st.info(f"**Current Dataset:** {file_name}")
-    with st.expander("Raw Data"):
+    st.info(f"**Current Dataset:** {file_name}" + (" *(Cleaned)*" if is_cleaned else ""))
+    with st.expander("Cleaned Data" if is_cleaned else "Raw Data"):
         st.dataframe(df, width="stretch")
 
     # Dataset Overview
