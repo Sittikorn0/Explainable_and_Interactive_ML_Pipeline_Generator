@@ -82,7 +82,7 @@ def render_eda():
     file_name = st.session_state.get("last_uploaded_file", "Unknown File")
     is_cleaned = has_working_df and st.session_state.get("cleaning_confirmed")
 
-    st.info(f"**Current Dataset:** {file_name}" + (" *(Cleaned)*" if is_cleaned else ""))
+    st.info(f"**Current Dataset:** {file_name}")
     with st.expander("Cleaned Data" if is_cleaned else "Raw Data"):
         st.dataframe(df, width="stretch")
 
