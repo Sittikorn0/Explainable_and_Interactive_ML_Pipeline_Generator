@@ -1,31 +1,64 @@
-/* style.css */
+/* ── Layout ─────────────────────────────────────────── */
 .block-container {
     padding-top: 3rem;
     margin-top: -2rem;
 }
 
-/* header {
-    visibility: hidden;
-    height: 0px;
-} */
-
-/* คุณสามารถเพิ่มการตกแต่งอื่นๆ ได้ที่นี่ เช่น เปลี่ยนฟอนต์ หรือสีปุ่ม */
+/* ── Primary Button ────────────────────────────────── */
 div.stButton > button[kind="primary"] {
-    background-color: #FFFFFF; /* พื้นหลังสีขาว */
-    color: #000000;            /* ตัวอักษรสีดำ */
-    border: 1px solid #DEDEDE; /* เพิ่มขอบเทาอ่อนๆ ให้ปุ่มดูมีมิติบนพื้นขาว */
+    background-color: #FFFFFF;
+    color: #000000;
+    border: 1px solid #DEDEDE;
 }
-
-/* เอฟเฟกต์ตอนเอาเมาส์ไปชี้ (Hover) เพื่อให้ผู้ใช้รู้ว่ากดได้ */
 div.stButton > button[kind="primary"]:hover {
-    background-color: #F0F2F6; /* เปลี่ยนเป็นสีเทาอ่อนมากตอน hover */
+    background-color: #F0F2F6;
     color: #000000;
     border: 1px solid #000000;
     cursor: pointer;
 }
-
-/* เอฟเฟกต์ตอนคลิก (Active/Focus) */
 div.stButton > button[kind="primary"]:active {
     background-color: #FFFFFF;
     color: #000000;
+}
+
+/* ── Metric cards — เพิ่ม padding ให้อ่านง่ายขึ้น ──── */
+[data-testid="stMetric"] {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 12px 16px;
+}
+[data-testid="stMetricLabel"] {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+/* ── Expander — ลด visual noise ────────────────────── */
+[data-testid="stExpander"] {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+/* ── Tabs — เพิ่ม spacing ใต้ tabs ──────────────────── */
+.stTabs [data-baseweb="tab-panel"] {
+    padding-top: 1rem;
+}
+
+/* ── Caption (คำอธิบาย strategy) — ให้เด่นขึ้นเล็กน้อย */
+[data-testid="stCaptionContainer"] {
+    opacity: 0.75;
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+
+/* ── Divider — ลด margin ให้ compact ขึ้น ──────────── */
+[data-testid="stHorizontalRule"] {
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+/* ── Dataframe — ให้ header ชัดขึ้น ─────────────────── */
+[data-testid="stDataFrame"] th {
+    font-weight: 600;
 }
