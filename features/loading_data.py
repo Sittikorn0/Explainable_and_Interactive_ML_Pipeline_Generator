@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 import os
 import uuid
+import time
 
 def load_data(file_path):
     if file_path is None:
@@ -66,17 +67,34 @@ def get_session_id() -> str:
 #     # แสดงว่าเป็นที่ session_id เปลี่ยนตอน Refresh
 #     return "test_user_001"
 
+_CACHE_TTL = 24 * 3600  # 24 ชม.
+
+def _cleanup_old_files() -> None:
+    """ลบไฟล์ใน temp_cache ที่เก่าเกิน TTL"""
+    folder = "temp_cache"
+    now = time.time()
+    try:
+        for fname in os.listdir(folder):
+            fpath = os.path.join(folder, fname)
+            if os.path.isfile(fpath) and (now - os.path.getmtime(fpath)) > _CACHE_TTL:
+                os.remove(fpath)
+    except Exception as e:
+        print(f"Cleanup error: {e}")
+
 def _local_path() -> str:
     folder = "temp_cache"
     if not os.path.exists(folder):
         os.makedirs(folder)
-        
+    _cleanup_old_files()
     return os.path.join(folder, f"temp_{get_session_id()}.parquet")
 
 def _metadata_path() -> str:
-    import os
     folder = "temp_cache"
     return os.path.join(folder, f"meta_{get_session_id()}.txt")
+
+def _cleaned_csv_path() -> str:
+    folder = "temp_cache"
+    return os.path.join(folder, f"cleaned_{get_session_id()}.csv")
 
 def save_to_local(df: pd.DataFrame, filename: str) -> str:
     """เซฟ DataFrame ลง disk เพื่อป้องกันข้อมูลหายตอน Refresh"""
@@ -87,33 +105,28 @@ def save_to_local(df: pd.DataFrame, filename: str) -> str:
         f.write(filename)
     return path
 
-def load_from_local() -> pd.DataFrame | None:
+def load_from_local() -> tuple[pd.DataFrame | None, str | None]:
     """ดึง DataFrame กลับมาจาก disk เมื่อ session state ว่างเปล่า"""
     path = _local_path()
     meta_path = _metadata_path()
-    df = None
-    filename = None
-    
+
     if os.path.exists(path):
         try:
             df = pd.read_parquet(path)
+            filename = None
             if os.path.exists(meta_path):
                 with open(meta_path, "r", encoding="utf-8") as f:
                     filename = f.read()
-                    
+            return df, filename
         except Exception as e:
             print(f"Error reading local cache: {e}")
-            return None
-    return df, filename
+    return None, None
 
 def delete_local() -> None:
-    path = _local_path()
-    meta = _metadata_path()
-    if os.path.exists(path):
+    for path in [_local_path(), _metadata_path(), _cleaned_csv_path()]:
         try:
-            for f in [path, meta]:
-                if os.path.exists(f):
-                    os.remove(f)
+            if os.path.exists(path):
+                os.remove(path)
         except Exception as e:
             print(f"Could not delete temp file: {e}")
             
@@ -138,12 +151,11 @@ def save_cleaned_data(df: pd.DataFrame, original_filename: str) -> str:
     """
     cleaned_filename = _cleaned_name(original_filename)
  
-    folder = "temp_cache"
-    if not os.path.exists(folder):
-        os.makedirs(folder)
- 
+    if not os.path.exists("temp_cache"):
+        os.makedirs("temp_cache")
+
     # 1. save CSV ไว้ให้ download
-    csv_path = os.path.join(folder, f"cleaned_{get_session_id()}.csv")
+    csv_path = _cleaned_csv_path()
     df.to_csv(csv_path, index=False)
  
     # 2. replace parquet cache เดิม (ทับ path เดิมได้เลย)
