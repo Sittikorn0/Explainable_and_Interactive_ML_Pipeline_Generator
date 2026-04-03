@@ -5,25 +5,34 @@ from features.data_distribute import data_distribution
 from features.loading_data import save_cleaned_data
 
 
-# ── คำอธิบาย Strategy (อ้างอิง Topic 7 & Topic 2) ──────────────────
 MISSING_STRATEGY_INFO = {
-    "mean": "**Mean (ค่าเฉลี่ย):** แทนค่าว่างด้วยค่าเฉลี่ยของคอลัมน์ "
-            "เหมาะกับข้อมูลที่กระจายแบบ Normal และไม่มี Outlier มาก "
-            "เพราะ Outlier จะดึงค่าเฉลี่ยให้เบี่ยงเบน",
-    "median": "**Median (ค่ากลาง):** แทนค่าว่างด้วยค่ากลางของคอลัมน์ "
-              "เหมาะกับข้อมูลที่มี Skew หรือมี Outlier เพราะ Median ไม่ถูกดึงโดยค่าสุดโต่ง",
-    "most frequent": "**Most Frequent (Mode/ฐานนิยม):** แทนค่าว่างด้วยค่าที่พบบ่อยที่สุด "
-                     "เหมาะกับข้อมูลประเภท Categorical/Nominal เช่น เพศ, สีผม, จังหวัด",
-    "drop rows": "**Drop Rows (Listwise Deletion):** ลบทั้งแถวที่มีค่าว่าง "
-                 "ข้อดีคือข้อมูลที่เหลือสะอาดครบถ้วน ข้อเสียคือสูญเสียข้อมูลที่อาจมีค่าในคอลัมน์อื่น",
+    "mean": "แทนค่าว่างด้วยค่าเฉลี่ย — เหมาะกับข้อมูลที่กระจายแบบ Normal ไม่มี Outlier มาก",
+    "median": "แทนค่าว่างด้วยค่ากลาง — เหมาะกับข้อมูลที่มี Skew หรือมี Outlier",
+    "most frequent": "แทนค่าว่างด้วยค่าที่พบบ่อยสุด (Mode) — เหมาะกับข้อมูล Categorical",
+    "drop rows": "ลบทั้งแถวที่มีค่าว่าง (Listwise Deletion) — ข้อมูลสะอาด แต่อาจสูญเสียข้อมูล",
 }
 
 OUTLIER_STRATEGY_INFO = {
-    "clip": "**Clip (ตัดค่าให้อยู่ในขอบเขต):** ค่าที่เกินขอบเขตจะถูกปรับให้เท่ากับขอบเขต "
-            "เหมาะเมื่อต้องการเก็บจำนวนแถวไว้ทั้งหมด แต่ลดอิทธิพลของค่าสุดโต่ง",
-    "drop rows": "**Drop Rows (ลบแถว):** ลบแถวที่มีค่าเกินขอบเขตออก "
-                 "เหมาะเมื่อค่าสุดโต่งนั้นเป็นข้อมูลผิดพลาด (error) ไม่ใช่ข้อมูลจริง",
+    "clip": "ตัดค่าให้อยู่ในขอบเขต — เก็บทุกแถวไว้ แต่ลดอิทธิพลของค่าสุดโต่ง",
+    "drop rows": "ลบแถวที่มีค่าเกินขอบเขต — เหมาะเมื่อค่าสุดโต่งเป็นข้อผิดพลาด",
 }
+
+_HR = (
+    "<hr style='margin:0.75rem 0;border:none;"
+    "border-top:1px solid rgba(255,255,255,0.06)'>"
+)
+
+
+def _color_changed(col):
+    styles = []
+    for i, val in enumerate(col):
+        if val == 0:
+            styles.append("color: rgba(255,255,255,0.35)")
+        elif i == 0:  # Rows: ลดลง = เสียข้อมูล
+            styles.append("color: #f87171" if val < 0 else "color: rgba(255,255,255,0.35)")
+        else:  # Missing / Duplicates / Outliers: ลดลง = ดี
+            styles.append("color: #4ade80" if val < 0 else "color: #f87171")
+    return styles
 
 
 def render_cleaning():
@@ -46,35 +55,51 @@ def render_cleaning():
     with st.expander("Raw Data"):
         st.dataframe(df, width="stretch")
 
-    # Dataset Overview
+    # ── working_df init ───────────────────────────────────────
+    current_shape = df.shape
+    if (
+        "working_df" not in st.session_state
+        or st.session_state.get("working_df_source_shape") != current_shape
+    ):
+        st.session_state["working_df"] = df.copy()
+        st.session_state["working_df_source_shape"] = current_shape
+        st.session_state["original_dup_count"] = int(df.duplicated().sum())
+        st.session_state.pop("original_outlier_count", None)
+
+    working_df = st.session_state["working_df"]
+
+    # ── Dataset Overview ──────────────────────────────────────
     st.subheader("Dataset Overview")
     with st.spinner("Calculating Data..."):
-        total_outl, outls_details = data_distribution(df)
+        total_outl, outls_details = data_distribution(working_df)
 
-    total_cells = df.size
-    total_missing = df.isnull().sum().sum()
+    if "original_outlier_count" not in st.session_state:
+        st.session_state["original_outlier_count"] = total_outl
+
+    total_cells = working_df.size
+    total_missing = working_df.isnull().sum().sum()
     missing_pct = (total_missing / total_cells * 100) if total_cells > 0 else 0
-    duplicate_count = int(df.duplicated().sum())
-    dup_pct = (duplicate_count / df.shape[0] * 100) if df.shape[0] > 0 else 0
+    duplicate_count = int(working_df.duplicated().sum())
+    dup_pct = (duplicate_count / working_df.shape[0] * 100) if working_df.shape[0] > 0 else 0
     outlier_pct = (total_outl / total_cells * 100) if total_cells > 0 else 0
 
     m1, m2, m3, m4, m5 = st.columns(5)
-    m1.metric("Rows", f"{df.shape[0]:,}")
-    m2.metric("Columns", df.shape[1])
+    m1.metric("Rows", f"{working_df.shape[0]:,}")
+    m2.metric("Columns", working_df.shape[1])
     m3.metric("Missing Values", f"{total_missing:,} ({missing_pct:.1f}%)")
     m4.metric("Duplicate Rows", f"{duplicate_count:,} ({dup_pct:.1f}%)")
     m5.metric("Outliers", f"{total_outl:,} ({outlier_pct:.1f}%)")
 
     tab1, tab2 = st.tabs(["Profile", "Cleaning"], width="stretch")
 
-    # Profile
+    # ── Tab 1: Profile ────────────────────────────────────────
     with tab1:
         st.subheader("Data Profile")
 
         outlier_dict = {item["Column"]: item for item in outls_details}
         profile_list = []
-        for col in df.columns:
-            series = df[col]
+        for col in working_df.columns:
+            series = working_df[col]
             profile_list.append({
                 "Column": col,
                 "Missing": int(series.isnull().sum()),
@@ -90,62 +115,39 @@ def render_cleaning():
                 "Column": st.column_config.TextColumn("Column"),
                 "Missing": st.column_config.NumberColumn("Missing", format="%d"),
                 "Unique": st.column_config.ProgressColumn(
-                    "Unique", min_value=0, max_value=df.shape[0], format="%d"
+                    "Unique", min_value=0, max_value=working_df.shape[0], format="%d"
                 ),
                 "Outliers": st.column_config.NumberColumn("Outliers", format="%d"),
             },
         )
 
-    # Cleaning
+    # ── Tab 2: Cleaning ───────────────────────────────────────
     with tab2:
-        # working_df = สำเนาที่ใช้แก้ไข ยังไม่ overwrite main_df
-        current_shape = df.shape
-        if (
-            "working_df" not in st.session_state
-            or st.session_state.get("working_df_source_shape") != current_shape
-        ):
-            st.session_state["working_df"] = df.copy()
-            st.session_state["working_df_source_shape"] = current_shape
-
         working_df = st.session_state["working_df"]
 
-        # Duplicates
+        # ── Duplicates ────────────────────────────────────────
         st.subheader("Duplicates")
 
-        with st.expander("Duplicates คืออะไร?"):
-            st.markdown(
-                "**Duplicated Entries** คือแถวข้อมูลที่ซ้ำกันทุกคอลัมน์ "
-                "อาจเกิดจากการบันทึกข้อมูลซ้ำ, import ข้อมูลซ้อน, หรือ system error\n\n"
-                "**ทำไมต้องลบ?** แถวซ้ำทำให้โมเดลให้น้ำหนักกับข้อมูลนั้นมากเกินจริง "
-                "ส่งผลให้ผลการวิเคราะห์และ prediction เบี่ยงเบน"
-            )
-
-        dup_count = int(working_df.duplicated().sum())
-        st.write(f"พบแถวซ้ำ **{dup_count:,}** แถว")
-
-        if dup_count > 0:
+        if duplicate_count == 0:
+            st.success("ไม่พบแถวซ้ำ")
+        else:
+            with st.expander("Duplicates คืออะไร?", expanded=False):
+                st.markdown(
+                    "**Duplicated Entries** คือแถวข้อมูลที่ซ้ำกันทุกคอลัมน์ "
+                    "อาจเกิดจากการบันทึกซ้ำ, import ข้อมูลซ้อน, หรือ system error "
+                    "ส่งผลให้โมเดลให้น้ำหนักกับข้อมูลนั้นมากเกินจริง"
+                )
+            st.write(f"พบแถวซ้ำ **{duplicate_count:,}** แถว")
             if st.button("Drop duplicate rows", key="drop_dup"):
                 st.session_state["working_df"] = (
                     working_df.drop_duplicates().reset_index(drop=True)
                 )
-                st.success(f"ลบแถวซ้ำ {dup_count:,} แถวแล้ว")
                 st.rerun()
 
         st.divider()
 
-        # Missing Values
+        # ── Missing Values ────────────────────────────────────
         st.subheader("Missing Values")
-
-        with st.expander("Missing Data คืออะไร?"):
-            st.markdown(
-                "**Missing Data** คือค่าว่างที่ขาดหายไปในชุดข้อมูล "
-                "อาจเกิดจากการป้อนข้อมูลไม่สมบูรณ์ อุปกรณ์ทำงานผิดพลาด หรือไฟล์สูญหาย\n\n"
-                "**ประเภทของ Missing Data**:\n"
-                "- **MCAR** (Missing Completely at Random): หายไปโดยบังเอิญ ไม่เกี่ยวกับตัวแปรใดเลย\n"
-                "- **MAR** (Missing at Random): การหายไปเกี่ยวข้องกับตัวแปรอื่น เช่น ผู้หญิงมักไม่เปิดเผยน้ำหนัก\n"
-                "- **MNAR** (Missing Not at Random): การหายไปเกี่ยวข้องกับค่าของตัวเอง เช่น คนน้ำหนักมากมักไม่ตอบ"
-            )
-
         missing_cols = {
             col: int(working_df[col].isnull().sum())
             for col in working_df.columns
@@ -153,16 +155,27 @@ def render_cleaning():
         }
 
         if not missing_cols:
-            st.success("ไม่มี Missing values")
+            st.success("ไม่มี Missing Values")
         else:
+            with st.expander("Missing Data คืออะไร?", expanded=False):
+                st.markdown(
+                    "**Missing Data** คือค่าว่างที่ขาดหายไปในชุดข้อมูล "
+                    "อาจเกิดจากการป้อนข้อมูลไม่สมบูรณ์ อุปกรณ์ทำงานผิดพลาด หรือไฟล์สูญหาย\n\n"
+                    "**ประเภทของ Missing Data**:\n"
+                    "- **MCAR** (Missing Completely at Random): หายไปโดยบังเอิญ ไม่เกี่ยวกับตัวแปรใดเลย\n"
+                    "- **MAR** (Missing at Random): การหายไปเกี่ยวข้องกับตัวแปรอื่น เช่น ผู้หญิงมักไม่เปิดเผยน้ำหนัก\n"
+                    "- **MNAR** (Missing Not at Random): การหายไปเกี่ยวข้องกับค่าของตัวเอง เช่น คนน้ำหนักมากมักไม่ตอบ"
+                )
+
+            last_missing_col = list(missing_cols.keys())[-1]
             for col, count in missing_cols.items():
                 pct = count / len(working_df) * 100
                 is_num = pd.api.types.is_numeric_dtype(working_df[col])
 
-                c1, c2, c3 = st.columns([3, 2, 2])
+                st.markdown(f"**{col}** — {count:,} ค่า ({pct:.1f}%)")
+
+                c1, c2, _ = st.columns([2, 0.8, 3.2])
                 with c1:
-                    st.write(f"**{col}** — {count:,} ค่า ({pct:.1f}%)")
-                with c2:
                     options = (
                         ["mean", "median", "drop rows"]
                         if is_num
@@ -174,7 +187,7 @@ def render_cleaning():
                         key=f"miss_strategy_{col}",
                         label_visibility="collapsed",
                     )
-                with c3:
+                with c2:
                     if st.button("Apply", key=f"miss_apply_{col}"):
                         wdf = st.session_state["working_df"]
                         if strategy == "mean":
@@ -186,28 +199,17 @@ def render_cleaning():
                         elif strategy == "drop rows":
                             wdf = wdf.dropna(subset=[col]).reset_index(drop=True)
                         st.session_state["working_df"] = wdf
-                        st.success(f"{col}: applied '{strategy}'")
                         st.rerun()
 
-                # แสดงคำอธิบายวิธีการจัดการ Missing Values ที่เลือก
                 st.caption(MISSING_STRATEGY_INFO.get(strategy, ""))
+
+                if col != last_missing_col:
+                    st.markdown(_HR, unsafe_allow_html=True)
 
         st.divider()
 
-        # Outliers
+        # ── Outliers ──────────────────────────────────────────
         st.subheader("Outliers")
-
-        with st.expander("Outlier และ วิธีตรวจจับ"):
-            st.markdown(
-                "**Outlier** คือค่าที่ผิดปกติ ห่างจากข้อมูลส่วนใหญ่อย่างมีนัยสำคัญ "
-                "อาจเกิดจากข้อผิดพลาดในการบันทึก หรือเป็นค่าจริงที่หายาก\n\n"
-                "**วิธีที่ระบบใช้ตรวจจับ** (เลือกอัตโนมัติตาม Skewness หรือความเบี่ยงเบนของข้อมูล):\n\n"
-                "| วิธี | เหมาะกับ | เกณฑ์ |\n"
-                "|------|---------|-------|\n"
-                "| **Z-Score** | ข้อมูลกระจายแบบ Normal (Skewness ใกล้ 0) | ค่าที่ห่างจาก Mean เกิน 3 เท่าของ SD |\n"
-                "| **IQR** | ข้อมูลเบ้ (Skewed) | ค่าที่ต่ำกว่า Q1−1.5×IQR หรือสูงกว่า Q3+1.5×IQR |\n"
-            )
-
         outlier_cols = {
             item["Column"]: item
             for item in outls_details
@@ -220,66 +222,82 @@ def render_cleaning():
         if not outlier_cols:
             st.success("ไม่พบ Outliers")
         else:
+            with st.expander("ระบบตรวจจับ Outlier อย่างไร?", expanded=False):
+                st.markdown(
+                    "**Outlier** คือค่าที่ผิดปกติ ห่างจากข้อมูลส่วนใหญ่อย่างมีนัยสำคัญ\n\n"
+                    "ระบบเลือกวิธีตรวจจับอัตโนมัติตาม Skewness ของข้อมูล:\n"
+                    "- |Skew| < 0.5 ข้อมูลใกล้ Normal ใช้ **Z-Score** "
+                    "(ค่าที่ห่างจาก Mean เกิน 3 เท่าของ SD)\n"
+                    "- |Skew| >= 0.5 ข้อมูลเบ้ ใช้ **IQR** "
+                    "(ค่านอกช่วง Q1 - 1.5 x IQR ถึง Q3 + 1.5 x IQR)"
+                )
+
+            last_outlier_col = list(outlier_cols.keys())[-1]
             for col, info in outlier_cols.items():
                 count = info["Outliers"]
-                method = info["Method"]
                 reason = info["Reason"]
                 lower = info["Lower"]
                 upper = info["Upper"]
 
-                c1, c2, c3 = st.columns([3, 2, 2])
+                st.markdown(f"**{col}** — {count:,} ค่า")
+                st.caption(reason)
+                st.caption(f"ขอบเขต: [{lower:,.2f}, {upper:,.2f}]")
+
+                c1, c2, _ = st.columns([2, 0.8, 3.2])
                 with c1:
-                    st.write(f"**{col}** — {count:,} ค่า")
-                    st.caption(f"{reason} → ขอบเขต: [{lower:,.2f}, {upper:,.2f}]")
-                with c2:
                     strategy = st.selectbox(
                         "Strategy",
                         ["clip", "drop rows"],
                         key=f"out_strategy_{col}",
                         label_visibility="collapsed",
                     )
-                with c3:
+                with c2:
                     if st.button("Apply", key=f"out_apply_{col}"):
                         wdf = st.session_state["working_df"]
                         series = wdf[col]
-
                         if strategy == "clip":
                             wdf[col] = series.clip(lower=lower, upper=upper)
                         elif strategy == "drop rows":
                             mask = (series >= lower) & (series <= upper)
                             wdf = wdf[mask].reset_index(drop=True)
-
                         st.session_state["working_df"] = wdf
-                        st.success(f"{col}: applied '{strategy}'")
                         st.rerun()
 
-                # แสดงคำอธิบายวิธีการจัดการ Outliers ที่เลือก
                 st.caption(OUTLIER_STRATEGY_INFO.get(strategy, ""))
+
+                if col != last_outlier_col:
+                    st.markdown(_HR, unsafe_allow_html=True)
 
         st.divider()
 
-        # Before & After Summary
+        # ── Summary ───────────────────────────────────────────
         st.subheader("Summary")
-        rows_before = df.shape[0]
-        rows_after = working_df.shape[0]
-        missing_before = df.isnull().sum().sum()
-        missing_after = working_df.isnull().sum().sum()
 
-        s1, s2, s3 = st.columns(3)
-        s1.metric("Rows", f"{rows_after:,}", delta=f"{rows_after - rows_before:,}")
-        s2.metric(
-            "Missing Values",
-            f"{int(missing_after):,}",
-            delta=f"{int(missing_after - missing_before):,}",
-        )
-        s3.metric(
-            "Duplicates",
-            f"{int(working_df.duplicated().sum()):,}",
-            delta=f"{int(working_df.duplicated().sum()) - duplicate_count:,}",
-        )
+        dup_before = st.session_state.get("original_dup_count", int(df.duplicated().sum()))
+        outl_before = st.session_state["original_outlier_count"]
 
-        # Confirm / Reset
-        cf1, cf2 = st.columns(2)
+        changed_values = [
+            working_df.shape[0] - df.shape[0],
+            int(working_df.isnull().sum().sum()) - int(df.isnull().sum().sum()),
+            duplicate_count - dup_before,
+            total_outl - outl_before,
+        ]
+        summary_df = pd.DataFrame({
+            "Metric": ["Rows", "Missing Values", "Duplicates", "Outliers"],
+            "Before": [f"{df.shape[0]:,}", f"{int(df.isnull().sum().sum()):,}", f"{dup_before:,}", f"{outl_before:,}"],
+            "After": [f"{working_df.shape[0]:,}", f"{int(working_df.isnull().sum().sum()):,}", f"{duplicate_count:,}", f"{total_outl:,}"],
+            "Changed": changed_values,
+        })
+
+        styled_summary = (
+            summary_df.style
+            .apply(_color_changed, subset=["Changed"])
+            .format({"Changed": lambda x: "—" if x == 0 else f"+{x:,}" if x > 0 else f"{x:,}"})
+        )
+        st.dataframe(styled_summary, width="stretch", hide_index=True)
+
+        # ── Confirm / Reset ───────────────────────────────────
+        _, cf1, cf2, _ = st.columns([2, 1.5, 1.5, 2])
         with cf1:
             if st.button("Confirm & Save", type="primary", width="stretch"):
                 original_filename = st.session_state.get(
@@ -299,7 +317,7 @@ def render_cleaning():
                 st.info("Reset กลับ original data แล้ว")
                 st.rerun()
 
-        # Download button จะแสดงหลัง Confirm แล้วเท่านั้น
+        # ── Download (หลัง Confirm เท่านั้น) ──────────────────
         if st.session_state.get("cleaning_confirmed"):
             csv_path = st.session_state.get("cleaned_csv_path")
             if csv_path and os.path.exists(csv_path):
@@ -312,9 +330,12 @@ def render_cleaning():
                         width="stretch",
                     )
 
-    # Page Navigation
+    # ── Navigation ────────────────────────────────────────────
     st.divider()
-    col1, space, col2 = st.columns([0.8, 8, 0.8])
+    confirmed = st.session_state.get("cleaning_confirmed", False)
+    if not confirmed:
+        st.info("กรุณากด **Confirm & Save** ก่อนไปขั้นตอนถัดไป")
+    col1, _, col2 = st.columns([0.8, 8, 0.8])
     with col1:
         if st.button("Back", type="secondary", width="stretch"):
             st.session_state.pop("working_df", None)
@@ -323,7 +344,6 @@ def render_cleaning():
             st.query_params["step"] = "upload"
             st.rerun()
     with col2:
-        confirmed = st.session_state.get("cleaning_confirmed", False)
         if st.button(
             "Next Step",
             type="primary",
@@ -332,5 +352,3 @@ def render_cleaning():
         ):
             st.query_params["step"] = "eda"
             st.rerun()
-        if not confirmed:
-            st.caption("กด Confirm & Save ก่อนไปขั้นตอนถัดไป")
