@@ -4,49 +4,7 @@ import numpy as np
 import plotly.express as px
 from scipy.stats import skew
 from features.data_distribute import data_distribution
-
-
-# ── Helper functions ──────────────────────────────────────────
-
-
-def _is_pseudo_int(s: pd.Series) -> bool:
-    """float64 ที่ pandas บังคับเพราะมี NaN แต่ค่าจริงเป็นจำนวนเต็มทั้งหมด"""
-    non_null = s.dropna()
-    if len(non_null) == 0:
-        return False
-    return bool((non_null % 1 == 0).all())
-
-
-def _actual_type(series: pd.Series) -> str:
-    """คืน type ที่สื่อความหมายได้จริง ไม่ใช่ pandas internal dtype"""
-    dtype = str(series.dtype)
-    if dtype.startswith("int"):
-        return "int"
-    if dtype.startswith("float"):
-        return "int" if _is_pseudo_int(series) else "float"
-    if dtype == "bool":
-        return "bool"
-    if dtype == "object":
-        try:
-            pd.to_datetime(series.dropna().head(20), format="mixed", dayfirst=False)
-            return "datetime"
-        except (ValueError, TypeError):
-            pass
-        return "string"
-    return dtype
-
-
-def _ml_category(series: pd.Series, actual: str, is_target: bool) -> str:
-    """จัดประเภทตาม ML Category (อ้างอิง Topic 2 - Attribute Types)"""
-    if actual == "datetime":
-        cat = "Datetime"
-    elif actual == "int":
-        cat = "Numeric/Discrete"
-    elif actual == "float":
-        cat = "Numeric/Continuous"
-    else:
-        cat = "Categorical/Nominal"
-    return f"{cat} (Target)" if is_target else cat
+from features.data_type_detection import actual_type, ml_category
 
 
 def _skew_insight(col_skew: float) -> str:
@@ -119,12 +77,12 @@ def render_eda():
 
         for col in df.columns:
             series = df[col]
-            actual = _actual_type(series)
+            actual = actual_type(series)
             is_target = col == target_col
             profile_list.append({
                 "Column": col,
                 "Data Types": actual,
-                "ML Category": _ml_category(series, actual, is_target),
+                "ML Category": ml_category(actual, is_target),
                 "Missing": int(series.isnull().sum()),
                 "Outliers": outlier_dict.get(col, {}).get("Outliers", 0),
                 "Unique": int(series.nunique()),
