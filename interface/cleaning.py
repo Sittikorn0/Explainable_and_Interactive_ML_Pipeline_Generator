@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from features.data_distribute import data_distribution
 from features.loading_data import save_cleaned_data
+from features.cleaning_logic import use_missing_strategy, use_outlier_strategy
 
 
 MISSING_STRATEGY_INFO = {
@@ -189,15 +190,7 @@ def render_cleaning():
                     )
                 with c2:
                     if st.button("Apply", key=f"miss_apply_{col}"):
-                        wdf = st.session_state["working_df"]
-                        if strategy == "mean":
-                            wdf[col] = wdf[col].fillna(wdf[col].mean())
-                        elif strategy == "median":
-                            wdf[col] = wdf[col].fillna(wdf[col].median())
-                        elif strategy == "most frequent":
-                            wdf[col] = wdf[col].fillna(wdf[col].mode()[0])
-                        elif strategy == "drop rows":
-                            wdf = wdf.dropna(subset=[col]).reset_index(drop=True)
+                        wdf = use_missing_strategy(st.session_state["working_df"], col, strategy)
                         st.session_state["working_df"] = wdf
                         st.rerun()
 
@@ -253,13 +246,7 @@ def render_cleaning():
                     )
                 with c2:
                     if st.button("Apply", key=f"out_apply_{col}"):
-                        wdf = st.session_state["working_df"]
-                        series = wdf[col]
-                        if strategy == "clip":
-                            wdf[col] = series.clip(lower=lower, upper=upper)
-                        elif strategy == "drop rows":
-                            mask = (series >= lower) & (series <= upper)
-                            wdf = wdf[mask].reset_index(drop=True)
+                        wdf = use_outlier_strategy(st.session_state["working_df"], col, strategy, lower, upper)
                         st.session_state["working_df"] = wdf
                         st.rerun()
 
