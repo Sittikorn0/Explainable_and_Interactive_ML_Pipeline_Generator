@@ -4,12 +4,14 @@ import os
 from features.data_distribute import data_distribution
 from features.loading_data import save_cleaned_data
 from features.cleaning_logic import use_missing_strategy, use_outlier_strategy
+from features.data_type_detection import actual_type
 
 
 MISSING_STRATEGY_INFO = {
-    "mean": "แทนค่าว่างด้วยค่าเฉลี่ย — เหมาะกับข้อมูลที่กระจายแบบ Normal ไม่มี Outlier มาก",
+    "mean": "แทนค่าว่างด้วยค่าเฉลี่ย — เหมาะกับข้อมูล Continuous ที่กระจายแบบ Normal",
     "median": "แทนค่าว่างด้วยค่ากลาง — เหมาะกับข้อมูลที่มี Skew หรือมี Outlier",
-    "most frequent": "แทนค่าว่างด้วยค่าที่พบบ่อยสุด (Mode) — เหมาะกับข้อมูล Categorical",
+    "median (rounded)": "แทนค่าว่างด้วยค่ากลาง แล้วปัดเป็นจำนวนเต็ม — เหมาะกับข้อมูล Discrete เช่น อายุ จำนวนสินค้า",
+    "most frequent": "แทนค่าว่างด้วยค่าที่พบบ่อยสุด (Mode) — เหมาะกับข้อมูล Categorical หรือ Discrete",
     "drop rows": "ลบทั้งแถวที่มีค่าว่าง (Listwise Deletion) — ข้อมูลสะอาด แต่อาจสูญเสียข้อมูล",
 }
 
@@ -171,17 +173,18 @@ def render_cleaning():
             last_missing_col = list(missing_cols.keys())[-1]
             for col, count in missing_cols.items():
                 pct = count / len(working_df) * 100
-                is_num = pd.api.types.is_numeric_dtype(working_df[col])
+                col_type = actual_type(working_df[col])
 
                 st.markdown(f"**{col}** — {count:,} ค่า ({pct:.1f}%)")
 
                 c1, c2, _ = st.columns([2, 0.8, 3.2])
                 with c1:
-                    options = (
-                        ["mean", "median", "drop rows"]
-                        if is_num
-                        else ["most frequent", "drop rows"]
-                    )
+                    if col_type == "float":
+                        options = ["mean", "median", "drop rows"]
+                    elif col_type == "int":
+                        options = ["median (rounded)", "most frequent", "drop rows"]
+                    else:
+                        options = ["most frequent", "drop rows"]
                     strategy = st.selectbox(
                         "Strategy",
                         options,
