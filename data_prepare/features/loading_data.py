@@ -7,7 +7,8 @@ import pandas as pd
 import streamlit as st
 
 _CACHE_DIR = "temp_cache"
-_CACHE_TTL = 24 * 3600  # 24 ชม.
+_CACHE_TTL = 3 * 3600  # 3 ชม.
+_MAX_SESSIONS = 5       # จำนวน session สูงสุดที่เก็บไว้พร้อมกัน
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -32,14 +33,58 @@ def _cache_path(prefix: str, ext: str) -> str:
     return os.path.join(_CACHE_DIR, f"{prefix}_{get_session_id()}.{ext}")
 
 
+def _list_cache_files() -> list[str]:
+    """คืนรายชื่อไฟล์ทุกนามสกุลใน temp_cache"""
+    return [
+        f for f in os.listdir(_CACHE_DIR)
+        if os.path.isfile(os.path.join(_CACHE_DIR, f))
+    ]
+
+
+def _session_id_of(fname: str) -> str | None:
+    """แยก session id จากชื่อไฟล์ เช่น temp_abc12345.parquet → 'abc12345'"""
+    name = os.path.splitext(fname)[0]   # ตัด extension ออก
+    parts = name.rsplit("_", 1)
+    return parts[1] if len(parts) == 2 else None
+
+
 def _cleanup_old_files() -> None:
-    """ลบไฟล์ใน temp_cache ที่เก่าเกิน TTL"""
+    """ลบไฟล์ใน temp_cache ที่เก่าเกิน TTL และ enforce _MAX_SESSIONS
+    ทำงานกับทุกนามสกุลไฟล์ (.parquet, .csv, .txt ฯลฯ)
+    """
     now = time.time()
     try:
-        for fname in os.listdir(_CACHE_DIR):
+        # 1. ลบไฟล์ที่เกิน TTL ก่อน (ทุกนามสกุล)
+        for fname in _list_cache_files():
             fpath = os.path.join(_CACHE_DIR, fname)
-            if os.path.isfile(fpath) and (now - os.path.getmtime(fpath)) > _CACHE_TTL:
-                os.remove(fpath)
+            if (now - os.path.getmtime(fpath)) > _CACHE_TTL:
+                try:
+                    os.remove(fpath)
+                except Exception:
+                    pass
+
+        # 2. จัดกลุ่มไฟล์ที่เหลือตาม session id → หา mtime ล่าสุดของแต่ละ session
+        session_mtime: dict[str, float] = {}
+        for fname in _list_cache_files():
+            sid = _session_id_of(fname)
+            if sid is None:
+                continue
+            fpath = os.path.join(_CACHE_DIR, fname)
+            mtime = os.path.getmtime(fpath)
+            if sid not in session_mtime or mtime > session_mtime[sid]:
+                session_mtime[sid] = mtime
+
+        # 3. ถ้าจำนวน session เกิน limit → ลบ session เก่าที่สุดออก (ทุกนามสกุล)
+        if len(session_mtime) > _MAX_SESSIONS:
+            sorted_sessions = sorted(session_mtime, key=lambda s: session_mtime[s])
+            to_delete = set(sorted_sessions[:len(session_mtime) - _MAX_SESSIONS])
+            for fname in _list_cache_files():
+                if _session_id_of(fname) in to_delete:
+                    try:
+                        os.remove(os.path.join(_CACHE_DIR, fname))
+                    except Exception:
+                        pass
+
     except Exception as e:
         print(f"Cleanup error: {e}")
 
