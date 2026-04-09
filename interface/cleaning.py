@@ -75,7 +75,7 @@ def render_cleaning():
     st.subheader("Dataset Overview")
 
     # cache ผลลัพธ์ตาม shape+hash เพื่อไม่ต้องคำนวณใหม่ทุก rerun
-    _dist_key = ("_dist_cache", working_df.shape, hash(working_df.values.tobytes()))
+    _dist_key = ("_dist_cache", working_df.shape, int(pd.util.hash_pandas_object(working_df).sum()))
     if st.session_state.get("_dist_key") != _dist_key:
         with st.spinner("Calculating Data..."):
             total_outl, outls_details = data_distribution(working_df)
@@ -83,6 +83,7 @@ def render_cleaning():
         st.session_state["_dist_result"] = (total_outl, outls_details)
     else:
         total_outl, outls_details = st.session_state["_dist_result"]
+
 
     if "original_outlier_count" not in st.session_state:
         st.session_state["original_outlier_count"] = total_outl
