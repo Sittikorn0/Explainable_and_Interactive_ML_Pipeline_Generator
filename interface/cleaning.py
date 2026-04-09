@@ -98,9 +98,15 @@ def render_cleaning():
     m1, m2, m3, m4, m5 = st.columns(5)
     m1.metric("Rows", f"{working_df.shape[0]:,}")
     m2.metric("Columns", working_df.shape[1])
-    m3.metric("Missing Values", f"{total_missing:,} ({missing_pct:.1f}%)")
-    m4.metric("Duplicate Rows", f"{duplicate_count:,} ({dup_pct:.1f}%)")
-    m5.metric("Outliers", f"{total_outl:,} ({outlier_pct:.1f}%)")
+    def _fmt_pct(count, pct):
+        if count == 0:
+            return "0 (0.0%)"
+        pct_str = f"{pct:.1f}%" if pct >= 0.1 else "< 0.1%"
+        return f"{count:,} ({pct_str})"
+
+    m3.metric("Missing Values", _fmt_pct(total_missing, missing_pct))
+    m4.metric("Duplicate Rows", _fmt_pct(duplicate_count, dup_pct))
+    m5.metric("Outliers", _fmt_pct(total_outl, outlier_pct))
 
     tab1, tab2 = st.tabs(["Profile", "Cleaning"], width="stretch")
 
