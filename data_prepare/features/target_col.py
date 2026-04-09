@@ -1,5 +1,5 @@
 import pandas as pd
-from features.data_type_detection import actual_type
+from data_prepare.features.data_type_detection import actual_type
 
 
 def _score_column(df: pd.DataFrame, col: str, col_idx: int) -> tuple[float, list[str]]:
