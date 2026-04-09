@@ -1,7 +1,11 @@
 """
 ml_process/transformation/transformer.py
 Apply transformations ตาม decisions ที่ user เลือก
-ไม่มี Streamlit → test ได้อิสระ
+
+หลักการป้องกัน Data Leakage:
+- Encoding ทำได้ที่นี่ (ไม่ขึ้นกับ distribution ของ test set)
+- Scaling ไม่ทำที่นี่ — บันทึกแค่ method ไว้
+  แล้วให้ preprocess.py ทำหลัง train/test split เท่านั้น
 """
 import sys
 from pathlib import Path
@@ -11,7 +15,7 @@ if str(_ROOT) not in sys.path:
 
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler, RobustScaler
+from sklearn.preprocessing import LabelEncoder
 
 
 def apply_encoding(df: pd.DataFrame, decisions: dict, target_col: str) -> pd.DataFrame:
@@ -27,11 +31,9 @@ def apply_encoding(df: pd.DataFrame, decisions: dict, target_col: str) -> pd.Dat
 
         if method == "drop_column":
             result = result.drop(columns=[col])
-
         elif method == "one_hot_encoding":
             dummies = pd.get_dummies(result[col], prefix=col, drop_first=True, dtype=int)
             result  = pd.concat([result.drop(columns=[col]), dummies], axis=1)
-
         elif method == "label_encoding":
             le = LabelEncoder()
             result[col] = le.fit_transform(result[col].astype(str))
@@ -39,42 +41,10 @@ def apply_encoding(df: pd.DataFrame, decisions: dict, target_col: str) -> pd.Dat
     return result
 
 
-def apply_scaling(df: pd.DataFrame, method: str, target_col: str) -> pd.DataFrame:
-    """
-    Apply scaling ตาม method ที่เลือก
-    เฉพาะ numeric columns ที่ไม่ใช่ target
-    """
-    if method == "no_scaling":
-        return df
-
-    result   = df.copy()
-    num_cols = [
-        c for c in result.columns
-        if c != target_col and pd.api.types.is_numeric_dtype(result[c])
-    ]
-
-    if not num_cols:
-        return result
-
-    scaler_map = {
-        "standard_scaler": StandardScaler(),
-        "minmax_scaler":   MinMaxScaler(),
-        "robust_scaler":   RobustScaler(),
-    }
-    scaler = scaler_map.get(method)
-    if scaler:
-        result[num_cols] = scaler.fit_transform(result[num_cols])
-
-    return result
-
-
 def apply_feature_selection(df: pd.DataFrame,
-                             drop_cols: list[str],
+                             drop_cols: list,
                              target_col: str) -> pd.DataFrame:
-    """
-    Drop columns ที่ user เลือกให้ตัดออก
-    ป้องกันการตัด target column โดยไม่ตั้งใจ
-    """
+    """ตัด columns ที่ user เลือก ป้องกันตัด target โดยไม่ตั้งใจ"""
     safe_drop = [c for c in drop_cols if c != target_col and c in df.columns]
     return df.drop(columns=safe_drop)
 
@@ -82,37 +52,35 @@ def apply_feature_selection(df: pd.DataFrame,
 def apply_all(df: pd.DataFrame,
               encoding_decisions: dict,
               scaling_method: str,
-              drop_cols: list[str],
-              target_col: str) -> tuple[pd.DataFrame, dict]:
+              drop_cols: list,
+              target_col: str) -> tuple:
     """
-    Apply ทุก transformation ตามลำดับที่ถูกต้อง:
-    1. Feature Selection (ตัดคอลัมน์ก่อน)
-    2. Encoding
-    3. Scaling
+    Apply transformations ตามลำดับ:
+      1. Feature Selection
+      2. Encoding
+      ❌ Scaling — ไม่ทำที่นี่ เพื่อป้องกัน Data Leakage
+         scaling_method ถูกบันทึกไว้ใน summary แล้วส่งให้ preprocess.py
+         ทำหลัง train/test split แทน
 
     Returns: (transformed_df, summary)
     """
-    original_shape = df.shape
     result = df.copy()
 
     # 1. Feature Selection
     result = apply_feature_selection(result, drop_cols, target_col)
-    after_fs_shape = result.shape
 
     # 2. Encoding
     result = apply_encoding(result, encoding_decisions, target_col)
-    after_enc_shape = result.shape
 
-    # 3. Scaling
-    result = apply_scaling(result, scaling_method, target_col)
+    # ❌ ไม่ scale ที่นี่ — preprocess.py จะทำให้หลัง split
 
     summary = {
-        "original_rows":    original_shape[0],
-        "original_cols":    original_shape[1],
-        "dropped_cols":     len(drop_cols),
-        "encoded_cols":     len(encoding_decisions),
-        "final_cols":       result.shape[1],
-        "scaling_method":   scaling_method,
+        "original_rows":  df.shape[0],
+        "original_cols":  df.shape[1],
+        "dropped_cols":   len(drop_cols),
+        "encoded_cols":   len(encoding_decisions),
+        "final_cols":     result.shape[1],
+        "scaling_method": scaling_method,  # เก็บ method ไว้ให้ preprocess.py ใช้
     }
 
     return result, summary
