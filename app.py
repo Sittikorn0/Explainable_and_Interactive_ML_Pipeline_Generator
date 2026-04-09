@@ -28,13 +28,19 @@ def page_header(title: str, subtitle: str = "") -> None:
     )
 
 
+def navigate(step: str):
+    """เปลี่ยนหน้าโดยใช้ session_state เป็น source of truth แล้วค่อย sync URL"""
+    st.session_state["_step"] = step
+    st.query_params["step"] = step
+    st.rerun()
+
+
 def _reset_session():
     """ล้าง session state + cache ทั้งหมด กลับไปหน้า upload"""
     delete_local()
     for key in list(st.session_state.keys()):
         del st.session_state[key]
-    st.query_params["step"] = "upload"
-    st.rerun()
+    navigate("upload")
 
 
 def main():
@@ -62,13 +68,18 @@ def main():
             suggested, _ = suggest_target(st.session_state["main_df"])
             st.session_state["target_col"] = suggested
 
-    # Navigation
-    url_step = st.query_params.get("step", "upload")
-    if url_step in ("cleaning", "eda", "model") and st.session_state.get("main_df") is None:
+    # Navigation — session_state เป็น source of truth, query_params แค่ sync URL
+    # ถ้ามี _step ใน session_state ให้ใช้ค่านั้นก่อน (ป้องกัน race condition กับ rerun)
+    url_step = st.session_state.get("_step") or st.query_params.get("step", "upload")
+    # guard: ถ้าไม่มีข้อมูลแต่พยายามเข้าหน้า inner → กลับ upload
+    if url_step in ("cleaning", "eda", "transformation", "model_process") and st.session_state.get("main_df") is None:
         url_step = "upload"
-        st.query_params["step"] = "upload"
+    # sync URL ให้ตรงกับ step จริง
+    st.session_state["_step"] = url_step
+    if st.query_params.get("step") != url_step:
+        st.query_params["step"] = url_step
 
-    is_upload_page = url_step not in ("cleaning", "eda", "model")
+    is_upload_page = url_step not in ("cleaning", "eda", "transformation", "model_process")
 
     # แสดงปุ่ม New Dataset เฉพาะหน้าที่ไม่ใช่ Upload
     if is_upload_page:
@@ -135,6 +146,9 @@ def main():
     elif url_step == "eda":
         from interface.eda import render_eda
         render_eda()
+    elif url_step == "transformation":
+        from interface.data_transformation import render_transformation
+        render_transformation()
     else:
         from interface.upload import render_upload
         render_upload()

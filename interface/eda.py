@@ -32,8 +32,8 @@ def render_eda():
     page_header("Exploratory Data Analysis", "สำรวจและทำความเข้าใจข้อมูลก่อนสร้างโมเดล")
 
     if st.session_state.get("main_df") is None:
-        st.query_params["step"] = "upload"
-        st.rerun()
+        from app import navigate
+        navigate("upload")
         return
 
     has_working_df = "working_df" in st.session_state
@@ -256,9 +256,9 @@ def render_eda():
     col1, _, col2 = st.columns([0.8, 8, 0.8])
     with col1:
         if st.button("Back", type="secondary", width="stretch", key="back"):
-            st.query_params["step"] = "cleaning"
-            st.rerun()
+            from app import navigate
+            navigate("cleaning")
     with col2:
         if st.button("Next Step", type="primary", width="stretch"):
-            st.query_params["step"] = "model"
-            st.rerun()
+            from app import navigate
+            navigate("transformation")

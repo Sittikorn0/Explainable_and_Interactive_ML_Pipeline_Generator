@@ -84,6 +84,6 @@ def render_upload():
             _, col1 = st.columns([8, 0.8])
             with col1:
                 if st.button("Next Step", type="primary", width="stretch"):
+                    from app import navigate
                     save_target_col(st.session_state["target_col"])
-                    st.query_params["step"] = "cleaning"
-                    st.rerun()
+                    navigate("cleaning")

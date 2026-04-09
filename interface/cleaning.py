@@ -47,8 +47,8 @@ def render_cleaning():
     )
 
     if st.session_state.get("main_df") is None:
-        st.query_params["step"] = "upload"
-        st.rerun()
+        from app import navigate
+        navigate("upload")
         return
 
     df = st.session_state["main_df"]
@@ -337,11 +337,11 @@ def render_cleaning():
     col1, _, col2 = st.columns([0.8, 8, 0.8])
     with col1:
         if st.button("Back", type="secondary", width="stretch"):
+            from app import navigate
             st.session_state.pop("working_df", None)
             st.session_state.pop("working_df_source_shape", None)
             st.session_state.pop("cleaning_confirmed", None)
-            st.query_params["step"] = "upload"
-            st.rerun()
+            navigate("upload")
     with col2:
         if st.button(
             "Next Step",
@@ -349,5 +349,5 @@ def render_cleaning():
             width="stretch",
             disabled=not confirmed,
         ):
-            st.query_params["step"] = "eda"
-            st.rerun()
+            from app import navigate
+            navigate("eda")
