@@ -1,6 +1,6 @@
 import streamlit as st
-from features.loading_data import process_data, save_to_local, save_target_col
-from features.target_col import suggest_target, describe_target, get_column_reasons
+from data_prepare.features.loading_data import process_data, save_to_local, save_target_col
+from data_prepare.features.target_col import suggest_target, describe_target, get_column_reasons
 
 def render_upload():
     from app import page_header

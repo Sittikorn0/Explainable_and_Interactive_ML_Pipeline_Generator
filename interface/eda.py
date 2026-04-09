@@ -3,9 +3,9 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 from scipy.stats import skew
-from features.data_distribute import data_distribution
-from features.data_type_detection import actual_type, ml_category
-from features.target_col import describe_target
+from data_prepare.features.data_distribute import data_distribution
+from data_prepare.features.data_type_detection import actual_type, ml_category
+from data_prepare.features.target_col import describe_target
 
 
 def _skew_insight(col_skew: float) -> str:

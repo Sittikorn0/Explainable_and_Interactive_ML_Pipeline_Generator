@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 import os
-from features.data_distribute import data_distribution
-from features.loading_data import save_cleaned_data
-from features.cleaning_logic import use_missing_strategy, use_outlier_strategy
-from features.data_type_detection import actual_type
+from data_prepare.features.data_distribute import data_distribution
+from data_prepare.features.loading_data import save_cleaned_data
+from data_prepare.features.cleaning_logic import use_missing_strategy, use_outlier_strategy
+from data_prepare.features.data_type_detection import actual_type
 
 
 MISSING_STRATEGY_INFO = {
