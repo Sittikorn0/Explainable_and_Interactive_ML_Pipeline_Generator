@@ -1,4 +1,5 @@
 .env
+.venv
 temp_cache/*.csv
 temp_cache/*.parquet
 temp_cache/*.txt
