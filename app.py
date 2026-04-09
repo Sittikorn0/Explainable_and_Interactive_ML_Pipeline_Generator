@@ -1,6 +1,6 @@
 import streamlit as st
-from features.loading_data import load_from_local, load_target_col, delete_local
-from features.target_col import suggest_target
+from data_prepare.features.loading_data import load_from_local, load_target_col, delete_local
+from data_prepare.features.target_col import suggest_target
 
 SANS = "'DM Sans','Sarabun',sans-serif"
 
