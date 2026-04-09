@@ -2,6 +2,7 @@ import pandas as pd
 
 def use_missing_strategy(df: pd.DataFrame, col: str, strategy: str) -> pd.DataFrame:
     """แก้ Missing Values ในคอลัมน์ด้วย strategy ที่กำหนด"""
+    df = df.copy()
     if strategy == "mean":
         df[col] = df[col].fillna(df[col].mean())
     elif strategy == "median":
@@ -19,6 +20,7 @@ def use_outlier_strategy(
     df: pd.DataFrame, col: str, strategy: str, lower: float, upper: float
 ) -> pd.DataFrame:
     """จัดการ Outliers ในคอลัมน์ด้วย strategy ที่กำหนด"""
+    df = df.copy()
     series = df[col]
     if strategy == "clip":
         df[col] = series.clip(lower=lower, upper=upper)
