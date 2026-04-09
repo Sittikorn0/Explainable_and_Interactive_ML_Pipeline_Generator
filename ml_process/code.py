@@ -27,14 +27,40 @@ def render_ml_process():
     st.info(f"**Current Dataset:** {file_name}  |  {df.shape[0]:,} rows × {df.shape[1]} columns")
 
     # ── 1. Target Column ─────────────────────────────────────
-    st.subheader("1. กำหนด Target Column")
-    preset = st.session_state.get("ml_target_col_preset")
+    # ใช้ค่าจาก Transformation step โดยตรง ไม่ต้องให้ user เลือกซ้ำ
     cols   = df.columns.tolist()
-    idx    = cols.index(preset) if preset and preset in cols else len(cols) - 1
-    target_col = st.selectbox("Target", cols, index=idx, key="ml_target_col",
-                               label_visibility="collapsed")
+    preset = (st.session_state.get("_trans_target_saved") or
+              st.session_state.get("ml_target_col_preset"))
+    target_col = preset if preset and preset in cols else cols[-1]
+
     task_preview = detect_task(df, target_col)
-    st.caption(f"Task: **{task_preview.upper()}**  |  Unique values: **{df[target_col].nunique()}**")
+    st.markdown(f"""
+<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;
+padding:10px 16px;margin-bottom:16px;display:flex;gap:16px;align-items:center">
+  <div>
+    <div style="font-size:0.75rem;color:#8b949e;text-transform:uppercase;
+    letter-spacing:1px;margin-bottom:2px">Target Column</div>
+    <div style="font-family:monospace;font-weight:700;font-size:0.95rem;
+    color:#58a6ff">{target_col}</div>
+  </div>
+  <div style="width:1px;height:32px;background:#30363d"></div>
+  <div>
+    <div style="font-size:0.75rem;color:#8b949e;text-transform:uppercase;
+    letter-spacing:1px;margin-bottom:2px">Task</div>
+    <div style="font-weight:700;font-size:0.88rem;color:#3fb950">
+      {task_preview.upper()}
+    </div>
+  </div>
+  <div style="width:1px;height:32px;background:#30363d"></div>
+  <div>
+    <div style="font-size:0.75rem;color:#8b949e;text-transform:uppercase;
+    letter-spacing:1px;margin-bottom:2px">Unique Values</div>
+    <div style="font-weight:700;font-size:0.88rem;color:#e6edf3">
+      {df[target_col].nunique()}
+    </div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
     # ── 2. Data Splitting ─────────────────────────────────────
     st.subheader("2. Data Splitting (80 / 20)")

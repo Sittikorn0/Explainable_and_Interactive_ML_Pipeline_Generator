@@ -69,7 +69,7 @@ def show_pred_vs_actual(y_test, y_pred):
                             "Predicted": np.array(y_pred).flatten()})
     min_v, max_v = min(df_plot.min()), max(df_plot.max())
     fig = px.scatter(df_plot, x="Actual", y="Predicted", opacity=0.6,
-                     color_discrete_sequence=["#58a6ff"], trendline="ols")
+                     color_discrete_sequence=["#58a6ff"])
     fig.add_shape(type="line", x0=min_v, y0=min_v, x1=max_v, y1=max_v,
                   line=dict(color="red", dash="dash", width=1.5))
     fig.update_layout(template="plotly_dark", height=420, margin=dict(t=20, b=20))
