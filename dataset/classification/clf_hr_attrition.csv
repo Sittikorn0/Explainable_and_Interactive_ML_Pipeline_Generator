@@ -1,0 +1,1471 @@
+age,department,education,gender,job_role,marital_status,monthly_income,overtime,years_at_company,satisfaction,work_life_balance,performance,distance_home,attrition
+57,Finance,College,Female,Engineer,Single,7546,No,27,2,4,4,13,No
+45,Marketing,Master,Female,Director,Married,1611,No,15,1,3,4,17,No
+30,Marketing,College,Male,Analyst,Divorced,3215,Yes,12,4,1,4,28,Yes
+43,Legal,Below College,Female,Analyst,Married,4438,Yes,7,4,4,1,13,No
+33,Finance,Bachelor,Male,Director,Single,2432,Yes,24,1,3,1,17,Yes
+42,IT,Bachelor,Female,Engineer,Divorced,1721,No,1,2,1,4,19,Yes
+27,HR,College,Male,Staff,Single,4085,No,29,4,4,1,27,No
+46,IT,Doctor,Female,Director,Single,7453,No,39,4,3,2,14,No
+55,Sales,Master,Male,Analyst,Single,10606,Yes,2,3,1,2,20,Yes
+37,Finance,Bachelor,Male,Director,Married,3539,Yes,22,2,4,1,10,Yes
+43,HR,Bachelor,Male,Director,Single,7630,No,28,1,1,4,2,No
+49,IT,College,Female,Manager,Divorced,7200,No,29,3,4,3,14,No
+56,IT,Doctor,Male,Engineer,Divorced,10210,Yes,10,3,3,3,17,No
+55,Marketing,Master,Female,Manager,Divorced,3983,No,20,3,2,1,5,No
+41,Finance,Doctor,Male,Engineer,Single,1670,No,26,2,4,3,22,No
+48,Sales,Doctor,Female,Director,Divorced,5126,No,23,2,3,4,18,No
+57,R&D,College,Female,Engineer,Divorced,2675,No,30,2,4,2,3,No
+29,Finance,Doctor,Male,Analyst,Divorced,3184,No,29,1,2,2,16,No
+53,Sales,Master,Male,Manager,Divorced,4102,No,0,2,1,4,26,Yes
+27,Sales,Below College,Female,Director,Married,4010,Yes,0,3,2,3,19,Yes
+23,Finance,Below College,Male,Analyst,Single,5350,No,7,4,2,1,18,No
+24,HR,Master,Female,Engineer,Single,7494,No,33,1,1,2,20,No
+48,Finance,College,Female,Engineer,Divorced,3941,No,15,1,2,3,5,No
+44,IT,Bachelor,Female,Analyst,Single,6231,No,26,1,3,3,8,No
+25,Legal,College,Female,Engineer,Divorced,4958,No,3,3,4,2,6,No
+20,Marketing,Master,Female,Manager,Divorced,8615,No,18,2,2,2,15,No
+57,IT,Doctor,Female,Staff,Divorced,4388,No,28,3,4,1,25,No
+38,Sales,Below College,Female,Engineer,Single,4687,No,2,4,4,4,3,No
+18,Sales,Doctor,Female,Director,Married,3925,No,10,2,1,3,26,No
+32,R&D,College,Female,Engineer,Single,4458,No,7,4,2,1,9,No
+24,Sales,Master,Male,Director,Single,3071,Yes,38,1,1,2,27,Yes
+32,Legal,Below College,Female,Engineer,Married,2894,No,32,1,1,4,11,No
+42,R&D,Master,Female,Engineer,Single,7827,Yes,7,3,4,4,20,No
+20,Sales,Below College,Female,Director,Married,2565,Yes,24,2,3,3,24,Yes
+47,Sales,Below College,Male,Manager,Divorced,4058,Yes,23,1,4,4,26,Yes
+31,Finance,Below College,Male,Staff,Married,9038,Yes,25,3,1,2,23,Yes
+21,Finance,College,Male,Staff,Divorced,3977,No,25,4,2,2,14,No
+53,Marketing,Master,Male,Manager,Married,8080,No,16,3,3,2,23,No
+20,IT,Bachelor,Male,Engineer,Divorced,3447,Yes,26,2,3,1,9,Yes
+22,HR,Bachelor,Male,Staff,Single,2615,No,28,2,2,2,10,No
+42,Marketing,Bachelor,Female,Manager,Married,1887,Yes,38,2,2,1,15,Yes
+48,Sales,Master,Male,Manager,Single,10803,No,8,1,3,2,18,No
+28,Marketing,Doctor,Male,Staff,Divorced,2484,No,13,3,1,2,21,No
+25,Finance,Master,Male,Director,Married,7694,No,4,4,3,4,19,No
+43,IT,Below College,Male,Analyst,Married,2697,Yes,29,2,3,3,7,Yes
+19,Sales,Doctor,Male,Director,Married,10833,No,27,3,3,2,19,No
+45,Sales,Below College,Female,Engineer,Single,18473,Yes,36,1,1,4,5,Yes
+27,Marketing,Below College,Female,Director,Divorced,1786,No,7,4,2,4,21,No
+56,IT,Master,Male,Analyst,Single,2563,No,14,4,2,3,18,No
+54,Legal,Bachelor,Female,Analyst,Married,7815,No,27,4,2,4,27,No
+56,R&D,Doctor,Male,Manager,Divorced,6686,No,35,1,1,4,1,No
+38,Legal,College,Female,Engineer,Divorced,7833,No,32,2,1,3,12,No
+45,HR,Bachelor,Female,Manager,Single,3483,No,5,1,2,1,6,No
+55,IT,College,Male,Director,Single,16196,No,11,4,4,3,13,No
+50,Marketing,Master,Male,Director,Married,5275,Yes,6,3,4,3,17,No
+28,Legal,Doctor,Male,Staff,Married,2368,No,27,4,2,2,9,No
+18,Marketing,Master,Female,Manager,Married,4222,Yes,6,3,4,2,26,No
+50,HR,College,Female,Manager,Married,2387,Yes,0,1,4,1,21,Yes
+20,Sales,Below College,Male,Manager,Divorced,12766,Yes,23,1,2,3,1,Yes
+43,Sales,Master,Male,Manager,Married,3307,No,18,1,2,3,12,No
+32,R&D,Doctor,Female,Analyst,Married,6604,No,31,3,1,1,24,No
+58,Marketing,Master,Male,Staff,Married,3705,Yes,29,1,4,2,1,Yes
+31,HR,Bachelor,Female,Engineer,Single,3397,No,0,2,4,3,4,No
+40,Marketing,Master,Female,Engineer,Single,1562,No,31,4,2,1,7,No
+25,Finance,College,Male,Engineer,Single,7036,No,19,2,3,2,20,No
+53,Marketing,Master,Female,Analyst,Married,10716,No,20,3,2,4,28,No
+37,Marketing,Doctor,Female,Staff,Divorced,2836,No,18,1,1,1,5,No
+23,Finance,Master,Female,Staff,Married,1944,No,29,4,3,1,23,No
+50,Finance,Master,Female,Analyst,Single,7958,Yes,27,1,3,3,20,Yes
+45,Legal,Doctor,Male,Manager,Single,1830,No,31,1,3,4,5,No
+55,HR,Master,Female,Director,Married,10216,No,29,4,1,2,7,No
+47,Legal,Doctor,Male,Manager,Divorced,2856,Yes,22,4,4,4,17,No
+34,Sales,College,Female,Engineer,Divorced,2535,No,26,2,2,3,12,No
+26,R&D,Doctor,Male,Manager,Divorced,5704,No,36,2,1,3,15,No
+45,Legal,College,Female,Analyst,Single,2636,Yes,25,2,1,2,3,Yes
+24,Finance,College,Female,Engineer,Single,3215,Yes,2,2,3,2,17,Yes
+45,Sales,Doctor,Male,Director,Divorced,6077,No,30,2,3,2,14,No
+34,HR,Master,Female,Engineer,Married,1144,No,1,3,1,3,15,No
+57,IT,Bachelor,Male,Manager,Divorced,13166,No,9,3,4,2,15,No
+22,Marketing,Doctor,Female,Staff,Married,5045,No,37,1,3,2,15,No
+22,HR,Master,Male,Staff,Single,2262,No,18,1,1,2,19,No
+31,HR,College,Male,Staff,Single,2669,No,30,2,3,1,11,No
+23,Finance,Below College,Female,Engineer,Single,8910,Yes,28,1,2,2,18,Yes
+24,R&D,Bachelor,Female,Staff,Divorced,7048,Yes,24,3,2,3,21,Yes
+34,Legal,Master,Female,Analyst,Divorced,11294,No,31,3,2,1,10,No
+26,Finance,Bachelor,Female,Director,Single,3262,No,16,1,3,3,21,No
+48,Marketing,Below College,Female,Staff,Single,5871,No,22,2,3,4,26,No
+39,Finance,Below College,Female,Analyst,Single,6348,No,17,3,4,1,9,No
+26,Marketing,Below College,Female,Analyst,Divorced,7458,Yes,10,4,2,2,24,Yes
+33,Finance,Doctor,Female,Engineer,Divorced,9665,No,19,4,4,1,3,No
+53,IT,Bachelor,Female,Engineer,Single,3195,No,12,1,1,3,1,No
+51,R&D,Doctor,Male,Director,Divorced,4589,No,23,2,1,1,21,No
+30,IT,Below College,Male,Director,Divorced,3408,No,19,1,2,4,11,No
+36,Sales,Master,Male,Manager,Divorced,4762,No,27,2,4,2,16,No
+29,R&D,Below College,Female,Director,Divorced,7473,No,34,2,3,2,3,No
+53,Legal,Doctor,Male,Engineer,Single,1821,No,20,4,4,4,21,No
+27,Finance,Below College,Female,Analyst,Single,9562,Yes,5,3,1,3,9,Yes
+33,HR,Below College,Female,Manager,Divorced,2481,Yes,6,3,4,1,11,No
+45,Sales,Doctor,Female,Director,Single,4087,Yes,28,1,1,3,17,Yes
+36,HR,Doctor,Female,Analyst,Single,10366,Yes,22,1,1,3,1,Yes
+57,IT,Master,Male,Engineer,Single,5983,No,4,2,4,3,9,No
+23,Legal,Doctor,Male,Staff,Married,6025,No,21,3,3,2,3,No
+21,R&D,Master,Male,Manager,Single,2420,No,8,2,1,1,28,No
+47,Legal,College,Female,Analyst,Single,2626,No,31,4,4,2,10,No
+56,Sales,College,Female,Engineer,Divorced,8645,No,9,4,1,2,5,No
+48,IT,Doctor,Male,Engineer,Divorced,3451,Yes,27,2,2,2,25,Yes
+44,Finance,Below College,Female,Manager,Married,3652,No,10,2,3,1,11,No
+38,HR,Bachelor,Male,Manager,Married,8763,No,6,2,2,4,5,No
+54,Finance,Below College,Male,Director,Single,2617,No,29,2,1,2,12,No
+26,Marketing,Doctor,Male,Director,Single,5776,No,37,2,3,2,14,No
+52,Legal,Master,Female,Manager,Divorced,5042,Yes,33,4,4,2,12,No
+59,Sales,Below College,Male,Manager,Single,4906,No,27,4,4,1,19,No
+38,HR,College,Female,Analyst,Single,3600,No,31,4,3,1,9,No
+34,R&D,Doctor,Male,Director,Single,3470,No,15,1,2,3,28,No
+41,R&D,Below College,Female,Engineer,Single,2573,No,38,4,2,2,7,No
+48,R&D,Below College,Female,Director,Single,6565,No,0,3,3,2,16,No
+23,IT,Master,Male,Director,Single,3291,Yes,33,3,4,1,28,No
+52,R&D,Master,Female,Manager,Single,8788,Yes,22,2,3,1,28,Yes
+54,HR,Master,Female,Manager,Single,4295,No,19,4,2,2,7,No
+30,Legal,Bachelor,Female,Director,Divorced,2604,Yes,17,2,1,4,14,Yes
+42,Legal,Doctor,Male,Staff,Married,4261,No,17,2,4,3,8,No
+49,Legal,Doctor,Female,Staff,Single,3840,No,39,3,3,3,27,No
+18,IT,College,Male,Director,Divorced,9004,No,20,3,1,2,21,No
+52,Marketing,College,Male,Staff,Single,3938,No,7,2,2,3,18,No
+36,R&D,Doctor,Female,Director,Single,4164,Yes,33,3,4,3,27,No
+29,Legal,Below College,Male,Manager,Married,11463,No,10,2,3,2,25,No
+57,R&D,Doctor,Male,Manager,Divorced,6667,No,9,2,2,3,3,No
+57,IT,Bachelor,Male,Manager,Single,13328,No,7,2,3,1,27,No
+37,R&D,College,Male,Engineer,Married,10461,No,7,1,3,2,2,No
+50,Marketing,College,Male,Manager,Married,2886,Yes,18,3,4,1,26,No
+46,IT,College,Female,Manager,Single,8901,No,0,3,2,2,26,No
+33,IT,Doctor,Female,Director,Single,12273,No,2,4,2,1,5,No
+31,Sales,College,Male,Staff,Divorced,12328,No,31,3,1,3,8,No
+24,IT,College,Male,Staff,Divorced,8891,No,15,4,2,4,19,No
+23,R&D,Doctor,Female,Manager,Single,8782,Yes,29,2,2,1,22,Yes
+38,IT,Below College,Female,Manager,Single,4098,Yes,27,1,4,1,9,Yes
+53,R&D,College,Female,Manager,Married,2973,No,27,2,1,4,2,No
+39,R&D,College,Male,Director,Divorced,3978,No,15,2,4,4,15,No
+57,Legal,College,Male,Director,Single,1810,No,32,2,2,1,8,No
+36,IT,Bachelor,Female,Director,Single,11000,Yes,24,4,1,1,10,Yes
+42,Sales,Doctor,Male,Staff,Divorced,4146,Yes,17,1,4,1,7,Yes
+20,R&D,College,Female,Engineer,Single,10665,No,25,2,1,2,19,No
+53,Legal,Bachelor,Female,Staff,Married,2347,No,5,4,2,1,1,No
+51,Sales,Below College,Male,Director,Married,9410,No,37,2,1,1,22,No
+28,Sales,Below College,Female,Analyst,Single,3652,No,2,1,1,4,2,Yes
+59,IT,Bachelor,Female,Engineer,Divorced,2274,Yes,5,2,1,4,3,Yes
+44,Finance,Below College,Female,Manager,Married,13046,Yes,13,2,2,2,28,Yes
+59,Legal,Master,Female,Staff,Divorced,9550,No,17,3,2,2,14,No
+19,Finance,Below College,Female,Engineer,Divorced,5580,No,15,4,1,3,15,No
+23,R&D,Master,Male,Analyst,Divorced,5015,No,23,1,4,1,21,No
+19,HR,Bachelor,Female,Engineer,Married,6397,No,12,4,4,1,14,No
+59,Finance,Master,Male,Staff,Married,5523,No,0,3,2,4,27,No
+34,Legal,Below College,Male,Director,Single,3055,Yes,37,2,3,3,8,Yes
+57,IT,College,Female,Manager,Divorced,3838,Yes,13,1,4,1,18,Yes
+31,Legal,Master,Female,Director,Married,15937,No,16,1,1,3,22,No
+27,IT,Below College,Female,Director,Married,24423,No,12,4,3,2,17,No
+50,Finance,College,Male,Staff,Single,12551,No,12,2,2,1,7,No
+59,HR,Bachelor,Male,Director,Married,6548,No,8,3,4,1,20,No
+29,Marketing,Bachelor,Male,Director,Married,4013,No,5,2,3,2,1,No
+49,R&D,Doctor,Female,Staff,Married,3044,Yes,5,4,2,1,9,Yes
+41,Legal,Bachelor,Female,Staff,Single,3167,No,29,1,2,2,9,No
+31,Marketing,Doctor,Female,Analyst,Single,3526,No,36,1,1,2,11,No
+22,Marketing,Bachelor,Female,Director,Divorced,17866,No,13,2,4,3,19,No
+22,Sales,Bachelor,Female,Engineer,Married,14527,No,3,2,3,4,6,No
+49,Sales,Bachelor,Male,Manager,Single,7690,No,33,2,1,4,7,No
+50,R&D,Doctor,Male,Manager,Single,2761,Yes,1,2,4,2,29,Yes
+21,HR,Doctor,Male,Staff,Single,8398,No,16,3,3,3,15,No
+47,Sales,Master,Female,Staff,Divorced,4259,No,13,3,2,2,20,No
+58,Legal,Below College,Female,Analyst,Divorced,1350,No,16,3,2,3,6,No
+34,Legal,Below College,Male,Director,Divorced,5838,Yes,29,3,4,3,9,No
+20,Finance,Below College,Female,Staff,Divorced,2965,Yes,28,4,1,4,15,Yes
+30,Legal,Bachelor,Male,Staff,Divorced,3026,Yes,6,1,3,4,26,Yes
+53,R&D,Below College,Female,Manager,Married,4229,No,8,1,3,3,22,No
+35,IT,Doctor,Female,Director,Married,3644,No,22,4,2,4,23,No
+40,Marketing,Master,Female,Analyst,Single,4814,Yes,35,4,4,3,6,No
+52,Legal,College,Female,Staff,Divorced,4677,No,13,3,1,1,7,No
+50,R&D,Master,Male,Staff,Divorced,1594,No,19,2,2,2,17,No
+53,IT,Below College,Female,Staff,Single,12236,No,16,1,2,4,6,No
+34,IT,Below College,Male,Manager,Married,2724,Yes,31,4,1,2,28,Yes
+56,Sales,Doctor,Male,Staff,Divorced,2775,Yes,24,2,3,4,9,Yes
+51,IT,Master,Male,Staff,Divorced,4035,Yes,29,3,3,2,27,No
+29,HR,Doctor,Male,Manager,Divorced,4605,No,26,4,4,2,3,No
+22,IT,Doctor,Male,Staff,Married,11794,No,26,1,2,4,14,No
+57,IT,College,Female,Director,Married,5777,Yes,30,1,4,4,6,Yes
+44,Marketing,Doctor,Male,Director,Divorced,6904,Yes,25,1,3,4,4,Yes
+57,HR,Doctor,Male,Manager,Divorced,5794,Yes,13,4,1,4,16,Yes
+30,R&D,College,Male,Director,Single,5646,Yes,20,1,3,3,23,Yes
+43,HR,Bachelor,Male,Analyst,Single,5918,No,27,3,3,4,16,No
+31,HR,Bachelor,Male,Staff,Married,1541,No,14,1,2,4,23,No
+49,R&D,College,Female,Analyst,Single,4230,No,29,3,3,4,29,No
+28,Marketing,Doctor,Male,Director,Divorced,9871,No,24,1,4,1,9,No
+55,Legal,Below College,Female,Manager,Married,52333,No,10,3,1,2,4,No
+33,IT,Master,Male,Manager,Single,2386,Yes,10,4,2,4,8,Yes
+39,HR,Below College,Female,Analyst,Married,6335,No,27,3,1,4,24,No
+33,HR,Below College,Female,Director,Divorced,3489,No,4,4,4,2,8,No
+30,Legal,Doctor,Female,Staff,Single,16790,Yes,27,2,4,2,24,Yes
+29,R&D,Master,Female,Director,Single,2181,No,7,3,3,3,6,No
+35,Finance,Master,Female,Director,Single,7150,No,25,4,4,2,8,No
+46,Legal,Bachelor,Female,Manager,Divorced,2112,Yes,5,2,3,2,6,Yes
+35,HR,College,Female,Engineer,Married,4059,No,31,1,2,1,26,No
+19,Sales,Doctor,Male,Staff,Single,4814,Yes,31,2,1,3,14,Yes
+19,IT,Master,Female,Staff,Married,9337,No,11,3,3,1,14,No
+20,IT,Doctor,Male,Manager,Married,2575,No,5,2,3,2,18,No
+46,Legal,Bachelor,Male,Director,Married,7317,No,12,1,2,4,13,No
+25,Marketing,Below College,Male,Manager,Divorced,4970,Yes,38,2,4,3,15,Yes
+28,Legal,Master,Female,Director,Divorced,5788,No,39,3,3,2,3,No
+29,HR,Bachelor,Male,Engineer,Single,8734,No,33,3,4,2,6,No
+49,R&D,Doctor,Female,Engineer,Single,2276,Yes,22,4,3,4,23,No
+21,Sales,Bachelor,Female,Analyst,Married,7993,No,16,1,4,4,20,No
+26,Legal,Bachelor,Female,Director,Married,3493,No,0,1,3,4,17,No
+41,R&D,Bachelor,Male,Manager,Married,9485,No,6,2,1,3,20,No
+33,Legal,Bachelor,Male,Manager,Divorced,6007,Yes,12,1,1,1,16,Yes
+34,HR,Bachelor,Female,Manager,Divorced,4334,No,13,3,1,3,6,No
+39,Sales,Bachelor,Female,Analyst,Single,3449,Yes,16,2,3,4,8,Yes
+24,Marketing,College,Female,Staff,Married,8054,No,29,4,4,3,29,No
+27,Marketing,Doctor,Female,Manager,Married,10473,No,33,2,2,4,28,No
+46,Legal,Below College,Male,Engineer,Divorced,3569,No,26,2,2,1,13,No
+53,Marketing,Doctor,Male,Manager,Single,2490,Yes,24,4,2,3,29,Yes
+41,Finance,Master,Male,Manager,Married,7454,No,34,2,1,1,13,No
+31,R&D,Master,Male,Manager,Married,2060,No,8,1,1,1,20,No
+31,HR,Doctor,Male,Staff,Single,2245,No,5,2,1,4,26,No
+42,Sales,Bachelor,Female,Manager,Married,2597,No,25,2,4,3,17,No
+39,Legal,College,Female,Staff,Divorced,3830,No,37,2,1,3,21,No
+40,Legal,Below College,Male,Staff,Single,2204,No,38,3,4,1,23,No
+49,IT,Bachelor,Female,Analyst,Married,1535,Yes,26,3,4,4,22,No
+43,IT,Doctor,Male,Engineer,Married,2486,No,39,1,4,1,3,No
+44,R&D,Doctor,Female,Manager,Divorced,7226,No,30,4,3,1,13,No
+29,HR,College,Female,Manager,Divorced,2291,No,2,3,2,1,7,No
+36,Finance,College,Female,Manager,Divorced,4007,Yes,23,3,4,1,20,No
+36,HR,Doctor,Male,Staff,Married,15804,No,14,1,2,3,5,No
+51,R&D,Bachelor,Male,Director,Married,4771,Yes,5,1,4,2,11,Yes
+49,HR,Bachelor,Male,Engineer,Married,6036,No,10,4,4,3,23,No
+46,IT,Bachelor,Female,Manager,Single,2786,No,29,2,1,4,18,No
+38,IT,Below College,Female,Director,Divorced,17999,Yes,34,2,2,2,4,Yes
+52,Sales,Below College,Female,Director,Single,3551,No,37,4,4,1,20,No
+59,Finance,Bachelor,Female,Director,Divorced,4286,No,39,4,2,3,22,No
+22,IT,Doctor,Female,Engineer,Married,10831,No,28,4,1,2,28,No
+29,Sales,College,Male,Director,Single,4407,No,22,1,4,1,27,No
+24,Finance,Master,Male,Manager,Single,5058,No,2,2,1,3,7,Yes
+58,IT,College,Female,Manager,Divorced,4150,Yes,25,4,4,2,4,No
+19,Finance,College,Male,Analyst,Single,4167,Yes,13,4,1,3,10,Yes
+42,HR,Master,Female,Staff,Single,6138,No,18,2,1,2,1,No
+27,Sales,Bachelor,Female,Director,Married,6848,Yes,20,2,3,4,17,Yes
+55,Finance,College,Male,Staff,Divorced,3341,No,20,1,4,3,5,No
+23,Legal,Master,Female,Staff,Single,3103,Yes,8,3,4,3,17,No
+44,Finance,Doctor,Male,Staff,Married,3410,No,12,3,4,2,3,No
+52,HR,Doctor,Male,Staff,Single,2120,No,36,1,2,4,9,No
+27,IT,Doctor,Male,Staff,Married,1892,Yes,37,1,3,3,3,Yes
+26,IT,Bachelor,Female,Manager,Single,5874,No,23,2,2,4,3,No
+37,Legal,College,Male,Engineer,Married,8631,No,37,1,4,4,29,No
+54,R&D,College,Female,Director,Married,8288,No,10,1,3,3,9,No
+52,R&D,Below College,Female,Director,Divorced,1177,No,28,4,1,1,5,No
+54,IT,Doctor,Female,Manager,Married,4242,No,37,1,3,2,28,No
+57,Legal,Bachelor,Female,Manager,Single,2537,No,16,1,1,3,24,No
+25,Marketing,Master,Female,Staff,Married,5357,No,25,4,4,4,10,No
+48,Marketing,Bachelor,Female,Engineer,Married,3824,No,25,2,4,2,15,No
+33,Legal,College,Female,Director,Single,7010,Yes,11,2,1,3,25,Yes
+45,Finance,Doctor,Female,Analyst,Single,4858,No,17,1,3,2,12,No
+23,IT,Below College,Male,Manager,Married,1575,No,8,1,2,2,6,No
+49,R&D,Bachelor,Male,Analyst,Single,2751,No,2,3,3,4,7,No
+45,Finance,Below College,Female,Director,Married,4931,No,9,4,1,1,7,No
+28,Sales,College,Female,Manager,Married,5187,No,1,3,1,1,23,No
+59,Legal,Master,Male,Director,Married,2114,No,7,1,2,2,4,No
+40,Legal,Bachelor,Male,Manager,Single,1954,No,17,3,2,4,29,No
+47,R&D,College,Male,Director,Divorced,5083,No,38,3,2,4,13,No
+26,R&D,Doctor,Male,Analyst,Divorced,2117,Yes,30,2,1,3,15,Yes
+45,R&D,Bachelor,Male,Engineer,Married,1805,No,13,4,4,2,18,No
+41,Legal,Below College,Male,Manager,Married,3762,No,38,2,3,3,18,No
+45,Marketing,Bachelor,Female,Analyst,Single,3666,No,32,2,2,4,7,No
+41,HR,College,Male,Director,Divorced,2901,No,28,3,1,2,10,No
+32,HR,College,Male,Analyst,Divorced,3222,No,32,4,3,1,16,No
+56,Legal,Below College,Male,Manager,Divorced,4955,Yes,34,1,2,1,23,Yes
+50,Marketing,College,Male,Analyst,Single,3190,No,1,4,4,3,26,No
+51,IT,Bachelor,Female,Director,Single,5127,No,34,2,3,2,23,No
+39,IT,Below College,Female,Staff,Single,3911,No,31,3,3,4,29,No
+46,Legal,College,Female,Engineer,Married,5434,Yes,35,1,1,3,8,Yes
+51,Legal,College,Female,Engineer,Single,8324,No,22,2,1,1,19,No
+59,Marketing,Bachelor,Female,Staff,Married,8131,No,4,3,1,4,29,No
+27,Marketing,College,Female,Manager,Married,10645,Yes,15,2,4,2,11,Yes
+47,IT,Bachelor,Female,Analyst,Married,8126,No,39,3,3,1,21,No
+28,HR,Doctor,Female,Analyst,Married,5671,No,23,4,2,4,6,No
+51,Finance,Bachelor,Male,Staff,Single,3789,Yes,39,2,4,1,29,Yes
+38,Marketing,Master,Male,Staff,Single,3894,No,27,4,2,2,24,No
+30,Finance,College,Female,Director,Divorced,2902,No,24,4,2,3,24,No
+42,Finance,Doctor,Female,Director,Divorced,4928,Yes,6,3,1,4,10,Yes
+38,Sales,Below College,Female,Engineer,Married,7468,No,37,1,2,4,19,No
+18,HR,Master,Male,Manager,Divorced,3179,No,6,4,2,2,28,No
+22,Legal,Below College,Female,Manager,Divorced,4806,Yes,21,2,4,1,14,Yes
+39,Finance,Master,Female,Staff,Divorced,3273,No,21,2,1,1,20,No
+24,Legal,Doctor,Female,Engineer,Married,5572,No,26,3,2,1,6,No
+30,Legal,Doctor,Female,Engineer,Divorced,3534,No,32,4,2,4,4,No
+40,HR,Doctor,Male,Director,Single,3153,Yes,31,1,2,4,26,Yes
+38,HR,Master,Female,Analyst,Married,3268,No,38,1,3,1,20,No
+23,Sales,Bachelor,Male,Manager,Single,6647,Yes,31,2,3,4,15,Yes
+37,Legal,Below College,Male,Engineer,Married,4637,No,0,3,1,3,5,No
+29,IT,Bachelor,Female,Director,Single,3800,No,9,4,4,2,16,No
+57,HR,Bachelor,Male,Director,Divorced,5749,No,3,2,1,2,26,No
+26,Finance,College,Female,Director,Married,3832,No,28,3,3,4,7,No
+45,IT,Below College,Male,Analyst,Single,9661,No,6,1,1,3,28,No
+28,IT,Master,Female,Engineer,Married,2739,No,37,2,4,3,2,No
+49,R&D,College,Male,Staff,Single,4393,No,5,3,1,1,13,No
+28,Finance,College,Male,Staff,Divorced,2115,Yes,10,1,2,2,2,Yes
+41,Finance,Doctor,Female,Director,Married,3991,No,8,3,4,2,28,No
+32,HR,Master,Male,Director,Married,1794,No,29,2,4,2,26,No
+58,Finance,Bachelor,Female,Analyst,Single,7690,No,21,4,4,4,9,No
+52,Legal,Bachelor,Female,Director,Single,7784,Yes,38,3,1,3,20,Yes
+34,R&D,Bachelor,Male,Engineer,Divorced,7867,No,8,4,1,1,5,No
+42,HR,Doctor,Female,Director,Single,5000,No,37,2,2,4,3,No
+52,Marketing,Bachelor,Female,Director,Single,2898,Yes,32,1,4,1,2,Yes
+36,Finance,Below College,Female,Engineer,Single,3040,No,25,3,2,4,14,No
+58,Finance,Bachelor,Female,Manager,Divorced,12309,No,15,1,4,2,26,No
+48,Sales,Bachelor,Male,Staff,Divorced,11630,No,8,4,3,1,8,No
+34,Marketing,Below College,Male,Director,Married,5289,No,22,4,1,3,20,No
+40,Marketing,Doctor,Male,Engineer,Divorced,3606,No,14,1,2,3,12,No
+18,Legal,College,Female,Staff,Single,11172,No,18,2,1,4,17,No
+27,R&D,Master,Male,Analyst,Married,3239,No,15,4,1,2,29,No
+25,Legal,Doctor,Male,Manager,Divorced,5638,No,24,2,3,4,16,No
+59,Marketing,Bachelor,Male,Director,Divorced,11060,No,34,1,3,1,6,No
+43,Legal,College,Female,Manager,Single,2975,No,12,2,4,3,6,No
+51,Legal,Master,Male,Director,Single,8083,Yes,6,4,3,3,18,No
+36,Sales,Master,Female,Director,Divorced,6716,No,33,1,4,3,2,No
+31,R&D,Master,Male,Director,Married,4799,Yes,13,2,3,3,8,Yes
+25,Legal,Below College,Male,Manager,Single,2707,Yes,22,2,3,1,27,Yes
+18,Legal,Below College,Female,Analyst,Divorced,3182,Yes,22,3,2,3,23,Yes
+42,Marketing,College,Male,Engineer,Divorced,5846,Yes,16,4,3,4,14,No
+41,R&D,Bachelor,Female,Engineer,Single,2092,No,12,3,2,3,2,No
+37,Marketing,College,Female,Analyst,Married,5315,No,26,2,3,1,26,No
+47,Marketing,Bachelor,Male,Analyst,Married,6799,No,1,4,2,2,17,No
+22,Legal,Doctor,Female,Director,Married,8876,Yes,36,1,1,2,27,Yes
+20,IT,Master,Female,Director,Single,2123,No,29,1,4,3,24,No
+49,Marketing,Master,Female,Engineer,Single,10826,No,3,1,3,2,16,No
+34,Legal,Below College,Female,Director,Single,13591,No,29,2,2,1,26,No
+59,Finance,Doctor,Male,Director,Married,6286,No,2,2,3,3,18,No
+22,Marketing,Doctor,Female,Analyst,Married,2636,Yes,13,1,2,1,21,Yes
+28,Finance,Bachelor,Female,Manager,Single,4036,No,10,3,2,2,6,No
+55,HR,Doctor,Male,Staff,Single,4776,No,39,3,3,2,26,No
+21,IT,Below College,Male,Staff,Single,5780,No,22,4,4,3,17,No
+56,Sales,Bachelor,Male,Director,Married,4980,No,31,4,2,2,18,No
+36,R&D,College,Female,Director,Divorced,5817,No,2,1,1,3,14,Yes
+56,R&D,Bachelor,Female,Staff,Divorced,4654,No,0,2,3,3,10,No
+40,HR,College,Female,Analyst,Married,5762,No,8,2,1,4,4,No
+34,Marketing,Bachelor,Female,Staff,Single,3728,Yes,8,4,2,4,18,Yes
+30,Sales,Master,Male,Staff,Single,4012,No,11,1,2,4,11,No
+44,HR,College,Male,Staff,Single,3478,No,0,4,3,1,22,No
+18,HR,Below College,Female,Director,Single,15527,No,15,3,4,2,16,No
+19,R&D,College,Female,Director,Married,11829,No,29,1,1,2,4,No
+35,Finance,College,Female,Staff,Divorced,6858,Yes,7,1,4,4,27,Yes
+53,Finance,Bachelor,Female,Director,Divorced,10885,No,9,1,1,3,19,No
+50,Marketing,Master,Male,Staff,Married,7935,No,32,3,4,3,6,No
+53,Marketing,Bachelor,Male,Analyst,Single,5479,No,37,1,3,3,25,No
+19,Legal,Bachelor,Male,Director,Divorced,1991,No,21,4,1,3,8,No
+21,Legal,Master,Male,Manager,Married,4199,No,15,3,3,1,18,No
+33,HR,Bachelor,Female,Director,Single,4019,Yes,18,2,4,2,19,Yes
+21,Marketing,Master,Male,Analyst,Divorced,2490,No,10,4,4,4,18,No
+26,Finance,Below College,Female,Analyst,Married,2014,No,10,4,4,1,16,No
+38,Sales,Master,Male,Director,Divorced,6605,No,13,4,3,2,26,No
+40,R&D,Doctor,Male,Engineer,Divorced,5971,Yes,38,3,2,1,7,Yes
+19,Finance,Master,Female,Staff,Married,2439,Yes,25,4,2,3,25,Yes
+20,Legal,Master,Male,Staff,Married,3141,No,19,3,1,1,17,No
+40,IT,Doctor,Male,Analyst,Divorced,9864,No,19,1,3,1,27,No
+43,Marketing,Master,Male,Director,Divorced,2902,No,4,2,3,3,3,No
+24,R&D,College,Male,Engineer,Married,5445,Yes,0,1,3,3,22,Yes
+53,IT,Bachelor,Female,Manager,Single,4385,No,10,4,4,4,15,No
+50,R&D,Bachelor,Male,Staff,Single,6659,Yes,9,3,3,4,4,No
+53,HR,Below College,Male,Engineer,Single,2940,No,27,3,2,2,26,No
+21,Marketing,Below College,Male,Staff,Single,5187,No,33,1,1,4,16,No
+40,HR,Doctor,Female,Director,Married,5438,No,12,4,2,4,14,No
+42,R&D,College,Female,Staff,Single,5642,Yes,24,2,3,2,26,Yes
+58,HR,Below College,Male,Manager,Divorced,5153,No,22,3,1,1,17,No
+43,Marketing,Bachelor,Male,Director,Single,6043,Yes,35,3,1,1,9,Yes
+45,Finance,Below College,Male,Analyst,Married,18307,Yes,11,4,3,1,7,No
+45,Sales,Below College,Female,Engineer,Single,22851,No,1,3,3,3,14,No
+38,IT,Master,Male,Staff,Single,3349,No,19,4,2,2,27,No
+27,Finance,Below College,Male,Director,Married,1222,No,15,4,2,1,28,No
+44,R&D,Doctor,Female,Director,Single,7025,No,13,2,4,4,23,No
+32,Finance,Bachelor,Female,Staff,Married,5495,No,1,4,4,4,12,No
+34,HR,Doctor,Female,Analyst,Single,9289,No,15,1,4,4,17,No
+56,Marketing,Doctor,Male,Staff,Married,5830,No,3,2,3,2,9,No
+52,Finance,College,Male,Analyst,Single,5090,No,12,4,3,2,12,No
+22,Finance,Master,Male,Staff,Divorced,9675,No,37,4,4,4,12,No
+33,Marketing,Doctor,Female,Director,Divorced,10522,Yes,0,2,4,3,8,Yes
+40,HR,College,Male,Manager,Married,2138,Yes,8,3,2,3,27,Yes
+56,Sales,Bachelor,Male,Manager,Married,3011,No,20,2,4,1,28,No
+26,Finance,Bachelor,Female,Director,Married,4613,Yes,17,3,4,1,10,No
+50,IT,College,Female,Manager,Divorced,5213,No,31,2,1,1,12,No
+52,R&D,Doctor,Male,Analyst,Married,4291,No,33,2,4,1,5,No
+57,Legal,Doctor,Female,Director,Single,6377,No,19,1,1,1,20,No
+41,HR,Master,Male,Analyst,Married,8934,No,1,2,4,2,1,No
+41,HR,Master,Male,Director,Married,13816,Yes,3,1,1,2,9,Yes
+41,Finance,Bachelor,Male,Analyst,Single,6955,No,37,4,4,3,15,No
+36,IT,Master,Female,Analyst,Single,2947,Yes,6,3,2,3,24,Yes
+56,Legal,College,Male,Manager,Divorced,4498,No,21,3,3,2,29,No
+42,Marketing,Bachelor,Female,Director,Single,4697,No,19,1,1,3,2,No
+48,Legal,Doctor,Female,Staff,Single,6692,No,34,3,3,4,4,No
+55,Finance,Bachelor,Female,Manager,Married,6203,Yes,3,3,2,3,4,Yes
+42,Finance,Below College,Female,Analyst,Divorced,16818,No,19,2,4,4,29,No
+44,Marketing,Bachelor,Male,Analyst,Single,3726,No,34,1,4,4,23,No
+49,R&D,Master,Female,Staff,Divorced,6190,Yes,32,3,2,1,3,Yes
+28,Marketing,College,Male,Staff,Single,20187,No,20,4,3,3,16,No
+22,Finance,Doctor,Male,Analyst,Divorced,3459,No,13,1,3,4,8,No
+50,Sales,Doctor,Male,Staff,Single,5361,No,30,2,3,3,27,No
+36,Marketing,Master,Male,Engineer,Married,2787,No,21,4,3,3,7,No
+33,R&D,Master,Female,Manager,Divorced,5162,No,29,3,1,2,26,No
+52,Marketing,Master,Female,Director,Divorced,3077,No,28,3,3,2,12,No
+28,Marketing,Below College,Male,Staff,Single,9210,No,35,1,1,1,12,No
+28,HR,College,Male,Staff,Divorced,5368,No,28,3,2,3,4,No
+27,HR,Below College,Male,Engineer,Single,2803,Yes,6,1,4,2,15,Yes
+51,Finance,Master,Female,Director,Divorced,8138,No,31,3,1,4,25,No
+22,Finance,College,Female,Engineer,Divorced,5474,No,12,4,3,4,6,No
+40,Legal,Master,Male,Director,Married,8705,No,12,2,4,1,3,No
+42,Marketing,College,Male,Manager,Married,2468,Yes,13,4,1,4,7,Yes
+46,Sales,Doctor,Male,Staff,Divorced,6132,No,5,2,4,3,22,No
+57,IT,Below College,Female,Manager,Married,7816,No,15,1,2,4,24,No
+30,Finance,Master,Male,Director,Divorced,3812,Yes,20,3,3,1,21,No
+49,Marketing,Master,Female,Staff,Single,2309,No,15,4,2,1,6,No
+51,Marketing,Bachelor,Female,Engineer,Divorced,4793,No,4,3,4,4,1,No
+29,IT,Doctor,Female,Analyst,Divorced,10268,No,23,1,2,3,8,No
+41,Marketing,Master,Male,Engineer,Married,9658,No,0,2,3,2,1,No
+57,IT,Below College,Female,Analyst,Married,3800,No,9,4,1,3,16,No
+38,IT,Doctor,Female,Engineer,Single,2275,No,34,2,2,3,3,No
+46,Legal,Master,Male,Director,Single,3794,No,30,2,3,3,28,No
+40,Marketing,Below College,Male,Manager,Single,3710,No,14,1,4,4,2,No
+50,Legal,Bachelor,Male,Analyst,Divorced,6424,Yes,10,2,2,2,6,Yes
+25,Marketing,Bachelor,Female,Director,Single,4614,No,8,1,1,3,8,No
+59,HR,Below College,Female,Manager,Single,3127,Yes,1,2,2,2,24,Yes
+30,IT,Doctor,Male,Manager,Married,9533,No,29,2,4,1,7,No
+22,R&D,Below College,Female,Staff,Married,5346,No,15,4,4,2,7,No
+58,IT,Below College,Male,Staff,Single,6382,No,0,1,4,4,24,No
+27,R&D,Bachelor,Male,Staff,Single,1745,No,5,3,2,1,21,No
+31,Marketing,Bachelor,Female,Analyst,Divorced,1147,No,10,3,2,1,19,No
+41,Finance,Bachelor,Female,Analyst,Divorced,2074,No,32,3,2,3,18,No
+28,Sales,Master,Female,Manager,Married,3683,No,16,4,1,2,3,No
+20,Legal,Master,Female,Analyst,Single,6945,No,33,4,3,1,11,No
+46,Marketing,College,Male,Manager,Single,1205,No,39,2,2,1,11,No
+47,Sales,Master,Male,Director,Single,12780,No,24,2,1,2,3,No
+54,HR,Doctor,Female,Engineer,Single,5444,No,21,3,4,2,28,No
+24,R&D,Doctor,Female,Manager,Single,11116,No,25,2,2,1,23,No
+34,Legal,Bachelor,Female,Manager,Divorced,2888,No,26,2,2,1,1,No
+37,HR,Below College,Male,Director,Divorced,6649,No,37,4,2,2,23,No
+28,Finance,Bachelor,Male,Staff,Single,5172,No,8,3,1,4,22,No
+42,Finance,Below College,Female,Staff,Divorced,8027,Yes,36,1,2,2,27,Yes
+41,IT,Bachelor,Male,Staff,Divorced,4271,No,4,3,2,4,10,No
+19,Legal,Bachelor,Male,Manager,Single,6528,No,17,4,3,1,2,No
+44,Legal,Doctor,Male,Manager,Divorced,9521,No,21,3,1,3,26,No
+36,Legal,Below College,Male,Analyst,Single,3325,No,11,1,3,2,17,No
+46,Marketing,College,Female,Analyst,Divorced,5683,Yes,21,2,3,1,9,Yes
+54,IT,College,Female,Engineer,Single,1583,No,5,3,3,1,18,No
+28,Finance,Bachelor,Female,Engineer,Single,7491,Yes,35,4,3,3,20,No
+36,Finance,Bachelor,Female,Analyst,Divorced,15879,No,26,4,4,2,9,No
+45,IT,Doctor,Male,Manager,Divorced,2329,No,14,3,2,1,25,No
+56,HR,Below College,Female,Director,Married,4652,No,16,2,3,4,28,No
+38,Sales,Bachelor,Female,Analyst,Single,8335,No,2,2,1,3,11,Yes
+43,R&D,College,Female,Manager,Single,5008,Yes,9,4,2,4,17,Yes
+39,Finance,Below College,Female,Analyst,Single,5426,No,24,4,3,2,14,No
+23,IT,Bachelor,Female,Staff,Single,3887,No,20,1,3,4,18,No
+28,Finance,Below College,Male,Analyst,Divorced,3801,No,39,2,1,3,18,No
+31,HR,Doctor,Female,Staff,Divorced,4665,No,8,3,4,1,12,No
+53,Legal,College,Male,Manager,Married,5039,No,23,4,1,3,18,No
+57,Legal,Below College,Male,Staff,Single,2419,Yes,31,4,4,1,8,No
+58,R&D,College,Male,Analyst,Married,4723,Yes,2,4,4,1,29,Yes
+19,Legal,Bachelor,Male,Staff,Married,12595,No,32,4,4,4,8,No
+37,Legal,Master,Male,Director,Married,3821,No,11,2,3,3,26,No
+39,HR,Below College,Male,Staff,Married,2339,No,28,4,3,3,28,No
+56,Sales,College,Female,Staff,Married,4487,No,20,2,4,1,8,No
+21,HR,Below College,Male,Engineer,Divorced,3201,Yes,38,1,4,3,28,Yes
+46,R&D,Bachelor,Female,Director,Divorced,2201,No,33,1,3,2,20,No
+41,Legal,Bachelor,Male,Manager,Married,5342,Yes,32,3,4,2,15,No
+18,R&D,College,Male,Staff,Divorced,3209,Yes,31,4,3,4,8,No
+41,Finance,Doctor,Male,Director,Divorced,3378,No,19,3,4,4,14,No
+47,Sales,Below College,Female,Manager,Married,5388,No,2,2,3,3,13,No
+29,Marketing,Below College,Male,Director,Divorced,1958,Yes,3,3,1,4,23,Yes
+36,Finance,Bachelor,Male,Engineer,Divorced,1728,No,16,3,4,3,8,No
+54,Legal,Below College,Female,Manager,Single,7350,No,16,4,4,4,17,No
+57,IT,College,Male,Manager,Married,1543,Yes,18,2,1,2,19,Yes
+21,HR,Master,Male,Staff,Single,2735,No,3,2,2,1,26,No
+32,HR,Bachelor,Male,Analyst,Single,1669,No,28,4,4,1,6,No
+37,R&D,Master,Female,Manager,Married,3671,No,16,2,2,2,17,No
+37,IT,Below College,Male,Manager,Single,6353,Yes,21,1,1,1,4,Yes
+38,R&D,Doctor,Male,Engineer,Single,5257,No,1,4,4,3,25,No
+27,IT,College,Female,Engineer,Divorced,20642,No,11,4,2,3,7,No
+47,R&D,Below College,Female,Engineer,Single,9434,Yes,10,4,4,2,17,No
+41,Marketing,College,Male,Staff,Married,2811,Yes,39,1,4,2,29,Yes
+57,Marketing,Below College,Male,Manager,Divorced,2396,Yes,28,2,3,2,28,Yes
+57,Finance,Below College,Male,Engineer,Divorced,24934,Yes,19,1,2,2,22,Yes
+55,Marketing,Below College,Male,Engineer,Divorced,9297,Yes,4,1,3,1,22,Yes
+20,IT,Bachelor,Female,Director,Married,6999,No,24,1,3,1,28,No
+46,R&D,Master,Female,Director,Married,5140,No,33,3,2,1,18,No
+25,IT,Doctor,Female,Engineer,Married,5791,No,11,2,2,3,6,No
+46,Finance,Master,Male,Staff,Single,2019,No,27,2,3,4,10,No
+27,Finance,Master,Female,Analyst,Single,5400,No,33,4,4,3,18,No
+22,Legal,College,Female,Director,Divorced,5129,No,5,4,4,4,24,No
+28,Sales,Bachelor,Male,Director,Divorced,2856,Yes,18,3,1,2,7,Yes
+21,Marketing,Bachelor,Male,Manager,Married,3557,No,11,1,4,2,14,No
+52,HR,Below College,Male,Manager,Married,12198,No,24,4,2,1,22,No
+57,HR,Master,Male,Engineer,Single,4559,Yes,12,2,2,1,14,Yes
+29,Sales,Doctor,Male,Manager,Single,17029,Yes,16,4,1,4,10,Yes
+38,R&D,College,Male,Manager,Married,1729,No,11,1,2,4,22,No
+33,Sales,Bachelor,Female,Analyst,Married,3592,No,2,3,3,1,25,No
+31,R&D,Below College,Male,Staff,Single,1942,No,23,1,1,2,9,No
+38,Marketing,Doctor,Male,Engineer,Divorced,2378,Yes,7,4,1,1,26,Yes
+44,Marketing,Master,Female,Analyst,Divorced,2990,Yes,35,3,4,2,10,No
+53,Finance,Doctor,Female,Engineer,Single,5938,No,25,3,4,2,2,No
+18,Finance,Bachelor,Female,Staff,Single,5768,No,7,1,3,3,3,No
+18,Finance,College,Female,Engineer,Divorced,3269,No,31,4,3,3,16,No
+39,Finance,Master,Female,Manager,Single,1291,No,31,1,4,4,10,No
+32,HR,College,Male,Staff,Divorced,11927,No,0,4,4,2,23,No
+37,Legal,Doctor,Male,Analyst,Divorced,4140,Yes,2,4,3,1,11,Yes
+20,Finance,Doctor,Female,Analyst,Single,2515,No,0,2,4,2,10,No
+31,Finance,Below College,Female,Director,Married,5796,Yes,14,3,1,4,12,Yes
+26,Finance,Master,Female,Analyst,Married,5556,No,19,4,3,2,29,No
+36,R&D,Doctor,Female,Director,Married,4049,No,2,1,4,2,14,No
+57,IT,Bachelor,Male,Manager,Married,5372,Yes,14,1,2,4,9,Yes
+51,Finance,Bachelor,Female,Analyst,Married,2457,Yes,36,2,2,2,28,Yes
+21,Sales,College,Female,Staff,Married,7753,Yes,20,2,3,3,13,Yes
+50,Finance,Bachelor,Male,Director,Married,2702,Yes,38,2,2,4,6,Yes
+54,Finance,Doctor,Male,Analyst,Single,3417,No,22,3,2,3,11,No
+19,HR,Bachelor,Male,Manager,Single,7253,No,39,2,1,4,1,No
+44,IT,Master,Female,Staff,Married,10121,No,34,3,3,2,27,No
+34,Finance,College,Female,Staff,Single,12726,No,17,2,2,3,15,No
+48,IT,Master,Male,Manager,Divorced,9260,No,16,3,4,3,7,No
+58,R&D,Doctor,Female,Analyst,Married,4046,No,30,4,3,1,11,No
+23,Marketing,Doctor,Female,Engineer,Divorced,1949,No,25,2,3,3,17,No
+48,IT,Bachelor,Male,Analyst,Single,11418,No,21,3,2,3,5,No
+20,IT,Below College,Male,Director,Married,11185,No,35,4,2,2,9,No
+57,Finance,Below College,Male,Director,Divorced,3283,No,34,2,1,3,26,No
+20,Legal,Doctor,Female,Analyst,Single,8541,Yes,10,4,4,3,16,No
+50,Finance,Doctor,Male,Director,Married,4026,No,26,2,1,3,11,No
+30,Finance,College,Female,Engineer,Married,12097,No,33,1,1,2,26,No
+38,HR,Doctor,Female,Engineer,Divorced,3608,No,17,3,4,4,25,No
+54,Legal,Doctor,Female,Staff,Divorced,16109,No,26,1,2,2,17,No
+33,Marketing,College,Male,Director,Divorced,7876,Yes,3,3,1,3,6,Yes
+38,HR,Master,Male,Analyst,Single,14451,No,16,1,3,4,15,No
+30,HR,Master,Male,Staff,Divorced,3720,No,5,2,1,2,29,No
+21,HR,College,Female,Engineer,Divorced,6266,No,10,1,4,2,3,No
+48,Legal,College,Male,Staff,Divorced,2747,No,4,2,1,4,28,No
+26,R&D,Master,Male,Manager,Married,8155,Yes,17,3,1,1,9,Yes
+50,Marketing,Master,Female,Director,Divorced,8428,No,24,2,3,3,12,No
+54,R&D,Master,Female,Analyst,Divorced,20706,No,9,1,4,1,19,No
+54,R&D,Master,Male,Engineer,Single,6563,No,15,4,3,3,18,No
+41,Marketing,Bachelor,Male,Staff,Single,7589,Yes,9,3,2,3,16,Yes
+42,R&D,College,Female,Analyst,Divorced,3705,Yes,9,4,4,1,8,No
+58,Legal,Below College,Female,Director,Single,6801,No,35,4,1,1,19,No
+46,Marketing,Bachelor,Female,Analyst,Single,3913,No,20,4,3,3,5,No
+57,IT,Below College,Male,Director,Single,5268,Yes,13,4,3,4,12,No
+53,IT,Below College,Male,Director,Married,5457,Yes,7,4,4,4,6,No
+32,Finance,Doctor,Female,Director,Divorced,3978,No,0,1,3,1,12,No
+35,HR,College,Male,Staff,Divorced,5103,No,15,2,4,1,26,No
+37,IT,Bachelor,Male,Director,Divorced,3923,Yes,25,2,2,2,15,Yes
+22,IT,College,Male,Analyst,Single,3913,No,5,4,4,4,10,No
+35,R&D,Master,Female,Manager,Single,9376,No,38,1,4,4,17,No
+57,Marketing,College,Male,Analyst,Single,5460,No,1,4,2,3,7,No
+18,Sales,Below College,Female,Staff,Married,6052,No,8,4,2,2,27,No
+36,R&D,Master,Male,Director,Single,2050,No,4,3,1,3,7,No
+40,R&D,College,Female,Manager,Married,6336,No,39,1,3,2,21,No
+43,Legal,College,Female,Staff,Divorced,6756,No,4,4,2,4,25,No
+46,Marketing,Below College,Male,Engineer,Single,3869,No,7,2,2,3,11,No
+51,Sales,Master,Male,Engineer,Married,17171,No,4,3,3,2,2,No
+36,Sales,Below College,Female,Engineer,Married,1244,Yes,4,4,3,3,21,No
+35,Finance,College,Female,Manager,Single,7868,No,16,4,1,2,2,No
+19,R&D,Bachelor,Male,Analyst,Married,7537,No,8,4,1,1,14,No
+44,Legal,Bachelor,Female,Manager,Single,6801,No,33,1,4,3,18,No
+23,HR,Doctor,Female,Manager,Married,5462,No,32,4,1,1,16,No
+56,IT,Bachelor,Male,Manager,Divorced,6839,No,21,2,2,2,28,No
+23,R&D,Master,Male,Engineer,Divorced,8274,Yes,20,3,2,3,11,Yes
+23,HR,Doctor,Male,Analyst,Divorced,3179,Yes,14,1,3,2,9,Yes
+48,HR,Master,Male,Manager,Single,5881,No,0,3,1,2,7,No
+58,Marketing,Bachelor,Female,Analyst,Divorced,4402,No,6,2,4,1,4,No
+57,R&D,Bachelor,Male,Director,Divorced,2549,No,22,4,4,3,16,No
+47,Marketing,College,Male,Manager,Divorced,7557,No,5,1,4,4,14,No
+38,Finance,Master,Male,Manager,Single,3503,No,19,4,4,2,11,No
+58,HR,Below College,Male,Manager,Married,2000,No,25,1,3,1,8,No
+35,Sales,College,Female,Director,Single,3556,No,11,4,1,4,11,No
+40,HR,Master,Female,Director,Single,3043,Yes,12,2,1,1,27,Yes
+55,Finance,Doctor,Male,Engineer,Divorced,9109,Yes,12,2,1,1,29,Yes
+40,HR,Master,Male,Staff,Married,5387,Yes,1,4,1,1,20,Yes
+45,Marketing,Doctor,Male,Analyst,Divorced,11264,No,31,2,4,2,17,No
+53,R&D,Doctor,Male,Staff,Divorced,3294,Yes,30,4,4,4,28,No
+42,Sales,Bachelor,Female,Manager,Single,8304,No,10,1,3,2,26,No
+24,Marketing,Below College,Female,Manager,Single,27004,No,36,2,3,2,19,No
+35,IT,Master,Female,Engineer,Single,6085,No,3,1,4,3,10,No
+37,R&D,Below College,Female,Staff,Divorced,8241,No,33,4,2,4,12,No
+22,Sales,Doctor,Male,Manager,Married,7451,No,15,1,1,3,1,No
+35,Finance,Bachelor,Female,Staff,Married,2093,Yes,30,3,3,1,2,No
+59,HR,Below College,Female,Engineer,Divorced,6984,Yes,24,4,4,4,18,No
+57,Sales,College,Male,Staff,Married,5906,Yes,38,2,1,4,7,Yes
+50,Legal,Doctor,Female,Analyst,Divorced,4205,Yes,7,2,1,2,16,Yes
+32,IT,College,Female,Engineer,Married,2891,No,7,3,4,1,13,No
+52,Finance,Below College,Female,Staff,Divorced,7453,No,33,4,2,2,4,No
+18,R&D,Below College,Male,Manager,Married,2742,No,14,4,2,3,10,No
+38,Legal,Below College,Male,Director,Single,17679,No,4,4,3,1,28,No
+25,Sales,Master,Male,Director,Single,5263,No,18,4,4,2,9,No
+24,Finance,Doctor,Male,Engineer,Single,2359,Yes,9,1,3,2,18,Yes
+58,R&D,Doctor,Female,Director,Single,3610,Yes,8,4,2,2,9,Yes
+57,Legal,Doctor,Female,Analyst,Divorced,4159,No,28,1,3,1,22,No
+57,Legal,Master,Male,Engineer,Married,20898,No,39,1,3,3,10,No
+47,Marketing,Below College,Male,Manager,Divorced,2890,No,36,2,2,4,8,No
+55,HR,Below College,Male,Manager,Single,4583,No,18,4,1,2,23,No
+52,Finance,College,Female,Engineer,Married,3559,Yes,12,1,1,1,11,Yes
+19,Legal,Master,Female,Director,Divorced,6631,No,39,4,2,4,13,No
+25,Marketing,Bachelor,Male,Director,Single,3593,Yes,15,3,1,2,24,Yes
+55,IT,Master,Male,Manager,Married,2481,No,29,1,4,1,13,No
+21,IT,College,Male,Analyst,Married,4371,No,4,2,1,3,16,No
+54,R&D,College,Male,Director,Single,4106,No,32,4,2,2,13,No
+38,Legal,College,Male,Analyst,Single,3444,Yes,18,2,4,1,25,Yes
+30,Legal,Below College,Male,Director,Married,3557,Yes,18,1,3,2,12,Yes
+26,Sales,Bachelor,Male,Engineer,Single,10004,Yes,16,1,2,1,15,Yes
+46,Legal,College,Male,Staff,Divorced,4056,No,23,2,2,3,29,No
+58,HR,Doctor,Female,Manager,Single,2488,No,27,4,1,3,16,No
+41,R&D,Below College,Male,Engineer,Single,3724,No,36,1,4,1,8,No
+33,Finance,Bachelor,Female,Director,Single,5077,No,21,3,2,4,6,No
+29,Legal,Doctor,Male,Manager,Married,2204,Yes,38,2,4,3,24,Yes
+19,HR,Bachelor,Female,Staff,Married,13037,Yes,15,1,4,2,8,Yes
+36,Legal,Bachelor,Male,Staff,Single,8271,Yes,34,4,1,3,2,Yes
+47,Marketing,Doctor,Male,Director,Married,11592,Yes,26,1,2,2,18,Yes
+33,HR,Master,Female,Manager,Single,6218,No,11,4,4,3,11,No
+41,Marketing,Bachelor,Male,Director,Divorced,1399,Yes,27,4,4,3,17,No
+30,R&D,Master,Female,Staff,Married,12347,No,0,1,3,2,10,No
+22,Legal,Bachelor,Female,Engineer,Single,2927,No,38,3,1,3,2,No
+40,Sales,Doctor,Female,Engineer,Married,3073,No,17,4,2,2,23,No
+55,IT,Bachelor,Male,Analyst,Divorced,5398,No,22,2,4,2,27,No
+48,HR,College,Female,Staff,Divorced,11236,No,21,4,1,3,19,No
+34,Sales,College,Male,Staff,Single,9246,No,3,4,2,3,20,No
+20,Sales,Bachelor,Female,Director,Married,8465,No,10,3,4,2,20,No
+43,IT,Doctor,Male,Analyst,Divorced,4076,Yes,17,4,2,1,20,Yes
+30,HR,Doctor,Female,Analyst,Married,4037,No,6,1,2,3,2,No
+55,Legal,Below College,Female,Manager,Single,6048,No,20,3,1,4,27,No
+39,HR,Doctor,Male,Director,Divorced,4545,No,34,4,1,3,6,No
+38,Sales,Master,Male,Engineer,Divorced,8379,No,36,1,3,1,17,No
+46,Finance,Bachelor,Male,Manager,Married,8087,Yes,29,1,3,1,12,Yes
+56,Finance,College,Male,Analyst,Divorced,7007,Yes,16,4,3,3,5,No
+22,HR,Doctor,Male,Engineer,Single,1079,Yes,32,2,4,3,2,Yes
+31,Sales,College,Male,Staff,Single,5307,No,15,2,3,4,9,No
+35,Sales,Below College,Male,Director,Divorced,4604,No,14,4,2,3,2,No
+21,R&D,Bachelor,Male,Analyst,Single,5436,No,12,4,1,1,22,No
+50,Sales,Doctor,Male,Staff,Divorced,3125,No,38,1,2,4,20,No
+56,IT,College,Female,Analyst,Divorced,2219,Yes,2,4,1,3,14,Yes
+37,Finance,Doctor,Female,Engineer,Divorced,6489,No,23,4,1,4,22,No
+30,R&D,Below College,Female,Manager,Divorced,3968,No,22,1,2,4,15,No
+53,Legal,College,Female,Engineer,Married,6938,No,0,4,2,1,2,No
+21,IT,College,Male,Director,Divorced,3286,No,31,4,4,1,28,No
+52,Legal,Bachelor,Female,Director,Single,11493,No,32,4,1,2,18,No
+25,Finance,Bachelor,Female,Analyst,Married,8961,Yes,29,1,3,1,12,Yes
+57,IT,College,Female,Engineer,Single,5872,No,1,4,4,2,7,No
+53,Marketing,Bachelor,Male,Manager,Divorced,4324,Yes,17,2,3,1,16,Yes
+23,HR,College,Male,Director,Single,8196,No,29,4,4,1,19,No
+39,Marketing,Master,Female,Manager,Married,6220,Yes,17,2,1,2,3,Yes
+23,HR,Doctor,Female,Staff,Single,5671,No,4,4,2,2,15,No
+59,Finance,Master,Female,Analyst,Married,9188,No,4,1,2,2,15,No
+53,Finance,Master,Male,Manager,Divorced,11567,No,7,2,1,4,7,No
+26,Marketing,Doctor,Female,Analyst,Divorced,2318,No,8,4,2,2,8,No
+33,IT,College,Female,Staff,Single,2616,No,31,4,1,4,7,No
+56,Legal,College,Male,Manager,Single,3077,No,13,4,1,4,3,No
+55,HR,Bachelor,Female,Manager,Divorced,1995,Yes,12,4,1,2,19,Yes
+50,HR,Below College,Female,Staff,Divorced,4733,No,17,1,4,2,23,No
+35,R&D,College,Female,Engineer,Single,7044,No,3,3,2,2,19,No
+29,Sales,Doctor,Female,Manager,Divorced,4852,No,21,2,4,1,29,No
+44,IT,Below College,Female,Manager,Married,3567,No,19,4,3,1,18,No
+18,IT,Doctor,Female,Director,Married,9661,Yes,14,1,1,2,7,Yes
+32,R&D,Doctor,Female,Engineer,Single,5347,Yes,6,3,2,3,19,Yes
+44,Finance,Doctor,Female,Manager,Single,6037,No,12,1,3,2,5,No
+33,Marketing,Below College,Male,Staff,Divorced,9823,No,33,4,1,3,23,No
+38,IT,Master,Female,Analyst,Divorced,4564,No,29,3,3,1,13,No
+18,HR,Doctor,Female,Staff,Married,16917,No,4,2,4,1,2,No
+46,R&D,Bachelor,Female,Engineer,Single,3756,No,0,2,4,3,24,No
+20,Marketing,College,Male,Director,Single,16297,No,30,1,2,1,18,No
+29,Legal,College,Female,Director,Single,2738,No,19,2,3,2,4,No
+45,Marketing,College,Male,Director,Single,6704,Yes,18,2,3,3,4,Yes
+56,IT,Below College,Female,Staff,Married,3342,No,28,3,4,3,8,No
+54,Sales,Bachelor,Male,Analyst,Married,9621,No,37,2,4,4,11,No
+48,HR,Bachelor,Male,Analyst,Single,3688,No,9,3,2,1,1,No
+48,Marketing,Bachelor,Male,Manager,Married,5851,No,28,3,1,3,28,No
+50,Legal,Bachelor,Female,Analyst,Single,3326,Yes,30,3,2,3,9,Yes
+50,HR,Bachelor,Female,Analyst,Married,8624,No,10,2,4,3,6,No
+57,IT,Master,Male,Manager,Divorced,3316,No,22,1,2,1,4,No
+28,R&D,Bachelor,Female,Staff,Married,13494,No,29,1,1,3,6,No
+46,Legal,Bachelor,Male,Staff,Single,2703,No,24,2,4,3,13,No
+42,Marketing,Below College,Female,Engineer,Divorced,2192,No,15,3,1,2,29,No
+30,Legal,Below College,Female,Staff,Single,8698,No,22,2,2,2,22,No
+36,IT,Bachelor,Male,Director,Divorced,3446,No,32,4,1,4,29,No
+53,Marketing,Master,Male,Director,Divorced,4893,No,36,1,4,3,9,No
+45,Legal,Bachelor,Female,Engineer,Married,4050,No,27,3,4,1,27,No
+21,R&D,Bachelor,Male,Analyst,Married,2235,No,26,2,1,4,14,No
+20,Legal,Bachelor,Male,Engineer,Divorced,4692,No,5,3,2,4,12,No
+55,HR,Doctor,Female,Manager,Divorced,10498,Yes,37,4,2,4,4,Yes
+54,HR,Master,Male,Engineer,Divorced,8972,No,36,3,2,3,8,No
+42,Marketing,College,Female,Engineer,Single,5648,No,5,4,2,4,17,No
+58,IT,Bachelor,Female,Director,Married,9579,No,24,1,3,1,22,No
+52,R&D,College,Male,Manager,Single,2602,Yes,12,3,3,2,5,No
+46,Finance,Master,Male,Manager,Married,4042,No,32,2,1,2,3,No
+58,HR,Bachelor,Male,Engineer,Single,6232,No,32,3,3,3,4,No
+46,Legal,College,Female,Manager,Married,4544,No,24,3,3,1,8,No
+29,Finance,College,Male,Manager,Divorced,4238,No,13,4,3,1,16,No
+52,Legal,Master,Female,Staff,Divorced,2391,No,39,4,1,1,11,No
+37,Marketing,Bachelor,Male,Manager,Married,1409,No,37,2,3,3,27,No
+34,Finance,Doctor,Male,Analyst,Divorced,8028,Yes,8,1,2,1,26,Yes
+29,IT,Master,Female,Manager,Divorced,5686,No,17,1,2,2,27,No
+53,Legal,Doctor,Male,Director,Single,8443,Yes,14,4,1,1,2,Yes
+27,IT,Bachelor,Male,Staff,Married,3780,No,3,2,1,1,8,No
+35,Legal,College,Female,Director,Divorced,3204,No,33,3,1,3,7,No
+47,Finance,Master,Male,Director,Married,4934,No,37,2,4,4,1,No
+25,IT,Master,Male,Analyst,Single,8205,Yes,16,2,3,4,29,Yes
+58,HR,Master,Female,Staff,Married,4277,No,6,2,1,3,2,No
+30,Marketing,Below College,Male,Engineer,Single,7951,Yes,31,1,1,3,23,Yes
+48,Finance,Bachelor,Male,Manager,Single,2687,No,22,3,1,3,27,No
+23,Legal,Below College,Female,Analyst,Single,4461,No,19,2,2,3,13,No
+24,HR,Master,Male,Analyst,Divorced,4712,No,1,1,1,1,11,Yes
+38,Legal,Master,Male,Engineer,Single,10258,Yes,20,1,2,1,3,Yes
+55,Finance,Doctor,Male,Analyst,Married,5566,No,11,4,2,4,2,No
+45,Legal,Below College,Female,Engineer,Married,14011,Yes,26,3,4,3,16,No
+38,HR,College,Male,Engineer,Divorced,2189,No,9,2,1,3,1,No
+38,IT,Bachelor,Female,Engineer,Divorced,5313,No,7,3,4,1,7,No
+41,IT,College,Male,Analyst,Single,5473,No,20,4,1,3,3,No
+44,Marketing,College,Male,Engineer,Single,7129,Yes,21,4,3,2,22,No
+44,Legal,Bachelor,Male,Analyst,Single,3016,No,12,2,1,1,16,No
+30,IT,Master,Male,Staff,Divorced,13503,No,39,1,1,2,26,No
+46,R&D,Doctor,Male,Engineer,Divorced,4953,Yes,11,4,1,1,24,Yes
+56,HR,Master,Male,Analyst,Married,2559,No,16,1,1,1,6,No
+45,HR,Master,Male,Analyst,Single,4867,No,8,4,1,1,14,No
+54,Finance,Below College,Male,Analyst,Single,4072,No,39,3,1,4,23,No
+46,Marketing,College,Male,Manager,Married,26106,No,11,2,4,4,11,No
+39,Sales,College,Female,Manager,Married,9227,No,8,4,3,1,22,No
+53,IT,College,Male,Engineer,Married,5063,No,29,3,4,1,23,No
+47,Sales,Doctor,Female,Staff,Married,4595,No,5,4,3,1,21,No
+45,R&D,Doctor,Female,Engineer,Single,8696,Yes,24,2,4,1,25,Yes
+40,Marketing,Doctor,Male,Director,Divorced,8949,Yes,27,3,4,3,19,No
+50,HR,Bachelor,Female,Director,Single,856,No,9,1,1,3,22,No
+21,Sales,Doctor,Female,Staff,Married,7228,Yes,27,4,4,3,25,No
+20,R&D,Below College,Female,Staff,Divorced,4997,No,28,4,3,4,1,No
+49,Marketing,Below College,Female,Staff,Single,2237,Yes,35,3,2,2,21,Yes
+21,R&D,Master,Male,Manager,Married,8334,Yes,10,2,3,1,13,Yes
+18,IT,Master,Female,Manager,Divorced,18915,No,20,4,4,3,20,No
+29,Sales,Master,Male,Director,Divorced,6864,Yes,37,3,2,3,9,Yes
+30,Finance,Master,Female,Staff,Divorced,9511,No,25,2,1,3,27,No
+51,Finance,Below College,Female,Analyst,Single,14508,No,17,4,2,1,29,No
+46,Marketing,Master,Female,Director,Married,2986,No,3,3,1,1,11,No
+26,R&D,Below College,Male,Staff,Single,1612,No,14,2,3,2,1,No
+48,HR,Doctor,Male,Analyst,Single,7288,No,22,4,2,4,13,No
+24,Sales,Doctor,Male,Staff,Single,4236,Yes,5,4,2,2,20,Yes
+30,Finance,Bachelor,Male,Engineer,Divorced,2154,No,6,2,2,1,1,No
+19,Finance,Master,Female,Analyst,Married,4689,No,14,2,1,2,3,No
+50,R&D,Doctor,Male,Engineer,Single,7604,No,8,3,1,3,20,No
+24,Finance,Doctor,Female,Manager,Married,4494,No,29,4,3,2,17,No
+35,Legal,College,Male,Director,Divorced,3065,No,27,4,3,3,5,No
+25,R&D,College,Female,Staff,Single,4297,No,29,3,4,2,6,No
+29,Sales,Below College,Female,Director,Married,4857,No,7,4,1,3,17,No
+47,R&D,Bachelor,Male,Staff,Divorced,1544,No,34,4,3,2,10,No
+26,Finance,College,Female,Engineer,Single,4511,Yes,34,4,2,4,11,Yes
+45,R&D,Bachelor,Female,Analyst,Single,2193,No,25,1,2,2,13,No
+21,Finance,Doctor,Female,Analyst,Married,7298,No,29,2,2,1,29,No
+56,IT,Below College,Female,Staff,Married,1926,No,34,1,3,1,10,No
+34,Marketing,Bachelor,Female,Engineer,Single,9023,No,37,1,2,3,14,No
+28,Finance,College,Male,Staff,Single,3844,No,10,2,2,1,28,No
+19,Legal,Doctor,Male,Staff,Divorced,3548,No,19,1,1,3,13,No
+40,Legal,Master,Female,Staff,Divorced,5864,No,30,3,1,4,28,No
+39,Legal,Doctor,Female,Analyst,Single,2923,No,33,1,3,1,4,No
+43,Legal,College,Male,Staff,Married,5809,Yes,11,3,1,1,20,Yes
+29,Finance,College,Male,Analyst,Married,3167,No,27,2,4,3,17,No
+49,Finance,Master,Male,Manager,Single,3519,No,2,4,3,4,18,No
+26,Marketing,Doctor,Female,Engineer,Divorced,6267,No,4,2,4,4,11,No
+22,IT,Bachelor,Female,Manager,Single,2482,No,12,2,4,2,10,No
+43,HR,Bachelor,Male,Staff,Married,2301,Yes,11,1,3,3,21,Yes
+24,Finance,Doctor,Male,Analyst,Single,5704,Yes,0,2,1,3,18,Yes
+46,HR,Bachelor,Male,Engineer,Single,4836,Yes,18,2,1,4,19,Yes
+50,Sales,Doctor,Female,Director,Divorced,5438,Yes,28,3,3,3,9,No
+41,IT,Doctor,Female,Engineer,Married,5982,Yes,38,4,4,1,5,No
+42,R&D,College,Female,Engineer,Married,5086,No,24,1,3,1,1,No
+48,HR,Below College,Male,Staff,Single,7078,Yes,15,4,3,1,5,No
+46,Legal,College,Female,Manager,Married,5210,No,16,4,2,3,3,No
+22,IT,Bachelor,Male,Manager,Married,1473,Yes,27,4,2,2,1,Yes
+55,Sales,Below College,Male,Director,Married,1722,No,38,1,4,2,19,No
+28,IT,Doctor,Male,Staff,Married,15627,No,4,2,1,4,27,No
+49,R&D,Bachelor,Female,Engineer,Divorced,4914,No,0,4,2,3,6,No
+25,Finance,Master,Female,Manager,Divorced,8691,No,2,1,2,4,10,Yes
+37,Finance,Bachelor,Female,Manager,Divorced,3994,No,23,2,4,3,5,No
+51,Legal,Below College,Female,Analyst,Divorced,4746,No,28,4,3,2,12,No
+59,Finance,Below College,Female,Engineer,Divorced,3744,No,14,3,2,1,12,No
+25,Marketing,Doctor,Female,Staff,Married,21580,No,3,1,1,3,17,No
+19,Marketing,Master,Male,Manager,Single,5721,No,0,4,4,2,27,No
+38,Marketing,Doctor,Male,Staff,Single,3565,Yes,14,1,2,2,2,Yes
+32,Legal,Master,Female,Engineer,Divorced,1824,No,23,3,4,2,21,No
+23,Marketing,Master,Female,Engineer,Married,16062,No,30,1,2,1,25,No
+22,Sales,Doctor,Female,Manager,Divorced,4456,No,19,2,2,2,27,No
+20,Legal,Bachelor,Male,Director,Single,7681,No,9,4,4,4,14,No
+33,IT,College,Female,Staff,Married,8214,No,10,1,1,2,12,No
+52,Sales,Master,Male,Staff,Married,3723,No,17,1,1,2,28,No
+26,Finance,Below College,Female,Analyst,Married,7357,No,33,4,3,3,13,No
+52,R&D,Doctor,Male,Engineer,Single,3420,Yes,27,3,2,3,5,Yes
+36,Marketing,Bachelor,Male,Engineer,Single,2712,Yes,37,3,3,3,5,No
+51,IT,Master,Female,Manager,Divorced,9884,No,15,4,4,2,17,No
+56,R&D,Bachelor,Male,Manager,Divorced,4469,No,23,4,3,2,5,No
+27,Legal,Doctor,Male,Manager,Single,6708,No,38,2,4,4,24,No
+27,Legal,Below College,Male,Analyst,Divorced,6288,Yes,11,1,1,1,25,Yes
+37,Sales,Master,Male,Director,Single,7206,No,6,1,4,2,26,No
+18,Marketing,Master,Female,Manager,Married,1931,No,35,3,4,1,19,No
+23,Legal,Bachelor,Male,Manager,Divorced,3459,No,16,2,3,2,4,No
+19,Sales,Doctor,Male,Manager,Single,4045,Yes,3,1,2,1,7,Yes
+55,Sales,College,Male,Analyst,Single,2984,No,36,2,3,3,23,No
+50,HR,Master,Female,Staff,Single,6357,No,32,4,1,2,17,No
+20,IT,Below College,Female,Director,Divorced,10017,No,18,1,1,4,11,No
+53,Sales,Master,Male,Staff,Divorced,11016,No,25,4,1,1,6,No
+30,Finance,Master,Female,Engineer,Married,4009,No,10,3,2,3,13,No
+52,Legal,College,Female,Engineer,Divorced,5855,Yes,30,3,3,4,12,No
+32,Sales,College,Female,Manager,Divorced,6421,Yes,0,4,4,3,25,Yes
+39,Marketing,Doctor,Female,Staff,Divorced,7134,Yes,39,3,4,2,5,No
+21,Legal,Master,Female,Analyst,Married,2901,Yes,35,4,2,4,24,Yes
+34,Legal,Master,Female,Director,Married,14652,No,28,4,1,1,27,No
+22,Finance,Bachelor,Female,Staff,Married,8569,No,24,4,2,1,10,No
+38,Sales,Bachelor,Male,Staff,Divorced,8704,Yes,17,3,4,4,11,No
+41,Finance,Below College,Male,Director,Single,10118,No,2,3,1,1,9,No
+48,Sales,Below College,Male,Staff,Divorced,6771,No,17,3,2,3,26,No
+57,IT,Bachelor,Female,Staff,Married,2653,No,6,4,4,4,26,No
+47,Finance,Below College,Male,Director,Divorced,4521,No,27,2,4,1,13,No
+59,R&D,Master,Female,Analyst,Divorced,1825,No,16,3,2,3,3,No
+24,HR,College,Female,Director,Single,6304,Yes,24,2,4,1,17,Yes
+24,Finance,Master,Male,Manager,Single,4440,Yes,17,3,3,3,18,No
+44,Marketing,Bachelor,Male,Manager,Divorced,4796,Yes,39,1,3,2,5,Yes
+41,HR,Doctor,Male,Manager,Married,10121,No,2,1,1,3,16,Yes
+36,HR,Doctor,Male,Manager,Divorced,3736,No,24,1,3,1,26,No
+58,Sales,Bachelor,Female,Engineer,Divorced,4224,No,6,2,3,3,23,No
+51,Finance,Master,Male,Analyst,Divorced,4979,No,9,3,2,1,16,No
+39,IT,Below College,Male,Engineer,Married,1629,No,18,4,1,4,11,No
+44,Legal,Below College,Female,Staff,Married,4189,No,14,2,2,4,22,No
+23,HR,Doctor,Female,Staff,Married,1106,No,20,3,2,2,4,No
+27,Marketing,Bachelor,Female,Director,Married,3458,No,20,1,3,3,9,No
+48,IT,Bachelor,Female,Manager,Married,8210,No,36,2,3,2,15,No
+42,IT,College,Female,Director,Divorced,6427,Yes,27,3,4,4,12,No
+19,Marketing,Doctor,Male,Staff,Married,3439,No,31,4,4,3,27,No
+27,Legal,Bachelor,Male,Manager,Divorced,5036,No,26,2,1,3,16,No
+27,Marketing,College,Female,Analyst,Divorced,2578,Yes,22,4,3,2,4,No
+43,Sales,Below College,Male,Staff,Divorced,4907,No,9,2,4,2,3,No
+22,R&D,Doctor,Female,Director,Single,28515,No,39,1,2,3,27,No
+39,Legal,Doctor,Male,Director,Married,14875,Yes,5,1,3,3,21,Yes
+21,Finance,Bachelor,Male,Staff,Married,5072,Yes,23,1,1,3,4,Yes
+51,HR,Bachelor,Male,Engineer,Divorced,5410,No,17,4,1,2,2,No
+24,Finance,Master,Male,Analyst,Single,2730,No,9,1,2,1,19,No
+34,IT,Below College,Male,Staff,Married,3037,No,14,4,4,4,7,No
+28,HR,Below College,Female,Staff,Divorced,6107,No,33,4,2,4,28,No
+25,Legal,College,Male,Director,Single,3586,Yes,7,4,4,2,2,No
+45,Sales,College,Male,Manager,Divorced,8454,Yes,34,1,3,3,1,Yes
+50,Finance,Master,Male,Manager,Single,12604,No,26,3,1,4,18,No
+42,Sales,Below College,Male,Manager,Divorced,6000,No,24,4,4,4,28,No
+38,Sales,College,Female,Director,Married,5224,No,2,3,2,4,8,No
+29,Legal,Below College,Female,Manager,Divorced,1792,Yes,20,4,3,4,8,No
+43,Finance,Below College,Female,Staff,Divorced,7696,No,38,1,4,3,28,No
+46,Finance,College,Male,Engineer,Single,2474,No,31,1,3,2,10,No
+55,Legal,Bachelor,Female,Engineer,Single,3824,Yes,20,1,3,3,18,Yes
+52,Legal,Bachelor,Female,Engineer,Married,8740,No,8,2,2,3,22,No
+54,HR,College,Female,Manager,Divorced,9116,Yes,0,1,2,4,27,Yes
+46,IT,Master,Female,Engineer,Single,3714,No,3,3,3,4,28,No
+41,IT,Doctor,Male,Manager,Married,3845,No,3,4,3,3,11,No
+32,Legal,Below College,Male,Staff,Married,3230,No,25,3,4,3,27,No
+23,Marketing,Doctor,Male,Staff,Single,2395,No,33,2,2,3,23,No
+49,Sales,College,Male,Director,Single,3358,No,26,3,4,1,1,No
+51,IT,Below College,Female,Director,Divorced,1867,Yes,14,4,1,4,7,Yes
+53,R&D,Doctor,Male,Analyst,Married,7404,No,31,4,4,2,28,No
+37,Legal,Bachelor,Male,Staff,Single,6227,No,6,1,3,2,27,No
+29,Legal,Master,Male,Manager,Married,6879,No,13,2,1,2,8,No
+52,HR,Doctor,Female,Analyst,Divorced,2772,No,22,2,4,1,25,No
+55,Legal,Master,Female,Staff,Single,2399,No,0,3,1,1,14,No
+34,HR,Bachelor,Female,Manager,Married,5075,No,31,1,2,2,24,No
+44,Marketing,Doctor,Male,Staff,Single,5107,No,25,1,4,2,19,No
+34,Marketing,College,Male,Staff,Divorced,4499,No,8,1,4,2,8,No
+28,Legal,Below College,Male,Manager,Divorced,4131,No,15,4,2,3,19,No
+56,Sales,Bachelor,Male,Staff,Divorced,13718,No,30,2,4,4,22,No
+19,HR,Master,Female,Staff,Divorced,6346,No,1,3,1,1,4,No
+19,HR,Master,Male,Staff,Single,16033,No,31,3,2,1,23,No
+46,R&D,Bachelor,Female,Director,Single,10523,No,9,3,1,3,24,No
+41,Sales,College,Female,Engineer,Married,13656,No,24,1,4,1,10,No
+41,Sales,College,Male,Staff,Married,2579,No,17,2,4,2,22,No
+33,IT,Master,Female,Manager,Single,7015,Yes,33,2,4,1,10,Yes
+48,Marketing,Bachelor,Male,Staff,Single,3793,No,28,4,4,3,4,No
+26,IT,Bachelor,Male,Director,Married,1811,Yes,23,4,1,4,8,Yes
+44,Sales,Below College,Male,Director,Single,12059,No,2,4,4,2,7,No
+58,Legal,Master,Male,Staff,Divorced,4120,Yes,14,3,2,1,26,Yes
+31,R&D,College,Female,Analyst,Divorced,2609,Yes,2,3,2,2,15,Yes
+42,Legal,Doctor,Female,Engineer,Divorced,3832,No,30,2,3,4,8,No
+39,Legal,College,Male,Manager,Married,3048,No,9,4,2,1,29,No
+52,Sales,College,Female,Manager,Single,3241,No,37,3,3,2,10,No
+50,IT,Doctor,Female,Manager,Married,4302,Yes,21,4,2,3,7,Yes
+44,Finance,Master,Female,Manager,Married,13883,Yes,13,4,2,3,19,Yes
+57,Legal,Below College,Male,Director,Single,3295,Yes,8,2,4,4,3,Yes
+43,Legal,College,Male,Engineer,Married,13300,No,17,2,2,4,9,No
+36,Finance,College,Male,Staff,Divorced,8178,No,7,3,4,4,16,No
+56,R&D,Master,Female,Staff,Single,6233,No,37,2,4,1,14,No
+43,Marketing,Master,Male,Analyst,Divorced,7699,No,14,4,2,4,7,No
+23,HR,Bachelor,Male,Staff,Divorced,4955,No,14,2,1,1,12,No
+20,Sales,Master,Male,Engineer,Single,10632,Yes,5,4,4,2,1,No
+23,IT,Master,Male,Staff,Divorced,6906,No,11,4,2,3,16,No
+45,Marketing,College,Male,Director,Divorced,1810,No,18,3,1,2,3,No
+20,IT,Below College,Male,Staff,Divorced,5870,Yes,39,3,2,3,27,Yes
+30,Marketing,College,Female,Manager,Single,7866,Yes,4,3,2,4,1,Yes
+30,Sales,Master,Male,Manager,Single,4132,Yes,26,4,1,2,6,Yes
+30,HR,Bachelor,Female,Manager,Single,5301,No,9,2,2,2,29,No
+18,Sales,Below College,Male,Manager,Married,3402,No,13,3,4,4,2,No
+57,HR,Bachelor,Female,Director,Divorced,2150,No,33,3,3,2,7,No
+54,IT,Doctor,Female,Director,Married,1938,No,14,2,3,1,8,No
+48,R&D,Bachelor,Female,Director,Married,1954,No,28,2,2,3,13,No
+34,HR,Bachelor,Male,Staff,Divorced,7342,No,25,3,3,4,29,No
+26,Marketing,Master,Male,Manager,Single,1103,No,26,4,3,1,16,No
+30,R&D,Master,Female,Analyst,Married,3294,Yes,2,4,3,1,29,Yes
+54,IT,Master,Female,Analyst,Single,3104,No,2,3,4,4,22,No
+31,Finance,Master,Male,Manager,Single,4149,No,34,2,4,2,21,No
+28,R&D,Master,Male,Engineer,Divorced,1613,No,34,4,3,3,10,No
+42,HR,Bachelor,Male,Staff,Married,6262,No,5,2,1,1,4,No
+48,R&D,Doctor,Female,Analyst,Married,2289,No,13,1,1,2,25,No
+31,IT,Master,Female,Director,Single,9695,Yes,25,2,1,4,24,Yes
+24,R&D,Doctor,Female,Engineer,Divorced,3384,Yes,2,2,4,4,21,Yes
+41,IT,Doctor,Female,Director,Married,4640,No,32,1,4,3,13,No
+53,Finance,College,Female,Engineer,Single,4925,No,12,4,4,4,17,No
+59,HR,College,Male,Engineer,Single,5690,Yes,28,4,4,3,8,No
+59,Legal,Below College,Female,Staff,Single,5025,No,8,4,3,4,8,No
+58,Marketing,College,Female,Director,Divorced,3803,Yes,31,3,4,4,23,No
+20,R&D,Master,Male,Director,Divorced,6038,No,21,1,3,1,7,No
+43,Legal,Doctor,Male,Analyst,Single,6500,No,21,2,1,2,24,No
+43,Sales,Below College,Male,Manager,Single,3105,Yes,33,1,3,1,1,Yes
+18,Marketing,College,Female,Manager,Divorced,6347,No,9,1,1,3,15,No
+32,R&D,Bachelor,Male,Analyst,Single,10047,Yes,24,1,4,1,15,Yes
+28,Marketing,Below College,Female,Engineer,Single,7506,No,11,1,1,4,28,No
+54,Legal,Master,Male,Analyst,Divorced,8599,No,2,1,1,4,19,Yes
+24,Sales,Doctor,Female,Analyst,Single,5448,Yes,18,1,3,2,4,Yes
+29,Marketing,Master,Female,Director,Single,2802,No,32,3,1,3,27,No
+55,Legal,Master,Male,Analyst,Single,3023,No,25,1,2,4,6,No
+20,Marketing,Bachelor,Female,Engineer,Divorced,5954,Yes,12,1,1,2,10,Yes
+59,Sales,Bachelor,Male,Manager,Divorced,8652,Yes,6,4,4,2,12,No
+43,Sales,Doctor,Female,Staff,Divorced,26148,Yes,33,1,1,4,26,Yes
+47,Sales,College,Female,Analyst,Married,8858,No,21,1,2,4,25,No
+49,Finance,Master,Female,Analyst,Married,2435,No,19,4,3,3,4,No
+53,IT,College,Male,Director,Married,3101,No,22,4,1,2,6,No
+54,IT,Doctor,Female,Director,Married,19285,No,13,4,2,2,25,No
+35,Legal,Master,Male,Analyst,Divorced,4321,No,29,2,4,2,14,No
+18,Sales,College,Female,Analyst,Single,5056,No,22,1,4,3,13,No
+38,Legal,Master,Female,Engineer,Divorced,2762,No,18,1,3,2,25,No
+45,IT,Bachelor,Male,Manager,Married,12569,No,38,1,4,1,22,No
+33,Marketing,Bachelor,Male,Manager,Divorced,6635,Yes,35,4,2,1,21,Yes
+45,Sales,Below College,Female,Staff,Single,3087,No,5,3,1,2,3,No
+39,R&D,Doctor,Female,Manager,Married,2707,No,22,1,2,1,21,No
+36,Sales,College,Female,Staff,Single,5909,No,9,4,3,1,15,No
+18,Sales,Master,Female,Director,Single,5046,No,34,4,1,3,3,No
+48,IT,Below College,Female,Staff,Single,8097,No,20,4,2,2,5,No
+59,Legal,Doctor,Female,Staff,Married,6823,No,31,2,3,3,13,No
+51,HR,Doctor,Male,Manager,Divorced,4193,Yes,29,4,3,2,26,No
+57,Marketing,Doctor,Female,Analyst,Married,3546,Yes,32,3,1,4,26,Yes
+23,IT,College,Male,Director,Married,4465,No,5,2,1,1,15,No
+45,Legal,Bachelor,Female,Engineer,Divorced,3531,Yes,4,4,4,3,17,No
+20,Legal,Below College,Female,Staff,Divorced,4545,No,14,3,4,3,6,No
+48,Marketing,College,Male,Staff,Divorced,4963,No,24,3,1,4,23,No
+33,Legal,Master,Female,Staff,Divorced,2867,No,12,1,4,4,18,No
+34,R&D,College,Female,Analyst,Single,7175,No,5,4,1,1,3,No
+44,Finance,Master,Male,Engineer,Married,3935,No,36,4,4,1,26,No
+41,HR,Master,Female,Manager,Married,2965,No,1,1,2,2,9,Yes
+37,R&D,Doctor,Male,Director,Married,3979,Yes,16,3,3,2,8,No
+49,R&D,College,Female,Analyst,Divorced,5683,No,23,4,1,4,20,No
+52,Marketing,Bachelor,Female,Engineer,Married,5165,No,11,1,1,1,11,No
+30,HR,Master,Male,Director,Single,6331,No,13,1,1,1,28,No
+37,Marketing,Doctor,Male,Manager,Married,8425,No,6,3,2,4,24,No
+19,Finance,Bachelor,Female,Director,Married,10753,Yes,25,3,3,4,11,No
+21,Legal,College,Male,Staff,Single,5833,No,31,4,4,3,8,No
+44,Marketing,Bachelor,Male,Staff,Single,2587,No,28,4,4,4,22,No
+42,Sales,College,Male,Analyst,Married,4181,No,38,2,3,3,1,No
+21,Marketing,Master,Female,Director,Divorced,2690,No,8,3,4,2,2,No
+49,Legal,Below College,Male,Staff,Divorced,13603,No,13,2,1,4,20,No
+34,Sales,Below College,Male,Analyst,Married,16194,No,16,2,3,4,4,No
+18,R&D,Master,Male,Analyst,Married,7260,No,24,1,2,4,2,No
+50,Finance,Bachelor,Male,Analyst,Married,8226,Yes,29,1,3,3,25,Yes
+47,Legal,College,Male,Manager,Married,5713,No,28,4,1,4,2,No
+22,IT,Below College,Female,Staff,Divorced,6121,Yes,28,3,3,4,13,No
+29,Sales,College,Female,Staff,Married,1884,No,17,3,2,1,29,No
+55,Finance,Master,Female,Engineer,Single,4701,No,30,2,2,1,22,No
+49,Marketing,Bachelor,Female,Manager,Divorced,2896,Yes,18,2,3,1,21,Yes
+55,IT,College,Female,Staff,Divorced,5818,No,16,4,3,4,20,No
+34,Marketing,Bachelor,Male,Staff,Single,4742,No,5,1,4,1,6,No
+57,Legal,Below College,Male,Engineer,Married,15805,No,11,3,4,2,4,No
+49,R&D,College,Female,Director,Married,8518,Yes,37,3,1,1,25,Yes
+41,Legal,Doctor,Male,Director,Married,5829,No,2,3,4,4,27,No
+29,Legal,Below College,Male,Manager,Married,4187,No,34,3,1,1,26,No
+48,Legal,Bachelor,Male,Analyst,Married,13434,No,32,1,1,1,15,No
+36,Marketing,Master,Female,Engineer,Single,4827,No,28,4,3,1,23,No
+46,Sales,Doctor,Male,Engineer,Married,5996,No,2,4,4,2,3,No
+38,R&D,College,Male,Staff,Single,5040,Yes,4,1,2,2,28,Yes
+43,Finance,Below College,Female,Staff,Single,3856,No,13,4,2,3,26,No
+45,R&D,College,Female,Engineer,Single,5023,No,35,4,3,4,4,No
+34,Finance,College,Male,Analyst,Married,1514,Yes,27,2,2,2,17,Yes
+26,HR,Doctor,Male,Director,Married,1941,Yes,31,1,2,2,6,Yes
+38,Sales,Doctor,Female,Manager,Divorced,6061,No,17,4,3,2,2,No
+51,Sales,Doctor,Female,Director,Divorced,12593,No,39,2,2,4,20,No
+28,Finance,Doctor,Male,Manager,Single,6056,No,12,1,3,3,13,No
+37,Marketing,Master,Male,Analyst,Divorced,3190,Yes,1,1,1,4,15,Yes
+56,IT,Bachelor,Female,Engineer,Single,2067,No,24,3,4,1,5,No
+33,Marketing,Doctor,Male,Analyst,Divorced,7869,Yes,19,2,2,3,28,Yes
+46,HR,Below College,Female,Engineer,Married,3497,No,6,2,3,1,24,No
+18,Finance,College,Female,Staff,Married,7229,No,10,2,2,2,19,No
+35,HR,Doctor,Female,Manager,Single,6210,No,4,1,4,4,6,No
+39,Finance,Below College,Male,Staff,Single,6548,No,28,3,2,1,17,No
+25,HR,Master,Male,Engineer,Married,5014,Yes,17,1,1,3,25,Yes
+24,Finance,Below College,Female,Manager,Married,6186,No,7,4,3,1,28,No
+42,Sales,Below College,Female,Manager,Married,4574,No,26,4,4,1,1,No
+47,HR,Master,Female,Staff,Divorced,3357,Yes,1,4,1,2,2,Yes
+51,HR,Master,Female,Manager,Divorced,2757,No,34,3,2,1,1,No
+58,Finance,College,Male,Engineer,Divorced,1174,No,25,1,2,1,8,No
+28,R&D,Doctor,Female,Engineer,Divorced,4408,No,22,2,2,2,29,No
+32,R&D,Below College,Female,Staff,Single,12229,No,4,4,4,3,4,No
+52,Sales,Bachelor,Female,Analyst,Single,7616,No,15,4,3,2,18,No
+40,Marketing,Bachelor,Male,Engineer,Divorced,5634,No,10,1,4,1,23,No
+38,Marketing,College,Female,Engineer,Single,3164,No,18,2,1,4,24,No
+45,Sales,Bachelor,Female,Manager,Divorced,8941,No,15,3,3,2,9,No
+30,Marketing,College,Female,Manager,Divorced,4575,No,31,4,4,2,15,No
+51,IT,Doctor,Female,Engineer,Married,12644,No,11,4,2,1,16,No
+55,IT,College,Female,Staff,Divorced,2728,Yes,1,4,1,4,21,Yes
+23,IT,Master,Male,Analyst,Single,3133,No,21,2,2,3,3,No
+21,Legal,Master,Male,Manager,Divorced,2956,No,25,4,4,4,1,No
+22,Legal,Master,Male,Manager,Married,2019,Yes,32,2,1,2,24,Yes
+57,IT,Master,Female,Analyst,Single,2801,Yes,23,4,3,4,13,No
+23,Finance,Master,Female,Manager,Married,5228,No,4,4,3,3,14,No
+38,R&D,Master,Male,Staff,Divorced,3205,No,20,2,4,4,6,No
+45,Sales,Master,Female,Manager,Divorced,485,No,17,2,4,4,5,No
+20,Finance,Master,Male,Manager,Divorced,9363,No,38,3,3,4,29,No
+40,IT,Master,Female,Engineer,Divorced,1789,Yes,4,1,3,2,23,Yes
+25,Sales,Doctor,Male,Staff,Single,6999,No,7,4,4,1,5,No
+36,R&D,Master,Male,Staff,Divorced,5007,Yes,20,4,3,1,27,No
+28,Marketing,College,Female,Engineer,Married,17508,No,4,1,1,4,4,No
+27,Finance,Doctor,Female,Director,Single,8938,No,12,1,4,2,21,No
+45,R&D,Bachelor,Male,Analyst,Single,3630,No,18,1,1,2,12,No
+37,Sales,Below College,Male,Staff,Single,3225,No,28,4,2,2,14,No
+45,HR,Doctor,Female,Director,Married,12108,No,1,4,1,1,27,No
+46,Finance,Master,Male,Analyst,Married,2027,No,36,4,4,2,23,No
+25,Legal,Doctor,Female,Staff,Married,5511,No,25,2,2,4,14,No
+36,Sales,Below College,Male,Manager,Married,4542,No,28,3,3,1,11,No
+38,Sales,Below College,Female,Staff,Divorced,4000,No,4,3,1,2,22,No
+35,Legal,Master,Female,Analyst,Divorced,6076,Yes,31,1,1,4,10,Yes
+26,R&D,Master,Female,Director,Married,5506,No,37,1,4,1,10,No
+21,Sales,College,Male,Manager,Married,6466,No,1,4,3,2,29,No
+58,Finance,Below College,Female,Analyst,Divorced,5342,Yes,4,3,4,3,28,No
+42,IT,Master,Female,Analyst,Divorced,6314,No,32,3,3,4,27,No
+51,Legal,Below College,Female,Staff,Married,5197,Yes,34,2,4,3,9,Yes
+26,Finance,College,Male,Engineer,Single,3308,No,18,4,3,1,26,No
+26,Legal,Bachelor,Female,Engineer,Single,4926,No,14,4,2,2,2,No
+35,Sales,Below College,Female,Manager,Married,3201,No,34,3,4,4,14,No
+28,R&D,College,Female,Analyst,Single,3077,No,7,3,2,4,7,No
+30,Finance,College,Female,Director,Divorced,4017,No,0,2,4,4,17,No
+55,HR,College,Female,Manager,Single,4574,Yes,37,2,4,3,24,Yes
+26,IT,Doctor,Male,Manager,Married,5019,Yes,21,4,4,2,20,No
+33,Legal,Master,Female,Staff,Single,8517,Yes,16,2,1,2,8,Yes
+21,Marketing,Below College,Female,Director,Single,3644,No,15,3,4,2,24,No
+51,R&D,Doctor,Male,Analyst,Single,5530,No,0,4,3,3,20,No
+24,R&D,Below College,Male,Analyst,Divorced,5275,No,2,3,1,1,4,No
+32,Marketing,Doctor,Male,Analyst,Divorced,3411,No,5,4,3,3,5,No
+55,Marketing,Master,Male,Manager,Divorced,5137,No,2,4,3,1,13,No
+28,Finance,College,Female,Staff,Married,8969,Yes,29,3,3,3,7,No
+49,Sales,Below College,Male,Manager,Single,5496,No,10,4,3,2,6,No
+44,Sales,College,Female,Engineer,Divorced,5630,Yes,26,4,3,2,17,No
+47,HR,Master,Male,Engineer,Divorced,3218,No,21,2,2,2,6,No
+34,IT,Below College,Male,Analyst,Single,16015,No,5,3,1,3,19,No
+53,Legal,Bachelor,Female,Staff,Married,3330,Yes,37,3,3,4,25,No
+36,Sales,Bachelor,Male,Analyst,Single,1806,Yes,30,2,2,3,3,Yes
+24,HR,Bachelor,Male,Analyst,Married,8234,No,5,4,2,1,9,No
+38,HR,Master,Female,Manager,Single,4587,No,19,1,3,3,21,No
+45,R&D,Bachelor,Male,Analyst,Divorced,4097,No,10,1,4,1,28,No
+20,R&D,Below College,Male,Analyst,Divorced,3542,No,1,3,3,3,26,No
+31,IT,Bachelor,Male,Staff,Divorced,15108,No,30,2,2,4,15,No
+19,Finance,Below College,Female,Staff,Married,6079,No,37,4,3,4,8,No
+46,Marketing,Master,Female,Staff,Single,6835,No,25,2,2,2,25,No
+35,Marketing,College,Female,Analyst,Married,5418,No,26,4,3,4,25,No
+54,IT,Doctor,Female,Staff,Divorced,5779,No,30,3,2,3,23,No
+41,HR,Bachelor,Female,Staff,Married,11375,Yes,23,3,3,4,26,No
+29,IT,Doctor,Male,Director,Married,4228,No,12,1,4,2,15,No
+49,Marketing,College,Female,Director,Married,2050,Yes,24,2,4,3,1,Yes
+35,HR,Master,Male,Engineer,Single,8273,No,36,3,2,1,8,No
+30,Marketing,Master,Female,Manager,Married,6621,No,24,2,4,3,23,No
+21,Finance,College,Male,Manager,Married,5243,No,28,3,4,2,4,No
+40,R&D,Doctor,Female,Staff,Married,6518,Yes,30,4,1,4,22,Yes
+27,R&D,Bachelor,Female,Engineer,Divorced,3934,No,38,4,3,4,10,No
+22,HR,Below College,Male,Engineer,Divorced,4976,No,1,1,3,3,16,No
+57,IT,Master,Male,Director,Single,4541,Yes,11,3,4,1,18,No
+31,Marketing,College,Male,Engineer,Divorced,3446,No,4,1,4,1,4,No
+51,Sales,Doctor,Male,Analyst,Single,10031,No,26,1,2,1,8,No
+45,Finance,Bachelor,Female,Staff,Divorced,2106,Yes,33,3,3,1,4,No
+25,Marketing,Doctor,Male,Analyst,Single,20262,No,13,3,1,3,10,No
+33,Legal,Bachelor,Male,Manager,Single,8319,No,6,4,1,4,20,No
+48,Sales,Below College,Female,Director,Single,1691,No,36,1,4,1,4,No
+24,Finance,Below College,Male,Analyst,Divorced,4296,Yes,35,4,2,3,16,Yes
+20,Finance,College,Male,Staff,Married,4442,No,9,2,2,3,12,No
+46,R&D,College,Male,Analyst,Divorced,6217,Yes,28,2,3,3,10,Yes
+53,HR,Bachelor,Female,Analyst,Married,2714,No,15,1,4,1,25,No
+56,Marketing,Bachelor,Male,Engineer,Divorced,5010,Yes,37,1,4,1,11,Yes
+21,Finance,Bachelor,Female,Director,Married,4570,No,20,3,2,3,2,No
+26,Marketing,Bachelor,Male,Manager,Divorced,3157,No,37,3,1,3,16,No
+34,Finance,Below College,Female,Staff,Single,2904,Yes,32,1,1,3,23,Yes
+37,IT,College,Female,Staff,Single,8529,Yes,28,1,3,4,19,Yes
+31,R&D,College,Male,Manager,Single,1775,No,16,2,4,4,12,No
+46,HR,Master,Male,Staff,Married,6546,Yes,12,4,4,2,4,No
+30,Sales,College,Male,Engineer,Married,7930,No,5,2,1,2,17,No
+53,Sales,College,Male,Analyst,Single,4310,No,1,2,4,1,12,No
+34,IT,Doctor,Male,Engineer,Married,5071,No,7,4,4,4,16,No
+21,Legal,Doctor,Male,Engineer,Single,9878,No,31,1,2,2,3,No
+37,R&D,Master,Female,Engineer,Divorced,3219,No,35,1,3,3,2,No
+28,Finance,Bachelor,Female,Manager,Married,3425,Yes,8,2,3,3,26,Yes
+59,R&D,Master,Male,Director,Married,3650,No,22,2,3,1,7,No
+39,HR,Master,Female,Manager,Divorced,9889,No,6,4,2,1,6,No
+25,Sales,Below College,Male,Manager,Married,10671,No,30,3,3,2,1,No
+45,Marketing,College,Male,Engineer,Married,2126,No,20,3,3,3,15,No
+58,Sales,Below College,Female,Director,Married,8988,No,0,1,1,1,27,Yes
+47,Legal,College,Male,Manager,Divorced,8033,No,1,3,1,1,12,No
+50,Legal,Master,Female,Director,Single,12483,Yes,39,1,3,4,13,Yes
+50,Legal,College,Male,Engineer,Single,6192,Yes,10,1,2,2,8,Yes
+53,Legal,Bachelor,Female,Manager,Divorced,4785,No,36,1,2,1,9,No
+44,HR,Bachelor,Male,Director,Divorced,9770,No,17,4,2,2,1,No
+37,Finance,Master,Female,Staff,Divorced,7475,Yes,23,2,4,3,5,Yes
+50,R&D,Doctor,Female,Manager,Single,18900,No,18,3,4,2,7,No
+42,Sales,Bachelor,Male,Manager,Divorced,8736,No,4,4,2,1,18,No
+36,Legal,Master,Male,Manager,Single,5389,No,28,3,1,4,22,No
+38,Sales,Below College,Female,Director,Divorced,2429,Yes,38,4,4,2,8,No
+59,Legal,Doctor,Male,Analyst,Married,3468,No,1,3,2,2,24,No
+50,Marketing,Bachelor,Male,Manager,Single,2076,No,16,3,4,3,26,No
+20,R&D,Master,Male,Staff,Single,4319,Yes,10,2,4,4,10,Yes
+31,Marketing,Master,Male,Staff,Divorced,8566,No,36,3,4,2,29,No
+32,Marketing,Below College,Male,Engineer,Married,4903,No,12,4,4,4,8,No
+50,Legal,Below College,Male,Analyst,Single,9072,No,28,3,2,1,12,No
+59,Finance,Doctor,Female,Analyst,Divorced,6018,Yes,31,2,4,4,16,Yes
+39,Sales,Bachelor,Female,Director,Married,3858,No,39,3,3,1,12,No
+18,IT,Master,Male,Engineer,Single,5180,Yes,7,4,2,3,22,Yes
+48,R&D,Doctor,Female,Director,Divorced,6524,No,9,3,2,3,22,No
+52,Finance,Doctor,Male,Engineer,Married,5342,No,24,2,2,3,27,No
+37,IT,Below College,Female,Analyst,Single,5379,No,10,2,4,1,3,No
+49,Finance,Master,Male,Director,Single,3098,No,27,2,2,2,18,No
+29,Legal,College,Male,Engineer,Married,3790,No,32,2,1,1,5,No
+33,Legal,Below College,Male,Analyst,Divorced,19054,No,38,1,3,4,14,No
+25,Finance,Master,Female,Analyst,Divorced,10271,No,25,2,1,4,25,No
+31,HR,Doctor,Male,Manager,Married,2029,Yes,7,3,3,1,20,No
+35,HR,Doctor,Male,Director,Single,1187,Yes,37,3,3,3,21,No
+47,Finance,Bachelor,Female,Manager,Married,5144,Yes,25,3,4,3,16,No
+50,HR,College,Female,Analyst,Married,8400,No,31,3,3,4,22,No
+51,R&D,Below College,Male,Director,Married,3597,No,27,1,3,4,27,No
+51,Sales,Bachelor,Female,Director,Single,9072,No,6,1,1,2,6,No
+24,IT,Bachelor,Female,Staff,Married,5093,Yes,34,1,3,2,16,Yes
+23,Legal,College,Male,Engineer,Married,4456,No,1,3,2,2,20,No
+23,R&D,Below College,Male,Staff,Single,7736,Yes,21,4,2,4,14,Yes
+39,Sales,Below College,Male,Staff,Single,3571,No,21,4,3,2,20,No
+25,HR,Doctor,Male,Analyst,Married,4138,No,2,3,2,4,24,No
+54,IT,Below College,Female,Engineer,Divorced,7347,Yes,7,2,4,4,5,Yes
+32,R&D,Bachelor,Male,Staff,Married,4823,No,3,2,2,1,14,No
+43,Marketing,Doctor,Male,Staff,Single,15448,No,14,3,4,2,11,No
+56,Legal,Below College,Male,Director,Single,7452,No,38,2,3,1,21,No
+20,Finance,College,Female,Analyst,Single,7167,No,11,2,4,1,9,No
+27,Legal,Bachelor,Male,Staff,Divorced,4770,No,28,4,4,2,20,No
+20,Sales,Master,Male,Engineer,Single,8306,No,8,3,3,4,7,No
+47,Sales,College,Male,Manager,Divorced,4049,No,39,1,3,4,5,No
+39,Marketing,College,Female,Manager,Single,5822,No,19,4,4,4,29,No
+20,Marketing,Below College,Male,Analyst,Single,2836,No,33,3,1,2,15,No
+18,Finance,Doctor,Male,Manager,Married,9169,No,25,3,3,4,25,No
+50,HR,Doctor,Male,Director,Divorced,5850,Yes,20,4,3,1,13,No
+36,Legal,Bachelor,Male,Director,Married,16147,No,22,2,1,3,12,No
+53,R&D,Below College,Female,Engineer,Divorced,20648,Yes,17,2,2,2,24,Yes
+51,R&D,Doctor,Female,Analyst,Single,7769,Yes,23,4,1,3,15,Yes
+48,R&D,Master,Male,Analyst,Single,5120,Yes,28,3,2,1,24,Yes
+41,HR,Below College,Female,Manager,Divorced,2785,Yes,37,1,1,3,26,Yes
+29,Legal,Below College,Female,Staff,Married,8457,Yes,37,3,4,1,26,No
+30,Legal,Doctor,Male,Staff,Divorced,5575,Yes,12,1,3,3,19,Yes
+33,Finance,College,Male,Staff,Divorced,6787,No,31,1,1,3,25,No
+33,R&D,Below College,Female,Engineer,Divorced,13875,Yes,18,3,3,4,24,No
+37,Sales,College,Male,Analyst,Single,2996,Yes,16,3,2,3,19,Yes
+58,Sales,Bachelor,Male,Manager,Divorced,2822,No,1,3,4,1,10,No
+44,Sales,Bachelor,Male,Engineer,Single,4264,Yes,17,1,3,1,17,Yes
+56,Marketing,Doctor,Male,Director,Married,8044,Yes,38,2,1,1,16,Yes
+30,Marketing,Bachelor,Female,Director,Single,6856,No,26,1,1,2,5,No
+21,HR,Doctor,Male,Director,Married,2871,No,13,1,4,1,29,No
+49,R&D,Doctor,Female,Analyst,Married,7738,No,14,1,2,2,4,No
+57,Marketing,College,Male,Director,Married,2390,No,7,4,4,1,24,No
+51,Sales,College,Male,Staff,Single,2973,No,8,2,4,2,22,No
+56,Marketing,Bachelor,Female,Director,Divorced,4585,No,20,1,3,3,10,No
+34,Legal,College,Female,Engineer,Single,3526,No,34,1,2,3,21,No
+41,Sales,Below College,Female,Director,Married,8382,No,13,4,4,1,25,No
+46,R&D,Master,Female,Staff,Divorced,5836,No,26,1,3,2,6,No
+45,Legal,Below College,Male,Director,Single,14176,Yes,7,2,3,4,29,Yes
+39,HR,Below College,Male,Manager,Married,4237,No,34,1,2,4,11,No
+45,Finance,Doctor,Female,Staff,Married,4567,Yes,17,2,2,4,11,Yes
+42,Finance,Master,Male,Analyst,Divorced,10160,No,13,2,3,3,27,No
+58,Legal,Doctor,Male,Director,Single,4653,No,7,3,2,3,16,No
+20,Sales,College,Male,Engineer,Divorced,12044,No,7,4,3,2,14,No
+30,Marketing,College,Female,Director,Divorced,6798,No,36,4,2,1,27,No
+48,Marketing,Master,Female,Engineer,Divorced,1197,No,1,4,2,3,19,No
+30,Sales,Bachelor,Female,Manager,Divorced,9962,Yes,16,3,2,1,22,Yes
+58,R&D,College,Female,Analyst,Single,8498,Yes,12,3,1,4,28,Yes
+35,Legal,Below College,Female,Staff,Divorced,8697,No,13,2,2,4,27,No
+54,Sales,Master,Female,Staff,Married,1561,No,8,4,1,1,28,No
+51,R&D,Master,Female,Analyst,Married,3301,No,26,3,3,2,4,No
+34,HR,College,Male,Manager,Married,3452,No,19,3,4,4,5,No
+38,HR,College,Male,Manager,Divorced,2967,No,37,3,4,2,22,No
+53,Legal,Doctor,Female,Director,Married,13976,No,11,2,4,4,25,No
+57,Sales,Doctor,Male,Manager,Single,4880,No,21,1,3,3,19,No
+36,HR,Below College,Male,Director,Divorced,4808,No,36,3,2,4,17,No
+29,Marketing,Master,Female,Engineer,Divorced,6844,No,38,3,1,2,18,No
+45,R&D,Bachelor,Male,Analyst,Divorced,6915,No,30,3,3,3,8,No
+28,Finance,Bachelor,Male,Engineer,Single,664,No,12,4,4,4,4,No
+54,Finance,Master,Female,Engineer,Divorced,3334,No,0,4,4,3,23,No
+45,HR,Below College,Female,Engineer,Divorced,2105,No,37,3,4,3,18,No
+52,R&D,Doctor,Male,Engineer,Married,6249,No,39,2,4,4,28,No
+32,Marketing,Doctor,Female,Staff,Married,4132,No,8,1,1,1,11,No
+33,Finance,Doctor,Female,Manager,Divorced,4960,No,38,4,4,1,26,No
+24,Marketing,Bachelor,Male,Analyst,Single,1412,No,9,1,1,2,14,No
+20,Marketing,Bachelor,Female,Analyst,Married,4080,Yes,28,3,4,2,13,No
+48,Finance,Below College,Male,Engineer,Divorced,9595,No,39,4,3,4,24,No
+29,Finance,Bachelor,Female,Analyst,Married,11449,No,29,1,1,3,26,No
+25,HR,College,Male,Director,Married,7565,No,1,3,1,3,16,No
+42,Legal,Bachelor,Female,Analyst,Single,2205,No,17,4,3,1,28,No
+52,R&D,Doctor,Male,Engineer,Divorced,10463,No,27,3,4,1,12,No
+29,Sales,Below College,Female,Analyst,Married,7588,No,31,4,4,3,9,No
+38,R&D,Master,Male,Manager,Divorced,4581,No,23,1,2,3,7,No
+43,Sales,Master,Female,Engineer,Single,1458,Yes,37,1,2,2,10,Yes
+19,Finance,Below College,Male,Staff,Single,8709,No,13,4,1,3,29,No
+31,Marketing,College,Female,Manager,Married,3445,No,24,2,2,3,27,No
+21,R&D,Master,Male,Analyst,Single,6049,No,24,3,3,4,17,No
+34,Marketing,Doctor,Male,Staff,Married,5120,Yes,31,1,3,3,18,Yes
+22,R&D,Master,Female,Manager,Divorced,12370,No,26,2,3,1,25,No
+41,Legal,Master,Female,Director,Married,4558,No,31,4,1,1,26,No
+24,IT,Doctor,Male,Manager,Married,4870,No,30,1,3,2,7,No
+40,R&D,Bachelor,Female,Staff,Single,12672,No,23,1,1,2,27,No
+34,Marketing,College,Male,Director,Divorced,3311,No,34,3,1,4,3,No
+29,IT,Doctor,Male,Analyst,Divorced,8011,No,29,2,3,2,15,No
+28,HR,Doctor,Male,Engineer,Married,4362,No,32,3,3,3,16,No
+28,Legal,Below College,Male,Analyst,Divorced,2693,No,32,4,1,3,21,No
+51,Finance,College,Male,Engineer,Divorced,4918,No,26,1,3,4,17,No
+54,HR,Bachelor,Male,Engineer,Married,7442,No,32,2,2,1,13,No
+46,HR,Doctor,Female,Staff,Married,11072,No,32,3,1,3,26,No
+53,R&D,Bachelor,Male,Director,Divorced,11906,Yes,3,2,4,3,3,Yes
+44,Finance,Doctor,Male,Director,Married,4118,Yes,29,4,1,4,27,Yes
+59,Legal,Doctor,Male,Manager,Single,2717,No,14,1,3,1,20,No
+39,IT,Below College,Male,Analyst,Divorced,4059,No,28,2,3,2,20,No
+19,R&D,Master,Male,Staff,Married,2418,No,27,4,1,3,23,No
+53,Sales,College,Female,Analyst,Divorced,4313,No,31,4,1,1,5,No
+47,R&D,Below College,Female,Manager,Divorced,4003,No,35,1,4,4,9,No
+24,IT,Bachelor,Male,Manager,Single,7604,No,29,3,4,4,23,No
+29,Marketing,Doctor,Male,Staff,Single,1308,No,37,1,1,1,18,No
+20,Legal,Doctor,Male,Manager,Divorced,3164,Yes,11,1,3,4,29,Yes
+34,Legal,College,Female,Staff,Single,3180,No,2,2,1,2,11,Yes
+58,R&D,Below College,Female,Manager,Married,10019,No,14,2,2,1,11,No
+49,Sales,Below College,Male,Director,Divorced,2519,No,9,3,2,2,16,No
+25,R&D,Bachelor,Female,Staff,Single,5630,No,21,4,3,4,8,No
+40,IT,Below College,Male,Director,Divorced,4551,No,22,2,1,2,27,No
+55,Legal,Below College,Male,Director,Divorced,9189,No,10,3,1,2,2,No
+47,Sales,Master,Female,Staff,Married,7026,No,15,1,2,2,23,No
+32,Finance,College,Female,Analyst,Married,5285,No,15,4,1,2,21,No
+27,IT,Below College,Female,Engineer,Married,3523,Yes,13,1,3,1,10,Yes
+55,Legal,Bachelor,Female,Manager,Single,1617,No,5,4,3,4,6,No
+32,R&D,Doctor,Female,Manager,Single,5700,Yes,16,2,4,4,27,Yes
+47,Legal,Below College,Male,Analyst,Single,6756,No,30,1,3,3,4,No
+43,Sales,Below College,Female,Engineer,Married,1910,No,9,1,1,2,21,No
+31,IT,Doctor,Male,Analyst,Divorced,2344,Yes,19,4,1,2,28,Yes
+20,Finance,Master,Female,Engineer,Married,5718,No,8,3,2,3,5,No
+53,Marketing,College,Male,Staff,Single,6023,No,14,4,2,3,23,No
+43,HR,Master,Female,Staff,Single,2712,No,38,2,3,2,11,No
+31,Sales,Bachelor,Female,Director,Single,3482,Yes,1,3,4,4,12,Yes
+48,Marketing,Below College,Male,Director,Married,1632,No,3,1,1,3,16,No
+31,Finance,Master,Female,Staff,Single,11230,Yes,23,1,4,2,20,Yes
+57,Marketing,College,Male,Director,Married,2253,Yes,17,1,1,4,21,Yes
+27,R&D,Bachelor,Female,Staff,Divorced,6804,No,10,2,3,1,14,No
+26,HR,Master,Male,Analyst,Married,4812,Yes,36,1,3,3,14,Yes
+57,Sales,Below College,Male,Manager,Single,10654,No,25,1,2,3,20,No
+59,IT,College,Female,Staff,Divorced,3055,Yes,7,3,4,4,20,No
+35,Legal,Below College,Female,Staff,Single,5098,No,21,2,2,1,15,No
+53,Finance,Below College,Female,Staff,Divorced,1773,No,4,1,3,4,8,No
+53,HR,Bachelor,Female,Director,Single,1535,No,1,3,4,3,27,No
+29,Finance,College,Female,Director,Married,7029,No,4,1,1,1,5,No
+57,Legal,Doctor,Male,Director,Single,1684,No,34,3,2,2,29,No
+20,Marketing,Below College,Female,Director,Married,4285,No,31,1,3,3,9,No
+35,Finance,College,Female,Analyst,Married,9016,Yes,18,2,1,4,21,Yes
+24,Finance,Below College,Male,Staff,Divorced,7692,No,38,4,3,4,16,No
+48,Marketing,Master,Male,Analyst,Married,3298,Yes,3,2,1,4,24,Yes
+18,Marketing,Master,Female,Director,Married,1894,No,22,3,2,4,3,No
+48,Legal,College,Male,Analyst,Married,6672,No,18,1,1,4,12,No
+30,HR,Bachelor,Female,Staff,Divorced,10996,Yes,25,2,4,3,7,Yes
+46,Sales,Doctor,Male,Staff,Single,3303,No,25,1,1,1,17,No
+20,Marketing,Master,Male,Director,Single,3035,Yes,6,2,3,4,15,Yes
+46,HR,Bachelor,Male,Staff,Married,3586,No,31,3,1,4,15,No
+52,Legal,Doctor,Female,Analyst,Married,6925,Yes,32,4,2,2,12,Yes
+32,Finance,Master,Male,Engineer,Single,10271,No,25,2,3,2,21,No
+38,Finance,Doctor,Female,Staff,Married,2336,Yes,23,1,3,1,2,Yes
+36,IT,Below College,Female,Analyst,Single,2000,Yes,22,1,3,3,8,Yes
+45,R&D,College,Female,Analyst,Divorced,20010,No,37,1,3,3,28,No
+21,Marketing,Master,Male,Analyst,Married,4418,No,25,3,4,1,22,No
+30,Legal,Master,Female,Staff,Married,5720,No,30,3,3,1,5,No
+32,HR,Below College,Male,Engineer,Single,3244,No,5,4,3,1,3,No
+56,IT,Master,Male,Director,Single,6594,Yes,30,1,3,4,29,Yes
+49,HR,Master,Female,Director,Divorced,8743,No,39,4,2,3,1,No
+20,Sales,Master,Female,Staff,Married,5883,Yes,11,1,2,1,16,Yes
+47,IT,Master,Female,Staff,Single,13967,Yes,16,2,3,2,10,Yes
+37,Legal,Master,Female,Manager,Divorced,4039,Yes,25,2,4,4,26,Yes
+19,HR,Bachelor,Female,Engineer,Single,4197,No,2,2,1,4,10,Yes
+42,Marketing,Master,Male,Analyst,Single,5646,Yes,14,1,4,4,11,Yes
+28,HR,Below College,Male,Analyst,Divorced,6496,No,37,2,3,4,26,No
+18,R&D,Master,Female,Director,Divorced,5635,No,23,1,3,1,12,No
+27,Finance,Doctor,Female,Staff,Divorced,2274,No,29,4,4,4,8,No
+34,Finance,Doctor,Female,Engineer,Divorced,5928,No,35,3,3,2,27,No
+47,IT,Below College,Male,Director,Divorced,3926,No,26,2,1,2,5,No
+52,HR,Bachelor,Male,Engineer,Divorced,3468,No,21,1,2,1,9,No
+36,HR,Below College,Female,Staff,Married,5011,Yes,1,1,1,4,11,Yes
+51,HR,Bachelor,Female,Analyst,Divorced,2760,No,6,4,1,2,15,No
+49,HR,College,Male,Manager,Married,2486,No,15,4,1,3,23,No
+29,R&D,Doctor,Male,Engineer,Single,1023,No,23,3,4,4,17,No
+34,Marketing,Doctor,Female,Analyst,Single,14021,Yes,29,4,4,1,11,No
+23,R&D,Doctor,Female,Engineer,Divorced,6859,Yes,0,3,1,3,13,Yes
+30,Legal,Bachelor,Male,Engineer,Single,4582,No,26,3,4,4,17,No
+56,Legal,Below College,Male,Engineer,Divorced,3293,Yes,8,4,3,3,23,No
+39,R&D,Bachelor,Male,Staff,Divorced,875,No,6,3,2,4,27,No
+28,R&D,Doctor,Male,Director,Married,3174,Yes,4,2,4,4,7,Yes
+24,Finance,Doctor,Male,Engineer,Single,7551,No,29,3,4,2,9,No
+38,Legal,Doctor,Female,Staff,Divorced,8649,No,26,1,1,3,18,No
+18,R&D,Doctor,Female,Manager,Single,7225,No,9,1,2,3,23,No
+47,HR,College,Male,Director,Married,5404,Yes,24,1,3,1,18,Yes
+36,R&D,Doctor,Male,Staff,Single,10746,No,17,4,3,1,10,No
+46,HR,Bachelor,Male,Manager,Married,4035,No,6,1,2,3,12,No
+52,IT,Doctor,Male,Director,Married,9424,No,30,4,3,2,26,No
+37,Legal,Master,Female,Staff,Married,3902,No,31,1,2,2,18,No
+53,Marketing,College,Female,Manager,Divorced,2896,Yes,10,3,1,4,21,Yes
+56,Finance,Doctor,Female,Staff,Divorced,2688,No,9,4,3,1,9,No
+18,Marketing,Master,Female,Manager,Single,2594,No,21,1,3,1,9,No
+40,IT,Bachelor,Male,Engineer,Divorced,7298,No,30,3,2,1,10,No
+48,Marketing,College,Male,Engineer,Divorced,3147,No,13,4,3,4,1,No
+52,Finance,Doctor,Female,Director,Single,2644,No,2,3,4,2,11,No
+39,HR,Bachelor,Male,Manager,Married,7541,No,23,3,1,1,14,No
+24,IT,Master,Female,Engineer,Married,5983,No,13,3,3,4,23,No
+50,IT,College,Male,Director,Single,8756,Yes,15,4,3,3,26,No
+53,HR,Doctor,Male,Analyst,Divorced,6684,Yes,27,4,3,2,10,No
+24,HR,Bachelor,Female,Engineer,Single,3127,No,34,2,2,3,28,No
+44,Finance,College,Male,Engineer,Single,5144,No,39,2,1,1,14,No
+19,Legal,Master,Male,Staff,Divorced,5297,No,1,2,1,4,19,Yes
+34,R&D,Doctor,Male,Analyst,Single,2831,Yes,33,2,3,2,26,Yes
+18,Legal,College,Female,Manager,Divorced,2533,No,17,4,3,1,10,No
+47,Sales,Master,Male,Director,Divorced,3266,No,6,2,2,2,17,No
+39,R&D,Master,Male,Analyst,Single,16679,No,37,1,1,4,2,No
+45,Legal,Bachelor,Male,Manager,Married,3836,Yes,6,2,4,4,22,Yes
+50,R&D,Master,Female,Engineer,Divorced,10298,No,3,1,3,1,14,No
+43,Marketing,Master,Male,Director,Married,3710,No,15,1,4,2,26,No
+52,Sales,Below College,Male,Director,Divorced,8377,Yes,5,3,4,4,18,No
+28,HR,Master,Female,Analyst,Married,8446,No,19,3,1,2,2,No
+24,R&D,Doctor,Male,Staff,Single,8704,No,30,3,4,2,20,No
+45,Legal,College,Male,Manager,Divorced,6202,No,18,2,3,3,19,No
+42,Finance,Doctor,Male,Analyst,Single,11230,No,21,4,3,1,24,No
+58,R&D,Doctor,Female,Staff,Single,6167,No,20,1,2,1,8,No
+48,HR,Bachelor,Male,Staff,Single,13740,Yes,17,4,1,2,6,Yes
+20,Legal,Below College,Male,Staff,Divorced,1859,Yes,31,4,1,3,20,Yes
+50,R&D,Below College,Female,Director,Single,6057,No,33,2,4,2,7,No
+51,IT,Doctor,Female,Manager,Single,5825,Yes,26,4,3,1,25,No
+38,Marketing,College,Male,Manager,Divorced,2801,No,37,4,3,1,13,No
+54,Marketing,Below College,Male,Analyst,Single,6958,No,29,3,2,2,2,No
+36,R&D,Below College,Male,Engineer,Divorced,2010,Yes,32,3,4,2,22,No
+54,Marketing,Doctor,Female,Analyst,Single,3319,No,26,1,3,2,7,No
+38,Finance,Below College,Male,Manager,Married,1481,No,22,1,1,1,1,No
+31,Sales,Bachelor,Female,Director,Single,12521,Yes,18,3,2,2,6,Yes
+27,R&D,Doctor,Male,Analyst,Married,4277,No,30,2,1,2,16,No
+24,Finance,Below College,Female,Engineer,Divorced,18036,No,3,2,2,4,8,No
+46,IT,Below College,Female,Analyst,Married,7956,No,18,1,1,1,13,No
+57,Finance,Below College,Female,Staff,Divorced,6430,No,37,3,4,2,23,No
+25,Finance,Doctor,Male,Engineer,Single,3457,Yes,39,2,3,3,18,Yes
+56,IT,College,Female,Staff,Married,2623,Yes,21,4,1,1,14,Yes
+30,HR,Master,Female,Director,Single,6726,Yes,8,1,4,2,18,Yes
+36,R&D,Below College,Male,Manager,Married,4708,No,30,1,1,2,29,No
+28,R&D,Master,Female,Analyst,Divorced,2200,No,9,4,4,4,4,No
+19,R&D,Master,Female,Analyst,Divorced,1978,Yes,9,4,2,4,15,Yes
+23,Sales,Below College,Male,Staff,Divorced,2764,No,29,1,4,1,5,No
+46,Finance,Below College,Female,Staff,Divorced,14655,Yes,9,4,1,4,21,Yes
+58,R&D,Master,Male,Manager,Single,18545,Yes,35,2,3,4,14,Yes
+22,Marketing,College,Male,Analyst,Single,5557,No,17,1,2,1,16,No
+58,HR,Master,Male,Manager,Single,5374,No,18,2,2,3,15,No
+47,IT,College,Female,Staff,Single,4016,No,22,1,4,2,11,No
+56,IT,Bachelor,Male,Staff,Single,2805,No,3,2,1,2,2,No
+53,Sales,College,Female,Engineer,Divorced,11216,No,11,3,4,4,23,No
+44,Legal,Doctor,Female,Staff,Single,15125,No,23,2,2,2,24,No
+35,IT,Below College,Female,Staff,Single,2875,No,12,4,3,4,18,No
+53,HR,Bachelor,Female,Manager,Single,4676,No,3,3,4,1,4,No
+33,Legal,Master,Male,Engineer,Divorced,3752,No,26,1,1,1,15,No
+22,Finance,College,Male,Engineer,Divorced,3819,No,37,2,4,1,12,No
+26,IT,Bachelor,Female,Analyst,Divorced,10012,No,38,1,4,2,27,No
+51,Legal,Doctor,Female,Director,Divorced,2236,No,7,3,4,4,27,No
+51,Legal,College,Male,Analyst,Single,6502,No,25,4,3,4,3,No
+53,IT,Master,Male,Analyst,Single,7607,No,33,4,1,2,4,No
+48,Marketing,Master,Male,Analyst,Married,4512,Yes,8,4,1,1,21,Yes
+37,Finance,College,Female,Engineer,Single,8398,No,9,1,2,3,16,No
+34,R&D,Doctor,Male,Manager,Divorced,5370,No,0,4,2,4,6,No
+37,HR,Below College,Male,Staff,Divorced,10201,No,7,4,4,4,2,No
+45,IT,Below College,Male,Engineer,Single,1971,Yes,9,1,2,2,26,Yes
+38,Marketing,Master,Female,Staff,Married,3986,Yes,24,1,1,3,22,Yes
+36,HR,Doctor,Male,Staff,Divorced,4707,No,30,3,4,1,9,No
+20,Legal,Master,Male,Director,Married,988,No,38,4,2,4,12,No
+47,Sales,Below College,Male,Analyst,Divorced,2561,Yes,2,3,3,2,12,Yes
+22,Marketing,Master,Female,Director,Divorced,3016,No,38,2,2,3,27,No
+59,Legal,College,Female,Analyst,Single,8681,Yes,37,2,3,2,24,Yes
+23,Sales,College,Male,Engineer,Divorced,3216,Yes,34,2,2,3,14,Yes
+20,IT,Doctor,Female,Staff,Married,3008,No,7,2,1,2,17,No
+59,Marketing,Below College,Female,Director,Married,8026,No,0,1,2,3,9,Yes
+41,R&D,Doctor,Male,Engineer,Single,1861,Yes,4,3,3,4,12,No
+18,Legal,Doctor,Female,Engineer,Divorced,1418,No,26,3,3,3,27,No
+53,HR,Below College,Male,Analyst,Married,3956,Yes,25,1,2,1,10,Yes
+32,HR,Bachelor,Female,Staff,Single,2061,Yes,25,2,4,4,11,Yes
+58,Legal,Bachelor,Female,Analyst,Married,2109,No,10,3,3,1,2,No
+55,Legal,Master,Male,Analyst,Single,6933,No,33,4,1,4,28,No
+35,Finance,Bachelor,Male,Engineer,Married,8313,No,1,1,2,3,16,Yes
+40,Marketing,College,Male,Analyst,Divorced,7889,No,20,1,3,4,27,No
+46,Marketing,Doctor,Female,Manager,Married,9559,No,25,4,2,2,1,No
+58,Legal,Master,Female,Staff,Married,10349,Yes,11,2,2,3,22,Yes
+39,Sales,Doctor,Female,Analyst,Single,1370,Yes,8,2,4,2,29,Yes
+41,Marketing,Below College,Female,Analyst,Single,6439,Yes,22,3,2,2,1,Yes
+30,HR,Bachelor,Male,Director,Single,3576,No,4,4,2,2,22,No
+50,Marketing,Below College,Male,Staff,Married,3138,Yes,8,3,2,2,2,Yes
+39,Finance,Master,Male,Staff,Single,6879,Yes,9,2,1,1,12,Yes
+52,Finance,College,Male,Analyst,Divorced,1740,No,9,3,2,3,27,No
+34,Legal,Bachelor,Male,Manager,Single,1718,Yes,13,4,1,2,23,Yes
+39,HR,Below College,Female,Director,Single,7187,Yes,35,4,2,1,23,Yes
+22,HR,Bachelor,Female,Manager,Divorced,6585,Yes,9,4,4,4,28,No
+42,HR,Doctor,Male,Analyst,Single,5334,Yes,36,2,4,2,20,Yes
+23,Marketing,College,Female,Staff,Single,2898,No,37,1,3,2,18,No
+34,Marketing,Bachelor,Female,Staff,Married,7679,No,21,1,2,1,12,No
+48,R&D,College,Female,Manager,Married,7392,Yes,22,1,4,4,27,Yes
+34,IT,Doctor,Male,Engineer,Single,5172,Yes,15,3,4,4,23,No
+50,Legal,Doctor,Female,Analyst,Divorced,2425,No,10,4,2,1,1,No
+56,IT,Below College,Male,Staff,Single,3807,No,34,2,3,2,28,No
+54,Sales,Master,Female,Engineer,Single,8124,No,19,1,1,3,27,No
+21,Marketing,Below College,Female,Staff,Single,10897,No,36,1,4,1,11,No
+31,R&D,College,Male,Staff,Married,4040,Yes,4,3,4,3,2,No
+30,R&D,Below College,Male,Engineer,Divorced,4231,No,35,3,1,2,12,No
+44,Finance,Bachelor,Male,Manager,Divorced,4460,No,12,1,4,2,2,No
+41,Marketing,Below College,Male,Analyst,Divorced,5796,Yes,16,4,1,4,17,Yes
+44,R&D,Master,Female,Engineer,Married,3468,No,25,4,1,2,25,No
+25,Finance,Master,Male,Engineer,Married,865,No,19,3,3,4,6,No
+56,Sales,College,Male,Staff,Single,10053,Yes,38,3,1,4,16,Yes
+38,Finance,Doctor,Female,Engineer,Married,14426,No,32,4,1,2,19,No
+58,Sales,Master,Female,Analyst,Single,3403,No,29,3,1,4,28,No
+28,IT,College,Female,Manager,Married,2591,Yes,15,3,1,2,6,Yes
+48,IT,Master,Male,Manager,Single,4526,No,6,4,4,4,7,No
+44,HR,Master,Male,Manager,Married,4391,No,29,4,1,4,19,No
+59,HR,Doctor,Female,Analyst,Divorced,8931,Yes,1,2,4,2,20,Yes
+44,Legal,Bachelor,Female,Staff,Single,5078,No,11,3,2,3,26,No
+25,Finance,College,Female,Analyst,Married,3054,No,39,3,2,1,17,No
+50,Legal,Master,Male,Engineer,Married,2228,No,0,2,1,2,6,Yes
+29,HR,Master,Female,Director,Single,8261,No,2,3,3,4,15,No
+52,Marketing,Below College,Male,Director,Married,7042,No,7,3,3,1,22,No
+51,Finance,Bachelor,Male,Director,Divorced,9286,No,25,1,4,3,9,No
+33,R&D,Doctor,Female,Manager,Single,2749,No,39,1,4,2,2,No
+53,Marketing,College,Male,Analyst,Single,14810,No,10,1,2,4,5,No
+19,Legal,Master,Male,Analyst,Single,1726,Yes,20,2,4,4,21,Yes
+29,Finance,College,Male,Manager,Single,7523,No,4,3,3,2,23,No
+44,Legal,Doctor,Male,Engineer,Single,1562,Yes,39,2,2,4,5,Yes
+34,IT,Bachelor,Male,Director,Divorced,3058,No,25,2,1,1,12,No
+37,Sales,Below College,Male,Director,Single,12539,Yes,20,3,4,4,10,No
+38,Legal,Bachelor,Female,Manager,Divorced,8093,No,8,4,1,1,4,No
+47,HR,Below College,Male,Director,Divorced,3541,No,16,4,4,1,12,No
+59,HR,College,Female,Staff,Divorced,3600,Yes,36,3,3,2,15,No
+37,HR,Bachelor,Male,Analyst,Single,5220,No,1,4,4,4,10,No
+25,Finance,Bachelor,Female,Director,Divorced,6690,No,39,1,3,1,28,No
+35,Marketing,Bachelor,Female,Director,Single,10414,No,27,3,3,4,18,No
+35,Sales,Doctor,Female,Staff,Divorced,3737,Yes,26,2,1,1,24,Yes
+35,HR,College,Male,Engineer,Single,1868,No,39,1,4,3,5,No
+19,Marketing,Below College,Male,Engineer,Married,5400,No,0,2,1,2,13,Yes
+29,Legal,Bachelor,Male,Staff,Married,3735,No,10,4,3,2,4,No
+49,R&D,College,Male,Engineer,Divorced,2252,No,38,3,3,2,9,No
+59,IT,Doctor,Male,Manager,Married,5875,No,17,1,3,1,18,No
+25,R&D,Doctor,Male,Staff,Divorced,4324,No,26,3,3,3,3,No
+27,Sales,College,Female,Analyst,Divorced,5907,Yes,9,1,2,1,24,Yes
+28,HR,Below College,Male,Analyst,Divorced,2873,Yes,35,1,3,2,11,Yes
+31,R&D,College,Male,Analyst,Married,6581,No,20,1,4,1,4,No
+43,IT,College,Male,Director,Divorced,2229,Yes,27,3,3,2,9,No
+47,Marketing,Master,Female,Staff,Married,2990,No,0,1,2,4,26,Yes
+59,Marketing,Doctor,Female,Staff,Married,4248,No,13,1,4,1,29,No
+21,R&D,Below College,Female,Engineer,Single,13975,No,19,3,2,4,12,No
+56,Legal,Master,Female,Staff,Married,7870,Yes,8,2,2,1,26,Yes
+28,Legal,College,Male,Staff,Single,9379,No,26,4,4,2,10,No
+41,HR,Doctor,Male,Engineer,Divorced,11501,No,3,3,2,4,10,No
+39,IT,Master,Female,Staff,Divorced,42689,No,36,3,3,1,9,No
+20,Sales,Master,Female,Staff,Single,5038,No,17,1,1,2,10,No
+54,HR,Below College,Male,Manager,Divorced,11524,Yes,30,3,1,1,9,Yes
+19,Finance,College,Female,Engineer,Single,9023,No,38,3,1,4,1,No
