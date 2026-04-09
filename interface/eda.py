@@ -5,6 +5,7 @@ import plotly.express as px
 from scipy.stats import skew
 from features.data_distribute import data_distribution
 from features.data_type_detection import actual_type, ml_category
+from features.target_col import describe_target
 
 
 def _skew_insight(col_skew: float) -> str:
@@ -46,8 +47,14 @@ def render_eda():
 
     # Dataset Overview
     st.subheader("Dataset Overview")
-    with st.spinner("Calculating Data..."):
-        total_outl, outls_details = data_distribution(df)
+    _dist_key = ("_eda_dist_cache", df.shape, int(pd.util.hash_pandas_object(df).sum()))
+    if st.session_state.get("_eda_dist_key") != _dist_key:
+        with st.spinner("Calculating Data..."):
+            total_outl, outls_details = data_distribution(df)
+        st.session_state["_eda_dist_key"] = _dist_key
+        st.session_state["_eda_dist_result"] = (total_outl, outls_details)
+    else:
+        total_outl, outls_details = st.session_state["_eda_dist_result"]
 
     total_cells = df.size
     total_missing = df.isnull().sum().sum()
@@ -63,6 +70,12 @@ def render_eda():
     m4.metric("Duplicate Rows", f"{duplicate_count:,} ({dup_pct:.1f}%)")
     m5.metric("Outliers", f"{total_outl:,} ({outlier_pct:.1f}%)")
 
+    # ดึง target column จากที่เลือกไว้ในหน้า Upload พร้อม fallback ถ้าไม่มีหรือไม่ valid
+    target_col = st.session_state.get("target_col", df.columns[-1])
+    if target_col not in df.columns:
+        target_col = df.columns[-1]
+    st.info(f"**Target Column:** {target_col}  \n{describe_target(df, target_col)}")
+
     tab1, tab2, tab3 = st.tabs(
         ["Profile", "Distributions", "Relationships"], width="stretch"
     )
@@ -72,7 +85,6 @@ def render_eda():
         st.subheader("Data Profile")
 
         outlier_dict = {item["Column"]: item for item in outls_details}
-        target_col = df.columns[-1]
         profile_list = []
 
         for col in df.columns:
@@ -116,7 +128,7 @@ def render_eda():
                 "| **Numeric/Discrete** | ตัวเลขจำนวนเต็ม นับได้ | จำนวนสินค้า, อายุ | Mean, Median, Mode |\n"
                 "| **Numeric/Continuous** | ตัวเลขทศนิยม วัดได้ | น้ำหนัก, อุณหภูมิ | Mean, Median |\n"
                 "| **Datetime** | วันที่/เวลา | 2024-01-01 | — |\n\n"
-                "**Target** คือคอลัมน์สุดท้ายของ dataset ซึ่งมักเป็นตัวแปรที่ต้องการทำนาย"
+                "**Target** คือคอลัมน์ที่ต้องการทำนาย ซึ่งเลือกไว้ในขั้นตอน Upload"
             )
 
     # Distributions
@@ -174,7 +186,7 @@ def render_eda():
             insight = f"มี **{n_unique}** ค่า Unique — ค่าที่พบมากสุดคือ **{top_value}** ({top_pct:.1f}%)"
 
             # ตรวจ Class Imbalance (ถ้าเป็น Target)
-            if selected_col == df.columns[-1] and n_unique <= 20:
+            if selected_col == target_col and n_unique <= 20:
                 min_count = int(counts["count"].min())
                 max_count = int(counts["count"].max())
                 if max_count > 3 * min_count:
@@ -241,7 +253,7 @@ def render_eda():
                 st.info("Need more numeric columns for correlation.")
 
     # Page Navigation
-    col1, space, col2 = st.columns([0.8, 8, 0.8])
+    col1, _, col2 = st.columns([0.8, 8, 0.8])
     with col1:
         if st.button("Back", type="secondary", width="stretch", key="back"):
             st.query_params["step"] = "cleaning"

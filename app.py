@@ -1,8 +1,7 @@
 import streamlit as st
-from features.loading_data import load_from_local, delete_local
+from features.loading_data import load_from_local, load_target_col, delete_local
+from features.target_col import suggest_target
 
-
-MONO = "'JetBrains Mono','DM Mono',monospace"
 SANS = "'DM Sans','Sarabun',sans-serif"
 
 
@@ -52,6 +51,16 @@ def main():
         if recovered_df is not None:
             st.session_state["main_df"] = recovered_df
             st.session_state["last_uploaded_file"] = recover_name
+
+    # Restore target_col ถ้าหายไปหลัง refresh (session_state ว่าง)
+    if "target_col" not in st.session_state and st.session_state.get("main_df") is not None:
+        saved = load_target_col()
+        main_cols = list(st.session_state["main_df"].columns)
+        if saved and saved in main_cols:
+            st.session_state["target_col"] = saved
+        else:
+            suggested, _ = suggest_target(st.session_state["main_df"])
+            st.session_state["target_col"] = suggested
 
     # Navigation
     url_step = st.query_params.get("step", "upload")
