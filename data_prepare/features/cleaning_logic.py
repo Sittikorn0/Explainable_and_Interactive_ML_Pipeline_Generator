@@ -12,7 +12,9 @@ def use_missing_strategy(df: pd.DataFrame, col: str, strategy: str) -> pd.DataFr
     elif strategy == "median (rounded)":
         df[col] = df[col].fillna(round(df[col].median()))
     elif strategy == "most frequent":
-        df[col] = df[col].fillna(df[col].mode()[0])
+        mode_vals = df[col].mode()
+        if len(mode_vals) > 0:
+            df[col] = df[col].fillna(mode_vals[0])
     elif strategy == "drop rows":
         df = df.dropna(subset=[col]).reset_index(drop=True)
     return df

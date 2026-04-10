@@ -25,15 +25,28 @@ _HR = (
     "border-top:1px solid rgba(255,255,255,0.06)'>"
 )
 
+# สัดส่วน column ของ action bar (Select All | Deselect All | gap | Strategy | Apply Selected | Apply All)
+_ACTION_BAR_COLS = [0.9, 1.1, 0.2, 2, 1.1, 0.9]
+
+
+def _fmt_pct(count: int, pct: float) -> str:
+    if count == 0:
+        return "0 (0.0%)"
+    pct_str = f"{pct:.1f}%" if pct >= 0.1 else "< 0.1%"
+    return f"{count:,} ({pct_str})"
+
 
 def _color_changed(col):
+    # index 0 = Rows: ลดลง = เสียข้อมูล (แดง)
+    # index 1 = Columns: ลดลง = ดี (เขียว)
+    # index 2+ = Missing / Duplicates / Outliers: ลดลง = ดี (เขียว)
     styles = []
     for i, val in enumerate(col):
         if val == 0:
             styles.append("color: rgba(255,255,255,0.35)")
-        elif i == 0:  # Rows: ลดลง = เสียข้อมูล
+        elif i == 0:
             styles.append("color: #f87171" if val < 0 else "color: rgba(255,255,255,0.35)")
-        else:  # Missing / Duplicates / Outliers: ลดลง = ดี
+        else:
             styles.append("color: #4ade80" if val < 0 else "color: #f87171")
     return styles
 
@@ -55,7 +68,8 @@ def render_cleaning():
     file_name = st.session_state.get("last_uploaded_file", "Unknown File")
 
     st.info(f"**Current Dataset:** {file_name}")
-    with st.expander("Raw Data"):
+    is_confirmed = st.session_state.get("cleaning_confirmed", False)
+    with st.expander("Cleaned Data" if is_confirmed else "Raw Data"):
         st.dataframe(df, width="stretch")
 
     # ── working_df init ───────────────────────────────────────
@@ -89,7 +103,8 @@ def render_cleaning():
         st.session_state["original_outlier_count"] = total_outl
 
     total_cells = working_df.size
-    total_missing = working_df.isnull().sum().sum()
+    null_counts = working_df.isnull().sum()   # cache ไว้ใช้หลายจุด
+    total_missing = int(null_counts.sum())
     missing_pct = (total_missing / total_cells * 100) if total_cells > 0 else 0
     duplicate_count = int(working_df.duplicated().sum())
     dup_pct = (duplicate_count / working_df.shape[0] * 100) if working_df.shape[0] > 0 else 0
@@ -98,12 +113,6 @@ def render_cleaning():
     m1, m2, m3, m4, m5 = st.columns(5)
     m1.metric("Rows", f"{working_df.shape[0]:,}")
     m2.metric("Columns", working_df.shape[1])
-    def _fmt_pct(count, pct):
-        if count == 0:
-            return "0 (0.0%)"
-        pct_str = f"{pct:.1f}%" if pct >= 0.1 else "< 0.1%"
-        return f"{count:,} ({pct_str})"
-
     m3.metric("Missing Values", _fmt_pct(total_missing, missing_pct))
     m4.metric("Duplicate Rows", _fmt_pct(duplicate_count, dup_pct))
     m5.metric("Outliers", _fmt_pct(total_outl, outlier_pct))
@@ -143,6 +152,65 @@ def render_cleaning():
     with tab2:
         working_df = st.session_state["working_df"]
 
+        # ── Drop Columns ──────────────────────────────────────
+        st.subheader("Drop Columns")
+
+        with st.expander("Drop Columns คืออะไร?", expanded=False):
+            st.markdown(
+                "ลบคอลัมน์ที่ไม่ต้องการออกจาก Dataset เช่น ID column, free-text column, "
+                "หรือคอลัมน์ที่มีค่าว่างมากเกินไป ซึ่งไม่มีประโยชน์ต่อการสร้างโมเดล"
+            )
+
+        target_col = st.session_state.get("target_col")
+        if not target_col or target_col not in working_df.columns:
+            target_col = None
+            st.warning("ไม่พบ Target Column — กรุณากลับไปเลือก Target ที่หน้า Upload ก่อน Drop Columns")
+
+        droppable_cols = [c for c in working_df.columns if c != target_col]
+
+        cols_to_drop = st.multiselect(
+            "เลือกคอลัมน์ที่ต้องการลบ",
+            options=droppable_cols,
+            placeholder="เลือกคอลัมน์...",
+            label_visibility="collapsed",
+            key="drop_cols_select",
+            disabled=target_col is None,
+        )
+
+        c_drop1, c_drop2, _ = st.columns([1.5, 1.5, 5])
+        with c_drop1:
+            if st.button("Drop Selected", key="drop_cols_apply", disabled=not cols_to_drop or target_col is None):
+                remaining = [c for c in working_df.columns if c not in cols_to_drop]
+                if len(remaining) < 2:
+                    st.error("ต้องเหลือคอลัมน์อย่างน้อย 2 คอลัมน์")
+                else:
+                    st.session_state["working_df"] = (
+                        working_df.drop(columns=cols_to_drop).reset_index(drop=True)
+                    )
+                    st.session_state["cleaning_confirmed"] = False
+                    st.rerun()
+        with c_drop2:
+            # แนะนำคอลัมน์ที่ควรลบ (missing > 80% หรือ unique == 1)
+            suggested_drops = [
+                c for c in droppable_cols
+                if (working_df[c].isnull().mean() > 0.8) or (working_df[c].nunique() <= 1)
+            ]
+            if suggested_drops and st.button("Drop แนะนำ", key="drop_cols_suggested", disabled=target_col is None):
+                remaining = [c for c in working_df.columns if c not in suggested_drops]
+                if len(remaining) < 2:
+                    st.error("ต้องเหลือคอลัมน์อย่างน้อย 2 คอลัมน์")
+                else:
+                    st.session_state["working_df"] = (
+                        working_df.drop(columns=suggested_drops).reset_index(drop=True)
+                    )
+                    st.session_state["cleaning_confirmed"] = False
+                    st.rerun()
+
+        if suggested_drops:
+            st.caption(f"แนะนำให้ลบ: {', '.join(suggested_drops)} (missing > 80% หรือมีค่าเดียว)")
+
+        st.divider()
+
         # ── Duplicates ────────────────────────────────────────
         st.subheader("Duplicates")
 
@@ -160,6 +228,7 @@ def render_cleaning():
                 st.session_state["working_df"] = (
                     working_df.drop_duplicates().reset_index(drop=True)
                 )
+                st.session_state["cleaning_confirmed"] = False
                 st.rerun()
 
         st.divider()
@@ -167,9 +236,9 @@ def render_cleaning():
         # ── Missing Values ────────────────────────────────────
         st.subheader("Missing Values")
         missing_cols = {
-            col: int(working_df[col].isnull().sum())
-            for col in working_df.columns
-            if working_df[col].isnull().sum() > 0
+            col: int(count)
+            for col, count in null_counts.items()
+            if count > 0
         }
 
         if not missing_cols:
@@ -185,15 +254,65 @@ def render_cleaning():
                     "- **MNAR** (Missing Not at Random): การหายไปเกี่ยวข้องกับค่าของตัวเอง เช่น คนน้ำหนักมากมักไม่ตอบ"
                 )
 
-            last_missing_col = list(missing_cols.keys())[-1]
+            # ── Action bar ─────────────────────────────────────
+            col_sel_all, col_desel_all, _, col_global_strat, col_apply_sel, col_apply_all = st.columns(_ACTION_BAR_COLS)
+            with col_sel_all:
+                if st.button("Select All", key="miss_sel_all", use_container_width=True):
+                    for col in missing_cols:
+                        st.session_state[f"miss_check_{col}"] = True
+                    st.rerun()
+            with col_desel_all:
+                if st.button("Deselect All", key="miss_desel_all", use_container_width=True):
+                    for col in missing_cols:
+                        st.session_state[f"miss_check_{col}"] = False
+                    st.rerun()
+            with col_global_strat:
+                global_miss_strategy = st.selectbox(
+                    "Global Strategy",
+                    ["mean", "median", "median (rounded)", "most frequent", "drop rows"],
+                    key="miss_global_strategy",
+                    label_visibility="collapsed",
+                )
+            checked_miss_cols = [
+                col for col in missing_cols
+                if st.session_state.get(f"miss_check_{col}", False)
+            ]
+            with col_apply_sel:
+                if st.button(
+                    "Apply Selected",
+                    key="miss_apply_selected",
+                    disabled=not checked_miss_cols,
+                    use_container_width=True,
+                ):
+                    df_work = st.session_state["working_df"]
+                    for col in checked_miss_cols:
+                        df_work = use_missing_strategy(df_work, col, global_miss_strategy)
+                    st.session_state["working_df"] = df_work
+                    st.session_state["cleaning_confirmed"] = False
+                    st.rerun()
+            with col_apply_all:
+                if st.button("Apply All", key="miss_apply_all", use_container_width=True):
+                    df_work = st.session_state["working_df"]
+                    for col in missing_cols:
+                        df_work = use_missing_strategy(df_work, col, global_miss_strategy)
+                    st.session_state["working_df"] = df_work
+                    st.session_state["cleaning_confirmed"] = False
+                    st.rerun()
+            st.caption(MISSING_STRATEGY_INFO.get(global_miss_strategy, ""))
+            st.markdown(_HR, unsafe_allow_html=True)
+
+            # ── Per-column rows ────────────────────────────────
+            last_missing_col = next(reversed(missing_cols))
             for col, count in missing_cols.items():
                 pct = count / len(working_df) * 100
                 col_type = actual_type(working_df[col])
 
-                st.markdown(f"**{col}** — {count:,} ค่า ({pct:.1f}%)")
-
-                c1, c2, _ = st.columns([2, 0.8, 3.2])
-                with c1:
+                col_check, col_name, col_strategy, col_apply, _ = st.columns([0.4, 2.8, 2, 0.8, 0.5], vertical_alignment="center")
+                with col_check:
+                    st.checkbox("Select", key=f"miss_check_{col}", label_visibility="hidden")
+                with col_name:
+                    st.markdown(f"**{col}** — {count:,} ค่า ({pct:.1f}%)")
+                with col_strategy:
                     if col_type == "float":
                         options = ["mean", "median", "drop rows"]
                     elif col_type == "int":
@@ -206,10 +325,11 @@ def render_cleaning():
                         key=f"miss_strategy_{col}",
                         label_visibility="collapsed",
                     )
-                with c2:
+                with col_apply:
                     if st.button("Apply", key=f"miss_apply_{col}"):
-                        wdf = use_missing_strategy(st.session_state["working_df"], col, strategy)
-                        st.session_state["working_df"] = wdf
+                        df_work = use_missing_strategy(st.session_state["working_df"], col, strategy)
+                        st.session_state["working_df"] = df_work
+                        st.session_state["cleaning_confirmed"] = False
                         st.rerun()
 
                 st.caption(MISSING_STRATEGY_INFO.get(strategy, ""))
@@ -243,29 +363,81 @@ def render_cleaning():
                     "(ค่านอกช่วง Q1 - 1.5 x IQR ถึง Q3 + 1.5 x IQR)"
                 )
 
-            last_outlier_col = list(outlier_cols.keys())[-1]
-            for col, info in outlier_cols.items():
-                count = info["Outliers"]
-                reason = info["Reason"]
-                lower = info["Lower"]
-                upper = info["Upper"]
+            # ── Action bar ─────────────────────────────────────
+            col_sel_all, col_desel_all, _, col_global_strat, col_apply_sel, col_apply_all = st.columns(_ACTION_BAR_COLS)
+            with col_sel_all:
+                if st.button("Select All", key="out_sel_all", use_container_width=True):
+                    for col in outlier_cols:
+                        st.session_state[f"out_check_{col}"] = True
+                    st.rerun()
+            with col_desel_all:
+                if st.button("Deselect All", key="out_desel_all", use_container_width=True):
+                    for col in outlier_cols:
+                        st.session_state[f"out_check_{col}"] = False
+                    st.rerun()
+            with col_global_strat:
+                global_out_strategy = st.selectbox(
+                    "Global Strategy",
+                    ["clip", "drop rows"],
+                    key="out_global_strategy",
+                    label_visibility="collapsed",
+                )
+            checked_out_cols = [
+                col for col in outlier_cols
+                if st.session_state.get(f"out_check_{col}", False)
+            ]
+            with col_apply_sel:
+                if st.button(
+                    "Apply Selected",
+                    key="out_apply_selected",
+                    disabled=not checked_out_cols,
+                    use_container_width=True,
+                ):
+                    df_work = st.session_state["working_df"]
+                    for col in checked_out_cols:
+                        bounds = outlier_cols[col]
+                        df_work = use_outlier_strategy(df_work, col, global_out_strategy, bounds["Lower"], bounds["Upper"])
+                    st.session_state["working_df"] = df_work
+                    st.session_state["cleaning_confirmed"] = False
+                    st.rerun()
+            with col_apply_all:
+                if st.button("Apply All", key="out_apply_all", use_container_width=True):
+                    df_work = st.session_state["working_df"]
+                    for col, bounds in outlier_cols.items():
+                        df_work = use_outlier_strategy(df_work, col, global_out_strategy, bounds["Lower"], bounds["Upper"])
+                    st.session_state["working_df"] = df_work
+                    st.session_state["cleaning_confirmed"] = False
+                    st.rerun()
+            st.caption(OUTLIER_STRATEGY_INFO.get(global_out_strategy, ""))
+            st.markdown(_HR, unsafe_allow_html=True)
 
-                st.markdown(f"**{col}** — {count:,} ค่า")
-                st.caption(reason)
-                st.caption(f"ขอบเขต: [{lower:,.2f}, {upper:,.2f}]")
+            # ── Per-column rows ────────────────────────────────
+            last_outlier_col = next(reversed(outlier_cols))
+            for col, bounds in outlier_cols.items():
+                count = bounds["Outliers"]
+                reason = bounds["Reason"]
+                lower = bounds["Lower"]
+                upper = bounds["Upper"]
 
-                c1, c2, _ = st.columns([2, 0.8, 3.2])
-                with c1:
+                col_check, col_name, col_strategy, col_apply, _ = st.columns([0.4, 2.8, 2, 0.8, 0.5], vertical_alignment="center")
+                with col_check:
+                    st.checkbox("Select", key=f"out_check_{col}", label_visibility="hidden")
+                with col_name:
+                    st.markdown(f"**{col}** — {count:,} ค่า")
+                    st.caption(reason)
+                    st.caption(f"ขอบเขต: [{lower:,.2f}, {upper:,.2f}]")
+                with col_strategy:
                     strategy = st.selectbox(
                         "Strategy",
                         ["clip", "drop rows"],
                         key=f"out_strategy_{col}",
                         label_visibility="collapsed",
                     )
-                with c2:
+                with col_apply:
                     if st.button("Apply", key=f"out_apply_{col}"):
-                        wdf = use_outlier_strategy(st.session_state["working_df"], col, strategy, lower, upper)
-                        st.session_state["working_df"] = wdf
+                        df_work = use_outlier_strategy(st.session_state["working_df"], col, strategy, lower, upper)
+                        st.session_state["working_df"] = df_work
+                        st.session_state["cleaning_confirmed"] = False
                         st.rerun()
 
                 st.caption(OUTLIER_STRATEGY_INFO.get(strategy, ""))
@@ -283,14 +455,15 @@ def render_cleaning():
 
         changed_values = [
             working_df.shape[0] - df.shape[0],
-            int(working_df.isnull().sum().sum()) - int(df.isnull().sum().sum()),
+            working_df.shape[1] - df.shape[1],
+            total_missing - int(df.isnull().sum().sum()),
             duplicate_count - dup_before,
             total_outl - outl_before,
         ]
         summary_df = pd.DataFrame({
-            "Metric": ["Rows", "Missing Values", "Duplicates", "Outliers"],
-            "Before": [f"{df.shape[0]:,}", f"{int(df.isnull().sum().sum()):,}", f"{dup_before:,}", f"{outl_before:,}"],
-            "After": [f"{working_df.shape[0]:,}", f"{int(working_df.isnull().sum().sum()):,}", f"{duplicate_count:,}", f"{total_outl:,}"],
+            "Metric": ["Rows", "Columns", "Missing Values", "Duplicates", "Outliers"],
+            "Before": [f"{df.shape[0]:,}", f"{df.shape[1]}", f"{int(df.isnull().sum().sum()):,}", f"{dup_before:,}", f"{outl_before:,}"],
+            "After": [f"{working_df.shape[0]:,}", f"{working_df.shape[1]}", f"{int(working_df.isnull().sum().sum()):,}", f"{duplicate_count:,}", f"{total_outl:,}"],
             "Changed": changed_values,
         })
 
