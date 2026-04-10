@@ -26,6 +26,13 @@ def _skew_insight(col_skew: float) -> str:
 
     return f"Skewness = {col_skew:.2f} → {shape}{direction}"
 
+def _fmt_pct(count: int, pct: float) -> str:
+    if count == 0:
+        return "0 (0.0%)"
+    pct_str = f"{pct:.1f}%" if pct >= 0.1 else "< 0.1%"
+    return f"{count:,} ({pct_str})"
+
+
 def render_eda():
     from app import page_header
 
@@ -66,9 +73,9 @@ def render_eda():
     m1, m2, m3, m4, m5 = st.columns(5)
     m1.metric("Rows", f"{df.shape[0]:,}")
     m2.metric("Columns", df.shape[1])
-    m3.metric("Missing Values", f"{total_missing:,} ({missing_pct:.1f}%)")
-    m4.metric("Duplicate Rows", f"{duplicate_count:,} ({dup_pct:.1f}%)")
-    m5.metric("Outliers", f"{total_outl:,} ({outlier_pct:.1f}%)")
+    m3.metric("Missing Values", _fmt_pct(total_missing, missing_pct))
+    m4.metric("Duplicate Rows", _fmt_pct(duplicate_count, dup_pct))
+    m5.metric("Outliers", _fmt_pct(total_outl, outlier_pct))
 
     # ดึง target column จากที่เลือกไว้ในหน้า Upload พร้อม fallback ถ้าไม่มีหรือไม่ valid
     target_col = st.session_state.get("target_col", df.columns[-1])
@@ -137,82 +144,359 @@ def render_eda():
 
         num_cols = df.select_dtypes(include=["number"]).columns.tolist()
         cat_cols = df.select_dtypes(include=["object", "category"]).columns.tolist()
+        dt_cols = [c for c in df.columns if pd.api.types.is_datetime64_any_dtype(df[c])]
+        dist_cols = num_cols + cat_cols + dt_cols
 
-        selected_col = st.selectbox("Select column to visualize", num_cols + cat_cols)
-
-        if selected_col in num_cols:
-            fig = px.histogram(
-                df,
-                x=selected_col,
-                marginal="box",
-                nbins=30,
-                color_discrete_sequence=["#0082CE"],
-            )
-            fig.update_layout(template="plotly_dark", height=450, showlegend=False)
-            st.plotly_chart(fig, width="stretch")
-
-            # Insight สำหรับ Numeric
-            col_data = df[selected_col].dropna()
-            col_skew = float(skew(col_data))
-            insight = _skew_insight(col_skew)
-
-            # คำแนะนำ Transformation ถ้าเบ้มาก
-            if abs(col_skew) >= 1:
-                insight += (
-                    "\n\n**คำแนะนำ:** ข้อมูลเบ้มาก อาจต้อง Transform ก่อนสร้างโมเดล "
-                    "เช่น Log, Box-Cox, หรือ Yeo-Johnson Transformation"
-                )
-
-            st.info(f"**{selected_col}:** {insight}")
-
+        if not dist_cols:
+            st.info("ไม่มีคอลัมน์ประเภท Numeric, Categorical หรือ Datetime สำหรับแสดง Distribution")
         else:
-            counts = df[selected_col].value_counts().reset_index()
-            counts.columns = [selected_col, "count"]
-            fig = px.bar(
-                counts.head(20),
-                x=selected_col,
-                y="count",
-                color_discrete_sequence=["#0082CE"],
+            selected_col = st.selectbox(
+                "Select column to visualize",
+                dist_cols,
+                key="eda_dist_col",
             )
-            fig.update_layout(template="plotly_dark", height=450, showlegend=False)
-            st.plotly_chart(fig, width="stretch")
 
-            # Insight สำหรับ Categorical
-            n_unique = df[selected_col].nunique()
-            top_value = counts.iloc[0][selected_col] if len(counts) > 0 else "N/A"
-            top_count = int(counts.iloc[0]["count"]) if len(counts) > 0 else 0
-            top_pct = (top_count / len(df) * 100) if len(df) > 0 else 0
+            if selected_col in num_cols:
+                fig = px.histogram(
+                    df,
+                    x=selected_col,
+                    marginal="box",
+                    nbins=30,
+                    color_discrete_sequence=["#0082CE"],
+                )
+                fig.update_layout(template="plotly_dark", height=450, showlegend=False)
+                st.plotly_chart(fig, width="stretch")
 
-            insight = f"มี **{n_unique}** ค่า Unique — ค่าที่พบมากสุดคือ **{top_value}** ({top_pct:.1f}%)"
+                # Insight สำหรับ Numeric
+                col_data = df[selected_col].dropna()
+                if len(col_data) < 2 or col_data.nunique() <= 1:
+                    st.info(f"**{selected_col}:** ข้อมูลไม่เพียงพอสำหรับวิเคราะห์ Skewness")
+                else:
+                    col_skew = float(skew(col_data))
+                    insight = _skew_insight(col_skew)
 
-            # ตรวจ Class Imbalance (ถ้าเป็น Target)
-            if selected_col == target_col and n_unique <= 20:
-                min_count = int(counts["count"].min())
-                max_count = int(counts["count"].max())
-                if max_count > 3 * min_count:
-                    insight += (
-                        "\n\n**Class Imbalance:** ค่าที่พบมากสุดมากกว่าค่าที่พบน้อยสุด "
-                        f"ถึง {max_count / min_count:.1f} เท่า — อาจต้องจัดการก่อนสร้างโมเดล"
+                    if abs(col_skew) >= 1:
+                        insight += (
+                            "\n\n**คำแนะนำ:** ข้อมูลเบ้มาก อาจต้อง Transform ก่อนสร้างโมเดล "
+                            "เช่น Log, Box-Cox, หรือ Yeo-Johnson Transformation"
+                        )
+
+                    st.info(f"**{selected_col}:** {insight}")
+
+            elif selected_col in dt_cols:
+                # ── Datetime Distribution ──────────────────────
+                dt_series = df[selected_col].dropna()
+                if len(dt_series) == 0:
+                    st.info(f"**{selected_col}:** ไม่มีข้อมูล valid (ทั้งหมดเป็น NaN)")
+                else:
+                    granularity = st.radio(
+                        "Granularity",
+                        ["Year", "Month", "Day"],
+                        horizontal=True,
+                        key="eda_dt_granularity",
+                    )
+                    if granularity == "Year":
+                        period_counts = dt_series.dt.year.value_counts().sort_index().reset_index()
+                        period_counts.columns = [selected_col, "count"]
+                    elif granularity == "Month":
+                        period_counts = (
+                            dt_series.dt.to_period("M")
+                            .astype(str)
+                            .value_counts()
+                            .sort_index()
+                            .reset_index()
+                        )
+                        period_counts.columns = [selected_col, "count"]
+                    else:
+                        period_counts = (
+                            dt_series.dt.to_period("D")
+                            .astype(str)
+                            .value_counts()
+                            .sort_index()
+                            .reset_index()
+                        )
+                        period_counts.columns = [selected_col, "count"]
+
+                    fig = px.line(
+                        period_counts,
+                        x=selected_col,
+                        y="count",
+                        markers=True,
+                        color_discrete_sequence=["#0082CE"],
+                    )
+                    fig.update_layout(template="plotly_dark", height=450)
+                    st.plotly_chart(fig, width="stretch")
+
+                    date_min = dt_series.min().strftime("%Y-%m-%d")
+                    date_max = dt_series.max().strftime("%Y-%m-%d")
+                    st.info(
+                        f"**{selected_col}:** ช่วงข้อมูลตั้งแต่ **{date_min}** ถึง **{date_max}** "
+                        f"— มีข้อมูลทั้งหมด **{len(dt_series):,}** แถว"
                     )
 
-            st.info(f"**{selected_col}:** {insight}")
+            else:
+                counts = df[selected_col].value_counts().reset_index()
+                counts.columns = [selected_col, "count"]
+                fig = px.bar(
+                    counts.head(20),
+                    x=selected_col,
+                    y="count",
+                    color_discrete_sequence=["#0082CE"],
+                )
+                fig.update_layout(template="plotly_dark", height=450, showlegend=False)
+                st.plotly_chart(fig, width="stretch")
+
+                # Insight สำหรับ Categorical
+                n_unique = df[selected_col].nunique()
+                top_value = counts.iloc[0][selected_col] if len(counts) > 0 else "N/A"
+                top_count = int(counts.iloc[0]["count"]) if len(counts) > 0 else 0
+                top_pct = (top_count / len(df) * 100) if len(df) > 0 else 0
+
+                insight = f"มี **{n_unique}** ค่า Unique — ค่าที่พบมากสุดคือ **{top_value}** ({top_pct:.1f}%)"
+
+                # ตรวจ Class Imbalance (ถ้าเป็น Target)
+                if selected_col == target_col and n_unique <= 20:
+                    min_count = int(counts["count"].min())
+                    max_count = int(counts["count"].max())
+                    if max_count > 3 * min_count:
+                        insight += (
+                            "\n\n**Class Imbalance:** ค่าที่พบมากสุดมากกว่าค่าที่พบน้อยสุด "
+                            f"ถึง {max_count / min_count:.1f} เท่า — อาจต้องจัดการก่อนสร้างโมเดล"
+                        )
+
+                st.info(f"**{selected_col}:** {insight}")
 
     # Relationships
     with tab3:
         st.subheader("Relationships & Redundancy")
 
+        # ── Feature vs Target ─────────────────────────────────
+        st.write("**Feature vs Target**")
+        feature_cols = [c for c in df.columns if c != target_col]
+        target_is_numeric = pd.api.types.is_numeric_dtype(df[target_col])
+        target_is_cat = not target_is_numeric
+
+        if feature_cols:
+            sel_feature = st.selectbox(
+                "เลือก Feature",
+                feature_cols,
+                key="eda_feature_vs_target",
+                label_visibility="collapsed",
+            )
+            feature_is_numeric = pd.api.types.is_numeric_dtype(df[sel_feature])
+            feature_is_datetime = pd.api.types.is_datetime64_any_dtype(df[sel_feature])
+
+            if feature_is_datetime:
+                # Datetime Feature vs Numeric/Categorical Target → Line chart over time
+                granularity = st.radio(
+                    "Granularity",
+                    ["Year", "Month", "Day"],
+                    horizontal=True,
+                    key="eda_rel_dt_granularity",
+                )
+                dt_subset = df[[sel_feature, target_col]].dropna().copy()
+                if granularity == "Year":
+                    dt_subset["_period"] = dt_subset[sel_feature].dt.year.astype(str)
+                elif granularity == "Month":
+                    dt_subset["_period"] = dt_subset[sel_feature].dt.to_period("M").astype(str)
+                else:
+                    dt_subset["_period"] = dt_subset[sel_feature].dt.to_period("D").astype(str)
+
+                if target_is_numeric:
+                    period_means = dt_subset.groupby("_period")[target_col].mean().reset_index()
+                    period_means.columns = [sel_feature, target_col]
+                    fig_ft = px.line(
+                        period_means,
+                        x=sel_feature,
+                        y=target_col,
+                        markers=True,
+                        color_discrete_sequence=["#0082CE"],
+                    )
+                    fig_ft.update_layout(
+                        template="plotly_dark",
+                        height=380,
+                        yaxis_title=f"Mean {target_col}",
+                    )
+                    st.plotly_chart(fig_ft, width="stretch")
+                    st.caption(f"ค่าเฉลี่ยของ {target_col} แต่ละ {granularity}")
+                else:
+                    period_class_counts = dt_subset.groupby(["_period", target_col]).size().reset_index(name="count")
+                    period_class_counts.columns = [sel_feature, target_col, "count"]
+                    fig_ft = px.line(
+                        period_class_counts,
+                        x=sel_feature,
+                        y="count",
+                        color=target_col,
+                        markers=True,
+                        color_discrete_sequence=px.colors.qualitative.Set2,
+                    )
+                    fig_ft.update_layout(template="plotly_dark", height=380)
+                    st.plotly_chart(fig_ft, width="stretch")
+                    st.caption(f"จำนวนแถวแต่ละ {target_col} class ตาม {granularity}")
+
+            elif feature_is_numeric and target_is_numeric:
+                # Numeric vs Numeric → Scatter + OLS trendline
+                fig_ft = px.scatter(
+                    df,
+                    x=sel_feature,
+                    y=target_col,
+                    opacity=0.6,
+                    color_discrete_sequence=["#0082CE"],
+                    trendline="ols",
+                    trendline_color_override="#f87171",
+                )
+                fig_ft.update_layout(template="plotly_dark", height=380)
+                st.plotly_chart(fig_ft, width="stretch")
+            elif feature_is_numeric and target_is_cat:
+                # Numeric Feature vs Categorical Target → Box plot
+                median_order = (
+                    df.groupby(target_col)[sel_feature]
+                    .median()
+                    .sort_values()
+                    .index.tolist()
+                )
+                fig_ft = px.box(
+                    df,
+                    x=target_col,
+                    y=sel_feature,
+                    color=target_col,
+                    color_discrete_sequence=px.colors.qualitative.Set2,
+                    category_orders={target_col: median_order},
+                )
+                fig_ft.update_layout(template="plotly_dark", height=380, showlegend=False)
+                st.plotly_chart(fig_ft, width="stretch")
+            elif not feature_is_numeric and target_is_numeric:
+                # Categorical Feature vs Numeric Target → Box plot
+                n_cats = df[sel_feature].nunique()
+                plot_df = df if n_cats <= 20 else df[df[sel_feature].isin(
+                    df[sel_feature].value_counts().head(20).index
+                )]
+                median_order = (
+                    plot_df.groupby(sel_feature)[target_col]
+                    .median()
+                    .sort_values()
+                    .index.tolist()
+                )
+                fig_ft = px.box(
+                    plot_df,
+                    x=sel_feature,
+                    y=target_col,
+                    color=sel_feature,
+                    color_discrete_sequence=px.colors.qualitative.Set2,
+                    category_orders={sel_feature: median_order},
+                )
+                fig_ft.update_layout(template="plotly_dark", height=380, showlegend=False)
+                if n_cats > 20:
+                    st.caption("แสดงแค่ 20 categories ที่พบมากสุด")
+                st.plotly_chart(fig_ft, width="stretch")
+            else:
+                # Categorical vs Categorical → Grouped bar
+                n_cats = df[sel_feature].nunique()
+                plot_df = df if n_cats <= 15 else df[df[sel_feature].isin(
+                    df[sel_feature].value_counts().head(15).index
+                )]
+                cat_order = plot_df[sel_feature].value_counts().index.tolist()
+                ct = plot_df.groupby([sel_feature, target_col]).size().reset_index(name="count")
+                fig_ft = px.bar(
+                    ct,
+                    x=sel_feature,
+                    y="count",
+                    color=target_col,
+                    barmode="group",
+                    color_discrete_sequence=px.colors.qualitative.Set2,
+                    category_orders={sel_feature: cat_order},
+                )
+                fig_ft.update_layout(template="plotly_dark", height=380)
+                if n_cats > 15:
+                    st.caption("แสดงแค่ 15 categories ที่พบมากสุด")
+                st.plotly_chart(fig_ft, width="stretch")
+        else:
+            st.info("ไม่มี Feature columns ให้แสดง")
+
+        st.divider()
+
         p_col1, p_col2 = st.columns(2)
 
         with p_col1:
-            st.write("**Missing Value Scan**")
-            missing_data = df.isnull().astype(int)
-            fig_miss = px.imshow(
-                missing_data,
-                labels=dict(x="Columns", y="Rows", color="Is Missing?"),
-                color_continuous_scale="Viridis",
-            )
-            fig_miss.update_layout(template="plotly_dark", height=400)
-            st.plotly_chart(fig_miss, width="stretch")
+            st.write("**Feature-Target Correlation**")
+            numeric_df_all = df.select_dtypes(include=[np.number])
+            if target_is_numeric and target_col in numeric_df_all.columns:
+                feature_num_cols = [c for c in numeric_df_all.columns if c != target_col]
+                if feature_num_cols:
+                    corr_with_target = (
+                        numeric_df_all[feature_num_cols]
+                        .corrwith(df[target_col])
+                        .dropna()
+                        .sort_values(key=abs, ascending=True)
+                    )
+                    corr_df = pd.DataFrame({
+                        "Feature": corr_with_target.index,
+                        "Correlation": corr_with_target.values,
+                    })
+                    corr_df["color"] = corr_df["Correlation"].apply(
+                        lambda x: "positive" if x >= 0 else "negative"
+                    )
+                    fig_corr_target = px.bar(
+                        corr_df,
+                        x="Correlation",
+                        y="Feature",
+                        orientation="h",
+                        color="color",
+                        color_discrete_map={"positive": "#4ade80", "negative": "#f87171"},
+                        range_x=[-1, 1],
+                        text=corr_df["Correlation"].round(2),
+                    )
+                    fig_corr_target.update_traces(textposition="outside")
+                    fig_corr_target.update_layout(
+                        template="plotly_dark",
+                        height=max(300, 35 * len(corr_df)),
+                        showlegend=False,
+                        xaxis_title="Pearson r",
+                    )
+                    st.plotly_chart(fig_corr_target, width="stretch")
+                    st.caption(
+                        "แท่งสีเขียว = สัมพันธ์เชิงบวกกับ target  |  "
+                        "แท่งสีแดง = สัมพันธ์เชิงลบ  |  "
+                        "ยิ่งแท่งยาว ยิ่งสัมพันธ์กันมาก"
+                    )
+                else:
+                    st.info("ไม่มี Numeric Feature columns")
+            else:
+                # Categorical target → แสดง mean ของ numeric features แยกตาม class
+                feature_num_cols = [c for c in numeric_df_all.columns if c != target_col]
+                if feature_num_cols and df[target_col].nunique() <= 20:
+                    class_means = df.groupby(target_col)[feature_num_cols].mean()
+                    # เรียง feature ตาม spread (max-min) ระหว่าง class → feature ที่แยก class ได้ดีอยู่บนสุด
+                    spread_order = (
+                        (class_means.max() - class_means.min())
+                        .sort_values(ascending=True)
+                        .index.tolist()
+                    )
+                    mean_by_class = (
+                        class_means
+                        .T
+                        .reset_index()
+                        .rename(columns={"index": "Feature"})
+                    )
+                    mean_melted = mean_by_class.melt(id_vars="Feature", var_name="Class", value_name="Mean")
+                    fig_mean = px.bar(
+                        mean_melted,
+                        x="Mean",
+                        y="Feature",
+                        color="Class",
+                        orientation="h",
+                        barmode="group",
+                        color_discrete_sequence=px.colors.qualitative.Set2,
+                        category_orders={"Feature": spread_order},
+                    )
+                    fig_mean.update_layout(
+                        template="plotly_dark",
+                        height=max(300, 40 * len(feature_num_cols)),
+                    )
+                    st.plotly_chart(fig_mean, width="stretch")
+                    st.caption("ค่าเฉลี่ยของแต่ละ Feature แยกตาม Target Class — ถ้า class ต่างกันมาก แปลว่า feature นั้นช่วยแยก class ได้ดี")
+                else:
+                    st.info("ไม่สามารถแสดง Feature-Target Correlation สำหรับข้อมูลประเภทนี้ได้")
 
         with p_col2:
             st.write("**Correlation Heatmap**")
