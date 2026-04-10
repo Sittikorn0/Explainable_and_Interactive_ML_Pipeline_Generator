@@ -22,10 +22,15 @@ def render_upload():
             "last_uploaded_file" not in st.session_state
             or st.session_state["last_uploaded_file"] != uploaded_file.name
         ):
-            df = process_data(uploaded_file)
+            try:
+                df, json_warnings = process_data(uploaded_file)
+            except ValueError as e:
+                st.error(f"ไม่สามารถโหลดไฟล์ได้: {e}")
+                return
             if df is not None:
                 st.session_state["main_df"] = df
                 st.session_state["last_uploaded_file"] = uploaded_file.name
+                st.session_state["json_warnings"] = json_warnings
                 st.session_state.pop("target_col", None)  # reset เมื่อโหลดไฟล์ใหม่
                 save_to_local(df, uploaded_file.name)
             else:
@@ -36,6 +41,16 @@ def render_upload():
 
         if df is not None:
             st.success(f"Load data from '{uploaded_file.name}' successfully!")
+
+            json_warnings = st.session_state.get("json_warnings", [])
+            if json_warnings:
+                warn_list = "\n".join(f"- `{c}`" for c in json_warnings)
+                st.warning(
+                    "**พบ Nested Columns ใน JSON — ถูกจัดการอัตโนมัติดังนี้:**\n\n"
+                    + warn_list
+                    + "\n\n*Array columns ถูก join เป็น string, "
+                    "Object columns ที่ซ้อนเกิน 5 ระดับถูกแปลงเป็น string*"
+                )
 
             col1, col2 = st.columns(2)
             col1.metric("Rows", f"{df.shape[0]:,}")

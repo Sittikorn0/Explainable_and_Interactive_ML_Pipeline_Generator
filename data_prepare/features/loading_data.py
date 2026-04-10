@@ -1,4 +1,5 @@
 import io
+import json
 import os
 import time
 import uuid
@@ -108,25 +109,181 @@ def _target_path() -> str:
 
 # ── Load / Save ───────────────────────────────────────────────────────────────
 
+_CSV_ENCODINGS = ["utf-8", "utf-8-sig", "cp874", "cp1252", "latin1"]
+_JSON_ENCODINGS = ["utf-8", "utf-8-sig", "cp874", "cp1252", "latin1"]
+_JSON_MAX_LEVEL = 5
+
+
+def _read_csv_with_fallback(file_bytes: bytes) -> pd.DataFrame:
+    """ลอง encoding หลายตัวตามลำดับ กรอง UnicodeDecodeError เท่านั้น
+    error ประเภทอื่น (parse error, format error) raise ทันทีโดยไม่ลอง encoding ถัดไป
+    """
+    last_err = None
+    for enc in _CSV_ENCODINGS:
+        try:
+            return pd.read_csv(io.BytesIO(file_bytes), encoding=enc)
+        except UnicodeDecodeError as e:
+            last_err = e
+    raise last_err
+
+
+def _decode_json_bytes(file_bytes: bytes) -> str:
+    """ลอง decode JSON bytes ด้วย encoding หลายแบบ คืน string แรกที่สำเร็จ"""
+    last_err = None
+    for enc in _JSON_ENCODINGS:
+        try:
+            return file_bytes.decode(enc)
+        except UnicodeDecodeError as e:
+            last_err = e
+    raise ValueError(
+        f"ไม่สามารถอ่านไฟล์ JSON ได้ — ลอง encoding {_JSON_ENCODINGS} แล้วไม่สำเร็จ"
+    ) from last_err
+
+
+def _parse_json_raw(text: str) -> list[dict]:
+    """Parse JSON text → list of dicts รองรับ 3 รูปแบบ:
+    1. Array of objects:  [{...}, {...}]
+    2. Single object:     {...}  (wrap เป็น list)
+    3. JSONL:             {...}\\n{...}\\n  (parse ทีละบรรทัด)
+
+    Raises:
+        ValueError: ถ้าโครงสร้างไม่รองรับ
+    """
+    # พยายาม parse เป็น standard JSON ก่อน
+    try:
+        raw = json.loads(text)
+    except json.JSONDecodeError:
+        # fallback: ลอง JSONL (newline-delimited JSON)
+        lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+        if not lines:
+            raise ValueError("ไฟล์ JSON ว่างเปล่า ไม่มีข้อมูล")
+        try:
+            raw = [json.loads(ln) for ln in lines]
+        except json.JSONDecodeError as e:
+            raise ValueError(
+                f"ไม่สามารถ parse ไฟล์ JSON ได้: {e}\n\n"
+                "ระบบรองรับ:\n"
+                "• Array of objects: [{...}, {...}]\n"
+                "• Single object: {...}\n"
+                "• JSONL (1 object ต่อบรรทัด): {...}\\n{...}"
+            ) from e
+
+    # top-level dict → ค้นหา key ที่เป็น array of objects (records)
+    if isinstance(raw, dict):
+        record_keys = [
+            k for k, v in raw.items()
+            if isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict)
+        ]
+        if len(record_keys) == 1:
+            # มี key เดียวที่เป็น records array → ใช้นั้น
+            raw = raw[record_keys[0]]
+        elif len(record_keys) > 1:
+            raise ValueError(
+                f"ไฟล์ JSON มีหลาย key ที่เป็น array of objects: {record_keys}\n\n"
+                "กรุณาระบุ key ที่ต้องการ หรือแปลงไฟล์ให้เป็น array of objects โดยตรง เช่น:\n"
+                f'  python -c "import json; d=json.load(open(\'file.json\')); '
+                f"print(json.dumps(d['{record_keys[0]}']))\""
+            )
+        else:
+            # ไม่มี key ที่เป็น records array → single object → wrap เป็น list
+            raw = [raw]
+
+    if not isinstance(raw, list):
+        raise ValueError(
+            "รูปแบบ JSON ไม่รองรับ — ต้องเป็น array of objects เช่น [{...}, {...}] "
+            "หรือ JSONL (1 object ต่อบรรทัด)"
+        )
+    if len(raw) == 0:
+        raise ValueError("ไฟล์ JSON ว่างเปล่า ไม่มีข้อมูล")
+    if not isinstance(raw[0], dict):
+        raise ValueError(
+            "รูปแบบ JSON ไม่รองรับ — แต่ละ element ต้องเป็น object เช่น [{...}, {...}]"
+        )
+
+    return raw
+
+
+def _read_json_normalized(file_bytes: bytes) -> tuple[pd.DataFrame, list[str]]:
+    """โหลด JSON แล้ว flatten nested objects และ join nested arrays เป็น string
+
+    Returns:
+        df: DataFrame ที่ flatten แล้ว
+        warnings: รายชื่อ column ที่ถูก join from array
+
+    Raises:
+        ValueError: ถ้า JSON ไม่ใช่ array of objects หรือโครงสร้างไม่รองรับ
+    """
+    text = _decode_json_bytes(file_bytes)
+    raw = _parse_json_raw(text)
+
+    # flatten nested objects ด้วย json_normalize (max_level ป้องกัน column explosion)
+    df = pd.json_normalize(raw, max_level=_JSON_MAX_LEVEL)
+
+    # ตรวจสอบว่ามี column ที่เป็น list of dicts (nested arrays of objects)
+    # ซึ่ง json_normalize ไม่สามารถ flatten ได้อัตโนมัติ → แจ้ง error ทันที
+    for col in df.columns:
+        sample = df[col].dropna()
+        if len(sample) > 0:
+            first_val = sample.iloc[0]
+            if (
+                isinstance(first_val, list)
+                and len(first_val) > 0
+                and isinstance(first_val[0], dict)
+            ):
+                raise ValueError(
+                    f"ไฟล์ JSON มีโครงสร้าง Nested Arrays ที่ซับซ้อนเกินไป\n\n"
+                    f"Column '{col}' เป็น array of objects ซึ่งระบบไม่สามารถ flatten ได้อัตโนมัติ\n\n"
+                    "ระบบรองรับเฉพาะ JSON ที่มีโครงสร้างแบบนี้:\n"
+                    "• Flat objects: [{\"a\": 1, \"b\": 2}, ...]\n"
+                    "• Nested objects: [{\"a\": {\"x\": 1}}, ...] (ถูก flatten เป็น a.x)\n\n"
+                    "กรุณา flatten ข้อมูลก่อน upload โดยใช้ pandas.json_normalize() "
+                    "พร้อม record_path ที่เหมาะสมกับโครงสร้างไฟล์ของคุณ"
+                )
+
+    # detect column ที่ยังเป็น list หรือ dict อยู่หลัง flatten → แปลงเป็น string
+    # cache mask ก่อนเพื่อไม่ต้อง apply isinstance ซ้ำในรอบเดียวกัน
+    joined_cols = []
+    for col in df.columns:
+        is_list = df[col].apply(lambda x: isinstance(x, list))
+        if is_list.any():
+            df[col] = df[col].apply(
+                lambda x: ", ".join(str(v) for v in x) if isinstance(x, list) else x
+            )
+            joined_cols.append(col)
+            continue
+
+        is_dict = df[col].apply(lambda x: isinstance(x, dict))
+        if is_dict.any():
+            df[col] = df[col].apply(lambda x: str(x) if isinstance(x, dict) else x)
+            joined_cols.append(f"{col} (object → string)")
+
+    # แปลง empty string → NaN เพื่อให้ isnull() ตรวจจับได้ (JSON อาจมี "" แทน null)
+    df = df.replace("", pd.NA)
+
+    return df, joined_cols
+
+
 @st.cache_data(show_spinner="Loading data...", ttl=3600, max_entries=5)
-def _process_cached(file_name: str, file_size: int, file_bytes: bytes) -> pd.DataFrame | None:
-    buf = io.BytesIO(file_bytes)
+def _process_cached(file_name: str, file_size: int, file_bytes: bytes) -> tuple[pd.DataFrame | None, list[str]]:
+    """Returns (df, json_warnings) — json_warnings ว่างเสมอยกเว้นไฟล์ JSON ที่มี nested columns"""
     try:
         if file_name.endswith(".csv"):
-            return pd.read_csv(buf)
+            return _read_csv_with_fallback(file_bytes), []
         elif file_name.endswith((".xlsx", ".xls")):
-            return pd.read_excel(buf)
+            return pd.read_excel(io.BytesIO(file_bytes)), []
         elif file_name.endswith(".json"):
-            return pd.read_json(buf)
+            return _read_json_normalized(file_bytes)
+    except ValueError as e:
+        raise
     except Exception as e:
         print(f"Error processing data: {e}")
-    return None
+    return None, []
 
 
-def process_data(uploaded_file) -> pd.DataFrame | None:
-    """รับ UploadedFile จาก st.file_uploader แล้ว return DataFrame"""
+def process_data(uploaded_file) -> tuple[pd.DataFrame | None, list[str]]:
+    """รับ UploadedFile จาก st.file_uploader แล้ว return (DataFrame, json_warnings)"""
     if uploaded_file is None:
-        return None
+        return None, []
     file_bytes = uploaded_file.getvalue()
     return _process_cached(uploaded_file.name, len(file_bytes), file_bytes)
 
@@ -197,6 +354,8 @@ def save_cleaned_data(df: pd.DataFrame, original_filename: str) -> str:
     Returns: cleaned_filename เช่น "hospital_cleaned.csv"
     """
     base = original_filename.rsplit(".", 1)[0]
+    if base.endswith("_cleaned"):
+        base = base[: -len("_cleaned")]
     cleaned_filename = f"{base}_cleaned.csv"
 
     _ensure_cache_dir()
