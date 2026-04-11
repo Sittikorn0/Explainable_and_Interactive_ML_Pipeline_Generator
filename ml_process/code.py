@@ -119,10 +119,14 @@ padding:14px 18px;margin-bottom:16px;font-size:0.83rem;color:#8b949e;line-height
 
         with st.spinner("กำลัง preprocess..."):
             try:
-                trans_summary  = st.session_state.get("trans_summary", {})
-                scaling_method = trans_summary.get("scaling_method", "standard_scaler")
+                trans_summary       = st.session_state.get("trans_summary", {})
+                scaling_method      = trans_summary.get("scaling_method", "standard_scaler")
+                label_encoding_cols = trans_summary.get("label_encoding_cols", [])
                 X_train, X_test, y_train, y_test, task_type = preprocess(
-                    df, target_col, scaling_method=scaling_method)
+                    df, target_col,
+                    scaling_method=scaling_method,
+                    label_encoding_cols=label_encoding_cols,
+                )
                 st.session_state["ml_task_type"] = task_type
                 st.caption(
                     f"ℹ️ Scaling: **{scaling_method}** (fit บน Train set เท่านั้น — ป้องกัน Data Leakage)"
@@ -252,11 +256,12 @@ padding:14px 18px;margin-top:12px">
 
 def _explain_metrics(metrics, task_type):
     if task_type == "classification":
-        acc, f1 = metrics.get("Accuracy", 0), metrics.get("F1-Score", 0)
+        acc = metrics.get("Accuracy", 0)
+        f1  = metrics.get("F1(Mac)", 0)
         lines = (f"• <b style='color:#58a6ff'>Accuracy {acc}</b> — ทำนายถูก {acc*100:.1f}% ของ test set<br>"
-                 f"• <b style='color:#58a6ff'>Precision</b> — จากที่ทำนายว่าเป็น class นั้น ถูกกี่ %<br>"
-                 f"• <b style='color:#58a6ff'>Recall</b> — จาก class นั้นทั้งหมด จับได้กี่ %<br>"
-                 f"• <b style='color:#58a6ff'>F1-Score {f1}</b> — ค่าเฉลี่ย Precision+Recall")
+                 f"• <b style='color:#58a6ff'>Precision (Macro)</b> — ค่าเฉลี่ย Precision ของทุก class เท่ากัน<br>"
+                 f"• <b style='color:#58a6ff'>Recall (Macro)</b> — ค่าเฉลี่ย Recall ของทุก class เท่ากัน<br>"
+                 f"• <b style='color:#58a6ff'>F1 (Macro) {f1}</b> — ค่าเฉลี่ย F1 ของทุก class เท่ากัน")
     else:
         r2, rmse = metrics.get("R² Score", 0), metrics.get("RMSE", 0)
         lines = (f"• <b style='color:#58a6ff'>R² {r2}</b> — อธิบาย variance ได้ {max(0,r2)*100:.1f}% (1=perfect)<br>"
@@ -302,8 +307,13 @@ def _show_fi(df, target_col, best_key, best_label, best_params, trans_summary):
     if fi_data is None or fi_data.get("model_key") != best_key:
         with st.spinner(f"คำนวณ Feature Importance ของ {best_label}..."):
             try:
-                scaling_method = trans_summary.get("scaling_method", "no_scaling")
-                X_tr, _, y_tr, _, _ = preprocess(df, target_col, scaling_method=scaling_method)
+                scaling_method      = trans_summary.get("scaling_method", "no_scaling")
+                label_encoding_cols = trans_summary.get("label_encoding_cols", [])
+                X_tr, _, y_tr, _, _ = preprocess(
+                    df, target_col,
+                    scaling_method=scaling_method,
+                    label_encoding_cols=label_encoding_cols,
+                )
                 m = get_model_map()[best_key]()
                 if best_params:
                     try: m.set_params(**best_params)

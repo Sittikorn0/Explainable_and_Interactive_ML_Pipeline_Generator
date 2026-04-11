@@ -36,13 +36,13 @@ def render_upload():
             st.success(f"Load data from '{uploaded_file.name}' successfully!")
 
             col1, col2 = st.columns(2)
-            col1.metric("จำนวนแถว (Rows)", f"{df.shape[0]:,}")
-            col2.metric("จำนวนคอลัมน์ (Columns)", f"{df.shape[1]}")
+            col1.metric("Rows", f"{df.shape[0]:,}")
+            col2.metric("Columns", f"{df.shape[1]}")
 
             st.subheader("Data Preview")
             st.dataframe(df.head(10))
 
-            space, col1 = st.columns([8, 0.8])
+            _, col1 = st.columns([8, 0.8])
             with col1:
                 if st.button("Next Step", type="primary", width="stretch"):
                     st.query_params["step"] = "cleaning"

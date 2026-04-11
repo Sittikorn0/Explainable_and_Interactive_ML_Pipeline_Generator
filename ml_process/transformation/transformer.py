@@ -3,8 +3,10 @@ ml_process/transformation/transformer.py
 Apply transformations ตาม decisions ที่ user เลือก
 
 หลักการป้องกัน Data Leakage:
-- Encoding ทำได้ที่นี่ (ไม่ขึ้นกับ distribution ของ test set)
-- Scaling ไม่ทำที่นี่ — บันทึกแค่ method ไว้
+- One-hot encoding: ทำได้ที่นี่ (pd.get_dummies ไม่ขึ้นกับ statistics)
+- Label encoding: ไม่ทำที่นี่ — บันทึก decisions ไว้ใน summary
+  แล้วให้ preprocess.py fit บน X_train เท่านั้นหลัง split
+- Scaling: ไม่ทำที่นี่ — บันทึกแค่ method ไว้
   แล้วให้ preprocess.py ทำหลัง train/test split เท่านั้น
 """
 import sys
@@ -15,7 +17,6 @@ if str(_ROOT) not in sys.path:
 
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder
 
 
 def apply_encoding(df: pd.DataFrame, decisions: dict, target_col: str) -> pd.DataFrame:
@@ -35,8 +36,9 @@ def apply_encoding(df: pd.DataFrame, decisions: dict, target_col: str) -> pd.Dat
             dummies = pd.get_dummies(result[col], prefix=col, drop_first=True, dtype=int)
             result  = pd.concat([result.drop(columns=[col]), dummies], axis=1)
         elif method == "label_encoding":
-            le = LabelEncoder()
-            result[col] = le.fit_transform(result[col].astype(str))
+            # ไม่ fit ที่นี่ — บันทึกไว้ใน label_encoding_cols
+            # preprocess.py จะ fit บน X_train เท่านั้นหลัง split
+            pass
 
     return result
 
@@ -74,13 +76,20 @@ def apply_all(df: pd.DataFrame,
 
     # ❌ ไม่ scale ที่นี่ — preprocess.py จะทำให้หลัง split
 
+    # columns ที่ user เลือก label_encoding — preprocess.py จะ fit หลัง split
+    label_encoding_cols = [
+        col for col, method in encoding_decisions.items()
+        if method == "label_encoding" and col in result.columns and col != target_col
+    ]
+
     summary = {
-        "original_rows":  df.shape[0],
-        "original_cols":  df.shape[1],
-        "dropped_cols":   len(drop_cols),
-        "encoded_cols":   len(encoding_decisions),
-        "final_cols":     result.shape[1],
-        "scaling_method": scaling_method,  # เก็บ method ไว้ให้ preprocess.py ใช้
+        "original_rows":      df.shape[0],
+        "original_cols":      df.shape[1],
+        "dropped_cols":       len(drop_cols),
+        "encoded_cols":       len(encoding_decisions),
+        "final_cols":         result.shape[1],
+        "scaling_method":     scaling_method,
+        "label_encoding_cols": label_encoding_cols,  # ส่งให้ preprocess.py ทำหลัง split
     }
 
     return result, summary

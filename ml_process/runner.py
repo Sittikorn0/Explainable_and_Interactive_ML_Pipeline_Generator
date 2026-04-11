@@ -133,7 +133,12 @@ def run_competition(X_train, X_test, y_train, y_test,
                                  "cv_std": None, "best_params": {}, "error": str(ex)}
 
     if best_model is None:
-        raise ValueError("ทุก model ล้มเหลว")
+        error_lines = "\n".join(
+            f"  • {v['label']}: {v['error']}"
+            for v in competition.values()
+            if v.get("error")
+        )
+        raise ValueError(f"ทุก model ล้มเหลว:\n{error_lines}")
 
     return {"competition": competition, "best_key": best_key,
             "best_label": models[best_key], "best_params": competition[best_key]["best_params"],

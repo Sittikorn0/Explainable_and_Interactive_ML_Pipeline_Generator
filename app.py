@@ -1,16 +1,24 @@
-import sys
-import os
-from pathlib import Path
-
-# ── Fix sys.path ให้ชี้มาที่ project root เสมอ ───────────────
-# ทำก่อนทุก import เพื่อให้ ml_process, features, interface หาเจอ
-_ROOT = str(Path(__file__).resolve().parent)
-if _ROOT not in sys.path:
-    sys.path.insert(0, _ROOT)
-os.chdir(_ROOT)  # ทำให้ open("interface/styles/app.css") ทำงานได้
-
 import streamlit as st
+import os
+import glob
 from features.loading_data import load_from_local
+
+
+def _clean_old_cache():
+    """ลบไฟล์ temp_cache ที่ไม่ได้เป็นของ session ปัจจุบัน"""
+    folder = "temp_cache"
+    if not os.path.exists(folder):
+        return
+    current_uid = st.query_params.get("uid", "")
+    for pattern in ["cleaned_*.csv", "temp_*.parquet", "meta_*.txt"]:
+        for f in glob.glob(os.path.join(folder, pattern)):
+            # ลบถ้าไม่ใช่ไฟล์ของ session ปัจจุบัน
+            if current_uid and current_uid in f:
+                continue
+            try:
+                os.remove(f)
+            except Exception:
+                pass
 
 
 MONO = "'JetBrains Mono','DM Mono',monospace"
@@ -43,6 +51,8 @@ def main():
     st.title("Explainable & Interactive ML Pipeline Generator")
     st.caption("Data Science 1312414 | Education Only", width="stretch")
 
+    _clean_old_cache()
+
     # Recovery Cache
     if st.session_state.get("main_df") is None:
         recovered_df, recover_name = load_from_local()
@@ -52,8 +62,8 @@ def main():
 
     url_step = st.query_params.get("step", "upload")
 
-    # Make sure got correct navigation
-    if url_step in ("cleaning", "eda", "transformation", "ml_process") and st.session_state.get("main_df") is None:
+    # Guard: ถ้าไม่มีข้อมูลให้กลับ upload
+    if url_step in ("cleaning", "eda", "model", "transformation", "ml_process")             and st.session_state.get("main_df") is None:
         url_step = "upload"
         st.query_params["step"] = "upload"
 
@@ -67,9 +77,9 @@ def main():
     elif url_step == "transformation":
         from ml_process.transformation.page import render_transformation
         render_transformation()
-    elif url_step == "ml_process":
+    elif url_step in ("model", "ml_process"):
         from ml_process.code import render_ml_process
-        render_ml_process()
+        render_ml_process() 
     else:
         from interface.upload import render_upload
         render_upload()

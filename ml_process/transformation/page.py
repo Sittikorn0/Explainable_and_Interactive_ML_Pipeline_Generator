@@ -227,7 +227,7 @@ def _render_feature_selection(df: pd.DataFrame, target_col: str,
             fig.update_layout(template="plotly_dark", height=350, margin=dict(t=20, b=20))
             st.plotly_chart(fig, use_container_width=True)
 
-        for pair in drop_high_corr:
+        for pair_idx, pair in enumerate(drop_high_corr):
             col_a, col_b, corr_val = pair["col_a"], pair["col_b"], pair["corr"]
             st.markdown(
                 f'`{col_a}` ↔ `{col_b}` — correlation = **{corr_val}** '
@@ -237,7 +237,7 @@ def _render_feature_selection(df: pd.DataFrame, target_col: str,
             if st.checkbox(
                 f"ตัด `{col_b}` ออก",
                 value=True,
-                key=f"drop_corr_{col_b}",
+                key=f"drop_corr_{pair_idx}_{col_a}_{col_b}",
             ):
                 to_drop.append(col_b)
 
