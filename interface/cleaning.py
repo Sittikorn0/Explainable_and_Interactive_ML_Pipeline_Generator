@@ -83,6 +83,10 @@ def render_cleaning():
         st.session_state["original_dup_count"] = int(df.duplicated().sum())
         st.session_state.pop("original_outlier_count", None)
 
+    # original_df เก็บข้อมูลดิบก่อน cleaning ใดๆ — ตั้งค่าครั้งเดียวตอนเปิดหน้าครั้งแรก
+    if "original_df" not in st.session_state:
+        st.session_state["original_df"] = df.copy()
+
     working_df = st.session_state["working_df"]
 
     # ── Dataset Overview ──────────────────────────────────────
@@ -286,7 +290,15 @@ def render_cleaning():
                 ):
                     df_work = st.session_state["working_df"]
                     for col in checked_miss_cols:
-                        df_work = use_missing_strategy(df_work, col, global_miss_strategy)
+                        col_type = actual_type(df_work[col])
+                        if col_type == "float":
+                            compatible = ["mean", "median", "drop rows"]
+                        elif col_type == "int":
+                            compatible = ["median (rounded)", "most frequent", "drop rows"]
+                        else:
+                            compatible = ["most frequent", "drop rows"]
+                        strategy = global_miss_strategy if global_miss_strategy in compatible else compatible[0]
+                        df_work = use_missing_strategy(df_work, col, strategy)
                     st.session_state["working_df"] = df_work
                     st.session_state["cleaning_confirmed"] = False
                     st.rerun()
@@ -294,7 +306,15 @@ def render_cleaning():
                 if st.button("Apply All", key="miss_apply_all", use_container_width=True):
                     df_work = st.session_state["working_df"]
                     for col in missing_cols:
-                        df_work = use_missing_strategy(df_work, col, global_miss_strategy)
+                        col_type = actual_type(df_work[col])
+                        if col_type == "float":
+                            compatible = ["mean", "median", "drop rows"]
+                        elif col_type == "int":
+                            compatible = ["median (rounded)", "most frequent", "drop rows"]
+                        else:
+                            compatible = ["most frequent", "drop rows"]
+                        strategy = global_miss_strategy if global_miss_strategy in compatible else compatible[0]
+                        df_work = use_missing_strategy(df_work, col, strategy)
                     st.session_state["working_df"] = df_work
                     st.session_state["cleaning_confirmed"] = False
                     st.rerun()
@@ -490,7 +510,7 @@ def render_cleaning():
                 st.rerun()
         with cf2:
             if st.button("Reset", type="secondary", width="stretch"):
-                st.session_state["working_df"] = df.copy()
+                st.session_state["working_df"] = st.session_state["original_df"].copy()
                 st.session_state["cleaning_confirmed"] = False
                 st.info("Reset กลับ original data แล้ว")
                 st.rerun()
