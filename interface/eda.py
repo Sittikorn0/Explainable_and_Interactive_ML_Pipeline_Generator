@@ -83,6 +83,18 @@ def render_eda():
         target_col = df.columns[-1]
     st.info(f"**Target Column:** {target_col}  \n{describe_target(df, target_col)}")
 
+    # Proactive class imbalance check — แสดงในหน้า Overview โดยไม่ต้องรอให้ user เลือก column
+    if not pd.api.types.is_numeric_dtype(df[target_col]) and df[target_col].nunique() <= 20:
+        target_counts = df[target_col].value_counts()
+        min_count = int(target_counts.min())
+        max_count = int(target_counts.max())
+        if max_count > 3 * min_count:
+            st.warning(
+                f"**Class Imbalance ตรวจพบใน Target '{target_col}':** "
+                f"ค่าที่พบมากสุดมากกว่าค่าที่พบน้อยสุดถึง **{max_count / min_count:.1f} เท่า** "
+                "— อาจต้องจัดการก่อนสร้างโมเดล เช่น Oversampling, SMOTE, หรือปรับ class_weight"
+            )
+
     tab1, tab2, tab3 = st.tabs(
         ["Profile", "Distributions", "Relationships"], width="stretch"
     )
@@ -143,8 +155,17 @@ def render_eda():
         st.subheader("Data Distributions")
 
         num_cols = df.select_dtypes(include=["number"]).columns.tolist()
-        cat_cols = df.select_dtypes(include=["object", "category"]).columns.tolist()
-        dt_cols = [c for c in df.columns if pd.api.types.is_datetime64_any_dtype(df[c])]
+        # รวม string columns ที่ actual_type ตรวจว่าเป็น datetime เพื่อให้สอดคล้องกับ Profile tab
+        dt_cols = [
+            c for c in df.columns
+            if pd.api.types.is_datetime64_any_dtype(df[c])
+            or (df[c].dtype == object and actual_type(df[c]) == "datetime")
+        ]
+        dt_col_set = set(dt_cols)
+        cat_cols = [
+            c for c in df.select_dtypes(include=["object", "category"]).columns
+            if c not in dt_col_set
+        ]
         dist_cols = num_cols + cat_cols + dt_cols
 
         if not dist_cols:
@@ -176,16 +197,28 @@ def render_eda():
                     insight = _skew_insight(col_skew)
 
                     if abs(col_skew) >= 1:
+                        col_min = float(col_data.min())
+                        if col_min <= 0:
+                            # Log และ Box-Cox ใช้ไม่ได้กับค่า 0 หรือลบ
+                            transform_rec = "**Yeo-Johnson Transformation** (รองรับค่า 0 และค่าลบ)"
+                        else:
+                            transform_rec = "Log, Box-Cox, หรือ Yeo-Johnson Transformation"
                         insight += (
-                            "\n\n**คำแนะนำ:** ข้อมูลเบ้มาก อาจต้อง Transform ก่อนสร้างโมเดล "
-                            "เช่น Log, Box-Cox, หรือ Yeo-Johnson Transformation"
+                            f"\n\n**คำแนะนำ:** ข้อมูลเบ้มาก อาจต้อง Transform ก่อนสร้างโมเดล "
+                            f"เช่น {transform_rec}"
                         )
 
                     st.info(f"**{selected_col}:** {insight}")
 
             elif selected_col in dt_cols:
                 # ── Datetime Distribution ──────────────────────
-                dt_series = df[selected_col].dropna()
+                # parse string columns ที่ยังไม่เป็น datetime64 ให้เป็นก่อน
+                if pd.api.types.is_datetime64_any_dtype(df[selected_col]):
+                    dt_series = df[selected_col].dropna()
+                else:
+                    dt_series = pd.to_datetime(
+                        df[selected_col], format="mixed", dayfirst=False, errors="coerce"
+                    ).dropna()
                 if len(dt_series) == 0:
                     st.info(f"**{selected_col}:** ไม่มีข้อมูล valid (ทั้งหมดเป็น NaN)")
                 else:
@@ -284,7 +317,10 @@ def render_eda():
                 label_visibility="collapsed",
             )
             feature_is_numeric = pd.api.types.is_numeric_dtype(df[sel_feature])
-            feature_is_datetime = pd.api.types.is_datetime64_any_dtype(df[sel_feature])
+            feature_is_datetime = (
+                pd.api.types.is_datetime64_any_dtype(df[sel_feature])
+                or (df[sel_feature].dtype == object and actual_type(df[sel_feature]) == "datetime")
+            )
 
             if feature_is_datetime:
                 # Datetime Feature vs Numeric/Categorical Target → Line chart over time
@@ -295,6 +331,12 @@ def render_eda():
                     key="eda_rel_dt_granularity",
                 )
                 dt_subset = df[[sel_feature, target_col]].dropna().copy()
+                # parse string datetime ให้เป็น datetime64 ก่อนใช้ .dt accessor
+                if not pd.api.types.is_datetime64_any_dtype(dt_subset[sel_feature]):
+                    dt_subset[sel_feature] = pd.to_datetime(
+                        dt_subset[sel_feature], format="mixed", dayfirst=False, errors="coerce"
+                    )
+                dt_subset = dt_subset.dropna(subset=[sel_feature])
                 if granularity == "Year":
                     dt_subset["_period"] = dt_subset[sel_feature].dt.year.astype(str)
                 elif granularity == "Month":
@@ -502,15 +544,21 @@ def render_eda():
             st.write("**Correlation Heatmap**")
             numeric_df = df.select_dtypes(include=[np.number])
             if numeric_df.shape[1] > 1:
+                n_numeric_cols = numeric_df.shape[1]
+                heatmap_height = max(400, min(800, 30 * n_numeric_cols))
+                # ซ่อนตัวเลขเมื่อ column มากเกิน 15 เพราะ cell เล็กเกินอ่าน
+                show_text = ".2f" if n_numeric_cols <= 15 else False
                 corr = numeric_df.corr()
                 fig_corr = px.imshow(
                     corr,
-                    text_auto=".2f",
+                    text_auto=show_text,
                     aspect="auto",
                     color_continuous_scale="RdBu_r",
                     range_color=[-1, 1],
                 )
-                fig_corr.update_layout(template="plotly_dark", height=400)
+                fig_corr.update_layout(template="plotly_dark", height=heatmap_height)
+                if n_numeric_cols > 15:
+                    st.caption(f"มี {n_numeric_cols} numeric columns — ซ่อนตัวเลขในตาราง hover เพื่ออ่านค่า")
                 st.plotly_chart(fig_corr, width="stretch")
 
                 # Detect High Correlation
