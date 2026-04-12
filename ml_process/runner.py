@@ -92,7 +92,7 @@ def _sample(X, y, max_rows):
 
 def run_competition(X_train, X_test, y_train, y_test,
                     task_type: str, on_progress=None) -> dict:
-    scorer    = "f1_weighted" if task_type == "classification" else "r2"
+    scorer    = "f1_macro" if task_type == "classification" else "r2"
     cv        = _safe_cv(y_train, task_type)
     models    = get_available_models(task_type)
     model_map = get_model_map()
@@ -116,9 +116,8 @@ def run_competition(X_train, X_test, y_train, y_test,
                 search.fit(X_tr, y_tr)
                 m, best_params = search.best_estimator_, search.best_params_
                 cv_mean = float(search.best_score_)
-                cv_std  = float(search.cv_results_["mean_test_score"].std())
+                cv_std = float(search.cv_results_["std_test_score"][search.best_index_])
             else:
-                m.fit(X_tr, y_tr)
                 scores  = cross_val_score(m, X_tr, y_tr, cv=cv, scoring=scorer, n_jobs=-1)
                 cv_mean, cv_std = float(scores.mean()), float(scores.std())
                 m.fit(X_tr, y_tr)
