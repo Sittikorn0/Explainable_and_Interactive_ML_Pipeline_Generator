@@ -39,9 +39,9 @@ def show_leaderboard(competition: dict):
                     key=lambda x: x[1]["cv_score"], reverse=True)
     errors = [(k, v) for k, v in competition.items() if v["cv_score"] is None]
 
+    medals = ["🥇", "🥈", "🥉"]
     rows = []
     for i, (_, res) in enumerate(ranked):
-        medals = ["🥇", "🥈", "🥉"]
         params = " | ".join(f"{k}={v}" for k, v in res["best_params"].items()) if res["best_params"] else "—"
         rows.append({
             "Rank": medals[i] if i < 3 else str(i + 1),
