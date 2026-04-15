@@ -32,6 +32,13 @@ def render_upload():
                 st.session_state["last_uploaded_file"] = uploaded_file.name
                 st.session_state["json_warnings"] = json_warnings
                 st.session_state.pop("target_col", None)  # reset เมื่อโหลดไฟล์ใหม่
+                # reset cleaning state ทั้งหมดเมื่อโหลดไฟล์ใหม่
+                for _k in [
+                    "working_df", "working_df_source_shape", "cleaning_confirmed",
+                    "original_df", "original_dup_count", "original_outlier_count",
+                    "_dist_key", "_dist_result",
+                ]:
+                    st.session_state.pop(_k, None)
                 save_to_local(df, uploaded_file.name)
             else:
                 st.error("Failed to load data. Please check the file format and content.")
@@ -44,13 +51,18 @@ def render_upload():
 
             json_warnings = st.session_state.get("json_warnings", [])
             if json_warnings:
-                warn_list = "\n".join(f"- `{c}`" for c in json_warnings)
-                st.warning(
-                    "**พบ Nested Columns ใน JSON — ถูกจัดการอัตโนมัติดังนี้:**\n\n"
-                    + warn_list
-                    + "\n\n*Array columns ถูก join เป็น string, "
-                    "Object columns ที่ซ้อนเกิน 5 ระดับถูกแปลงเป็น string*"
-                )
+                array_cols = [c for c in json_warnings if not c.endswith("(object → string)")]
+                dict_cols = [c.replace(" (object → string)", "") for c in json_warnings if c.endswith("(object → string)")]
+                sections = []
+                if array_cols:
+                    items = "\n".join(f"- `{c}`" for c in array_cols)
+                    sections.append(f"**Array columns** (ค่าหลายรายการถูก join เป็น string ด้วย ', '):\n\n{items}")
+                if dict_cols:
+                    items = "\n".join(f"- `{c}`" for c in dict_cols)
+                    sections.append(f"**Object columns** (ถูกแปลงเป็น string เพราะไม่สามารถ flatten ได้):\n\n{items}")
+                body = "\n\n".join(sections)
+                footer = "*คอลัมน์เหล่านี้ถูกแปลงเป็น text — ควรตรวจสอบใน Cleaning หากไม่ต้องการ*"
+                st.warning(f"**พบ Nested Columns ใน JSON — ถูกจัดการอัตโนมัติดังนี้:**\n\n{body}\n\n{footer}")
 
             col1, col2 = st.columns(2)
             col1.metric("Rows", f"{df.shape[0]:,}")
@@ -93,7 +105,7 @@ def render_upload():
                     if st.button(f"กลับไปใช้ที่ระบบแนะนำ ({suggested_col})", key="revert_target"):
                         st.session_state["_revert_target"] = True
                         st.rerun()
-                st.caption(describe_target(df, selected))
+                st.markdown(describe_target(df, selected))
 
             # ── Navigation ───────────────────────────────────────────────────
             _, col1 = st.columns([8, 0.8])
