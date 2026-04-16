@@ -20,19 +20,22 @@ from ml_process.transformation.transformer import apply_all
 
 # ── Labels สำหรับแสดงใน UI ───────────────────────────────────
 ENCODING_LABELS = {
-    "one_hot_encoding": "One-hot Encoding",
-    "label_encoding":   "Label Encoding",
-    "drop_column":      "Drop (ตัดออก)",
+    "one_hot_encoding":  "One-hot Encoding",
+    "label_encoding":    "Label Encoding",
+    "ordinal_encoding":  "Ordinal Encoding",
+    "drop_column":       "Drop (ตัดออก)",
 }
 SCALING_LABELS = {
+    "log_transform":  "Log Transform (log1p)",
     "standard_scaler": "Standard Scaler (Z-score)",
     "minmax_scaler":   "MinMax Scaler [0, 1]",
     "robust_scaler":   "Robust Scaler (Median/IQR)",
     "no_scaling":      "ไม่ทำ Scaling",
 }
 SCALING_WHEN = {
+    "log_transform":   "เมื่อข้อมูล skewed รุนแรง (|skew| > 2) เช่น รายได้ ราคา จำนวน transaction",
     "standard_scaler": "เมื่อข้อมูลกระจายแบบ normal, ไม่มี outlier",
-    "minmax_scaler":   "เมื่อข้อมูล skewed หรือต้องการช่วง [0,1]",
+    "minmax_scaler":   "เมื่อข้อมูล skewed เล็กน้อย หรือต้องการช่วง [0,1]",
     "robust_scaler":   "เมื่อมี outlier มาก (>5% ของข้อมูล)",
     "no_scaling":      "เมื่อใช้ tree-based model ล้วนๆ",
 }
@@ -67,7 +70,7 @@ def _rec_box(title: str, reason: str, warning: str = None):
 <div style="background:#161b22;border:1px solid #30363d;border-left:4px solid #58a6ff;
 border-radius:0 8px 8px 0;padding:12px 16px;margin:8px 0">
   <div style="font-weight:600;color:#58a6ff;font-size:0.88rem;margin-bottom:6px">
-    💡 แนะนำ: {title}
+     แนะนำ: {title}
   </div>
   <div style="font-size:0.83rem;color:#c9d1d9;line-height:1.7">{reason}</div>
   {warn_html}
@@ -81,11 +84,11 @@ def _render_encoding(df: pd.DataFrame, target_col: str,
     st.subheader("1. Encoding — แปลง Categorical เป็นตัวเลข")
 
     if not enc_analysis:
-        st.success("✓ ไม่มี categorical columns ที่ต้องทำ encoding")
+        st.success("ไม่มี categorical columns ที่ต้องทำ encoding")
         return {}
 
     # ตารางเปรียบเทียบ method
-    with st.expander("📖 เปรียบเทียบ Encoding Methods", expanded=False):
+    with st.expander("เปรียบเทียบ Encoding Methods", expanded=False):
         st.markdown("""
 | Method | เหมาะกับ | ข้อดี | ข้อเสีย |
 |---|---|---|---|
@@ -116,10 +119,24 @@ padding:12px 16px;margin:10px 0">
 """, unsafe_allow_html=True)
 
         _rec_box(
-            ENCODING_LABELS[recommended],
+            ENCODING_LABELS.get(recommended, recommended),
             info["reason"],
             info["warning"],
         )
+
+        # แสดง warning พิเศษสำหรับ ordinal encoding
+        if recommended == "ordinal_encoding":
+            st.markdown(f"""
+<div style="background:#2d1f0a;border:1px solid #d29922;border-radius:6px;
+padding:10px 14px;margin:6px 0;font-size:0.81rem;color:#d29922">
+  ⚠ <b>กรุณายืนยัน order ที่ถูกต้อง</b><br>
+  <span style="color:#c9d1d9">
+  ระบบเรียง alphabetical อัตโนมัติ: 
+  <b>{" &lt; ".join(sorted(str(v) for v in info["sample_values"]))}</b><br>
+  ถ้า order ไม่ถูกต้อง ให้เลือก Label Encoding แทน
+  </span>
+</div>
+""", unsafe_allow_html=True)
 
         chosen = st.radio(
             f"เลือก method สำหรับ `{col}`",
@@ -143,11 +160,11 @@ def _render_scaling(df: pd.DataFrame, target_col: str,
 
     col_stats = sc_analysis["column_stats"]
     if not col_stats:
-        st.success("✓ ไม่มี numeric columns ที่ต้องทำ scaling")
+        st.success("ไม่มี numeric columns ที่ต้องทำ scaling")
         return "no_scaling"
 
     # แสดง stats ของ numeric columns
-    with st.expander("📊 ดู Statistics ของ Numeric Columns"):
+    with st.expander("ดู Statistics ของ Numeric Columns"):
         stats_df = pd.DataFrame(col_stats)
         st.dataframe(
             stats_df,
@@ -176,12 +193,27 @@ def _render_scaling(df: pd.DataFrame, target_col: str,
 
     # Recommendation
     _rec_box(
-        SCALING_LABELS[sc_analysis["recommended"]],
+        SCALING_LABELS.get(sc_analysis["recommended"], sc_analysis["recommended"]),
         sc_analysis["reason"],
     )
 
+    # แสดง info พิเศษสำหรับ log transform
+    if sc_analysis["recommended"] == "log_transform":
+        heavy_cols = sc_analysis.get("heavy_skew_cols", [])
+        st.markdown(f"""
+<div style="background:#161b22;border:1px solid #30363d;border-radius:6px;
+padding:10px 14px;margin:6px 0;font-size:0.81rem;color:#c9d1d9;line-height:1.7">
+  <b style="color:#58a6ff">วิธีการทำงานของ Log Transform:</b><br>
+  ใช้ <code>log1p(x) = log(x + 1)</code> กับทุก column ที่มีค่า ≥ 0<br>
+  ({', '.join(f'<code>{c}</code>' for c in heavy_cols[:3])}{'...' if len(heavy_cols)>3 else ''})<br>
+  จากนั้นตามด้วย Standard Scaler เพื่อ normalize<br><br>
+  <b style="color:#d29922">⚠ หมายเหตุ:</b> ใช้ได้เฉพาะ column ที่มีค่า ≥ 0 เท่านั้น
+  column ที่มีค่าติดลบจะไม่ถูก log transform
+</div>
+""", unsafe_allow_html=True)
+
     # เลือก method
-    with st.expander("📖 เปรียบเทียบ Scaling Methods", expanded=False):
+    with st.expander("เปรียบเทียบ Scaling Methods", expanded=False):
         rows = []
         for k, label in SCALING_LABELS.items():
             rows.append({"Method": label, "ใช้เมื่อ": SCALING_WHEN[k]})
@@ -207,7 +239,7 @@ def _render_feature_selection(df: pd.DataFrame, target_col: str,
     drop_low_var   = fs_analysis["drop_low_var"]
 
     if not drop_high_corr and not drop_low_var:
-        st.success("✓ ไม่พบ features ที่ควรตัดออก")
+        st.success("ไม่พบ features ที่ควรตัดออก")
         return []
 
     to_drop = []
@@ -266,7 +298,7 @@ def _render_feature_selection(df: pd.DataFrame, target_col: str,
 def _render_summary(df: pd.DataFrame, transformed_df: pd.DataFrame,
                     summary: dict, target_col: str):
     st.markdown("---")
-    st.subheader("📋 สรุปผล Data Transformation")
+    st.subheader("สรุปผล Data Transformation")
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Original Columns",     summary["original_cols"])
@@ -303,20 +335,19 @@ def render_transformation():
         f"|  {df.shape[0]:,} rows × {df.shape[1]} columns"
     )
 
-    # ── เลือก Target Column ───────────────────────────────────
-    target_col = st.selectbox(
-        "Target Column (จะไม่ถูก transform)",
-        df.columns.tolist(),
-        index=len(df.columns) - 1,
-        key="trans_target_col",
-    )
+    # ── Target Column (จาก Upload/Cleaning — ไม่แสดง selectbox) ─
+    _cols = df.columns.tolist()
+    _saved = (st.session_state.get("_trans_target_saved") or
+              st.session_state.get("target_col"))
+    target_col = _saved if _saved in _cols else _cols[-1]
 
+    st.info(f"**Target Column:** `{target_col}` (เลือกไว้จากขั้นตอน Upload)")
     st.markdown("---")
 
     # ── วิเคราะห์ข้อมูล (cache ตาม df shape + target) ────────
     cache_key = f"trans_analysis_{df.shape}_{target_col}"
     if st.session_state.get("_trans_cache_key") != cache_key:
-        with st.spinner("🔍 วิเคราะห์ข้อมูล..."):
+        with st.spinner("วิเคราะห์ข้อมูล..."):
             analysis = analyze_all(df, target_col)
         st.session_state["_trans_analysis"]  = analysis
         st.session_state["_trans_cache_key"] = cache_key
@@ -357,7 +388,7 @@ def render_transformation():
         transformed_df = st.session_state["transformed_df"]
         summary        = st.session_state["trans_summary"]
         _render_summary(df, transformed_df, summary, target_col)
-        st.success("✅ Transform เสร็จแล้ว — กด Next Step เพื่อไป ML Process")
+        st.success("Transform เสร็จแล้ว — กด Next Step เพื่อไป ML Process")
 
     # ── Navigation ────────────────────────────────────────────
     st.markdown("---")

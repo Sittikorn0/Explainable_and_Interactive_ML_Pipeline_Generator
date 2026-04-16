@@ -106,12 +106,29 @@ def _clean(X: pd.DataFrame) -> pd.DataFrame:
 def _scale(X_train: pd.DataFrame, X_test: pd.DataFrame, method: str) -> tuple:
     """
     Fit scaler บน X_train เท่านั้น แล้ว transform ทั้งคู่ (ป้องกัน Leakage)
+
+    log_transform: log1p columns ที่ค่า min >= 0 แล้วตาม standard_scaler
     """
     if method == "no_scaling":
         return X_train, X_test
 
     num_cols = X_train.select_dtypes(include="number").columns.tolist()
     if not num_cols:
+        return X_train, X_test
+
+    # Log Transform: log1p ก่อน แล้วตาม standard scaler
+    if method == "log_transform":
+        X_train = X_train.copy()
+        X_test  = X_test.copy()
+        # ทำ log1p เฉพาะ column ที่ค่า min >= 0
+        log_cols = [c for c in num_cols if X_train[c].min() >= 0]
+        for col in log_cols:
+            X_train[col] = np.log1p(X_train[col])
+            X_test[col]  = np.log1p(np.maximum(X_test[col], 0))  # clip ค่าลบเป็น 0 ก่อน
+        # ตามด้วย standard scaler — fit เฉพาะ X_train
+        scaler = StandardScaler()
+        X_train[num_cols] = scaler.fit_transform(X_train[num_cols])
+        X_test[num_cols]  = scaler.transform(X_test[num_cols])
         return X_train, X_test
 
     scaler_map = {

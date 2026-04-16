@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import glob
-from features.loading_data import load_from_local
+from data_prepare.features.loading_data import load_from_local
 
 
 def _clean_old_cache():
@@ -27,7 +27,12 @@ SANS = "'DM Sans','Sarabun',sans-serif"
 def load_css(file_name):
     with open(file_name, encoding="utf-8") as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-load_css("interface/styles/app.css")
+
+
+def navigate(step: str) -> None:
+    st.query_params["step"] = step
+    st.rerun()
+
 
 def page_header(title: str, subtitle: str = "") -> None:
     st.markdown(
@@ -47,6 +52,8 @@ def main():
         layout="wide",
         initial_sidebar_state="collapsed",
     )
+
+    load_css("interface/styles/app.css")
 
     st.title("Explainable & Interactive ML Pipeline Generator")
     st.caption("Data Science 1312414 | Education Only", width="stretch")

@@ -64,23 +64,124 @@ MODEL_WHY = {
     "Linear Regression":
         "fit เส้นตรงผ่านข้อมูล เร็วและ interpretable เหมาะเมื่อ target มี linear relationship",
 }
+
+# ── หลักการออกแบบ PARAM_GRIDS ────────────────────────────────
+# 1. ทุก grid มี ≤ 12 combinations → n_iter=10 ครอบคลุมได้ดี
+# 2. ค่า default ที่ดีอยู่กลาง grid เสมอ (ไม่ใช่ขอบ)
+# 3. ใช้ log scale สำหรับ C, alpha, learning_rate
+# 4. liblinear ถูกตัดออก เพราะไม่รองรับ multiclass (n_classes ≥ 3)
 PARAM_GRIDS = {
-    "logistic_regression":         {"C": [0.01, 0.1, 1, 10], "solver": ["lbfgs", "liblinear"]},
-    "decision_tree":               {"max_depth": [3, 5, 8, None], "min_samples_split": [2, 5, 10]},
-    "random_forest":               {"n_estimators": [30, 50, 100], "max_depth": [4, 6, None]},
-    "gradient_boosting":           {"max_iter": [30, 50, 100], "max_depth": [3, 4, 6], "learning_rate": [0.05, 0.1, 0.2]},
-    "svm":                         {"alpha": [0.0001, 0.001, 0.01]},
-    "knn":                         {"n_neighbors": [3, 5, 7, 11], "weights": ["uniform", "distance"]},
-    "naive_bayes":                 {"var_smoothing": [1e-9, 1e-8, 1e-7]},
-    "xgboost":                     {"n_estimators": [50, 100], "max_depth": [3, 4, 6], "learning_rate": [0.05, 0.1, 0.2]},
-    "lightgbm":                    {"n_estimators": [50, 100], "max_depth": [3, 4, 6], "learning_rate": [0.05, 0.1, 0.2]},
-    "catboost":                    {"iterations": [50, 100], "depth": [3, 4, 6], "learning_rate": [0.05, 0.1, 0.2]},
-    "linear_regression":           {},
-    "decision_tree_regressor":     {"max_depth": [3, 5, 8, None], "min_samples_split": [2, 5, 10]},
-    "random_forest_regressor":     {"n_estimators": [30, 50, 100], "max_depth": [4, 6, None]},
-    "gradient_boosting_regressor": {"max_iter": [30, 50, 100], "max_depth": [3, 4, 6], "learning_rate": [0.05, 0.1, 0.2]},
-    "knn_regressor":               {"n_neighbors": [3, 5, 7, 11], "weights": ["uniform", "distance"]},
-    "xgboost_regressor":           {"n_estimators": [50, 100], "max_depth": [3, 4, 6], "learning_rate": [0.05, 0.1, 0.2]},
-    "lightgbm_regressor":          {"n_estimators": [50, 100], "max_depth": [3, 4, 6], "learning_rate": [0.05, 0.1, 0.2]},
-    "catboost_regressor":          {"iterations": [50, 100], "depth": [3, 4, 6], "learning_rate": [0.05, 0.1, 0.2]},
+    # ── Classification ────────────────────────────────────────
+
+    # C: log scale 0.01→100, lbfgs/saga รองรับ multiclass
+    # combinations: 5×2 = 10
+    "logistic_regression": {
+        "C":      [0.01, 0.1, 1, 10, 100],
+        "solver": ["lbfgs", "saga"],
+    },
+
+    # max_depth: None=unbound ไว้เป็น ceiling, min_samples_split ป้องกัน overfit
+    # combinations: 4×3 = 12
+    "decision_tree": {
+        "max_depth":         [3, 5, 8, None],
+        "min_samples_split": [2, 5, 10],
+    },
+
+    # n_estimators: 50-200 (มากกว่า 200 ให้ผลดีขึ้นน้อยมาก)
+    # combinations: 3×3 = 9
+    "random_forest": {
+        "n_estimators": [50, 100, 200],
+        "max_depth":    [4, 6, None],
+    },
+
+    # learning_rate+max_iter มี trade-off กัน rate ต่ำต้องการ iter มาก
+    # combinations: 3×3×3 = 27 → n_iter จะสุ่ม 10 ชุด
+    "gradient_boosting": {
+        "max_iter":     [50, 100, 200],
+        "max_depth":    [3, 4, 6],
+        "learning_rate":[0.05, 0.1, 0.2],
+    },
+
+    # alpha log scale: ค่าน้อย=regularize มาก
+    # combinations: 4
+    "svm": {
+        "alpha": [0.0001, 0.001, 0.01, 0.1],
+    },
+
+    # n_neighbors เลขคี่เสมอ ป้องกัน tie ใน binary
+    # combinations: 4×2 = 8
+    "knn": {
+        "n_neighbors": [3, 5, 7, 11],
+        "weights":     ["uniform", "distance"],
+    },
+
+    # var_smoothing: ป้องกัน log(0), log scale
+    # combinations: 3
+    "naive_bayes": {
+        "var_smoothing": [1e-9, 1e-8, 1e-7],
+    },
+
+    # XGBoost/LightGBM/CatBoost: combinations: 2×3×3 = 18
+    "xgboost":  {
+        "n_estimators": [50, 100],
+        "max_depth":    [3, 4, 6],
+        "learning_rate":[0.05, 0.1, 0.2],
+    },
+    "lightgbm": {
+        "n_estimators": [50, 100],
+        "max_depth":    [3, 4, 6],
+        "learning_rate":[0.05, 0.1, 0.2],
+    },
+    "catboost": {
+        "iterations":   [50, 100],
+        "depth":        [3, 4, 6],
+        "learning_rate":[0.05, 0.1, 0.2],
+    },
+
+    # ── Regression ────────────────────────────────────────────
+
+    # Linear Regression: closed-form solution ไม่มี hyperparameter
+    "linear_regression": {},
+
+    # Regression trees: เหมือน classification แต่ใช้ MSE แทน gini
+    # combinations: 4×3 = 12
+    "decision_tree_regressor": {
+        "max_depth":         [3, 5, 8, None],
+        "min_samples_split": [2, 5, 10],
+    },
+
+    # combinations: 3×3 = 9
+    "random_forest_regressor": {
+        "n_estimators": [50, 100, 200],
+        "max_depth":    [4, 6, None],
+    },
+
+    # combinations: 3×3×3 = 27
+    "gradient_boosting_regressor": {
+        "max_iter":     [50, 100, 200],
+        "max_depth":    [3, 4, 6],
+        "learning_rate":[0.05, 0.1, 0.2],
+    },
+
+    # combinations: 4×2 = 8
+    "knn_regressor": {
+        "n_neighbors": [3, 5, 7, 11],
+        "weights":     ["uniform", "distance"],
+    },
+
+    "xgboost_regressor": {
+        "n_estimators": [50, 100],
+        "max_depth":    [3, 4, 6],
+        "learning_rate":[0.05, 0.1, 0.2],
+    },
+    "lightgbm_regressor": {
+        "n_estimators": [50, 100],
+        "max_depth":    [3, 4, 6],
+        "learning_rate":[0.05, 0.1, 0.2],
+    },
+    "catboost_regressor": {
+        "iterations":   [50, 100],
+        "depth":        [3, 4, 6],
+        "learning_rate":[0.05, 0.1, 0.2],
+    },
 }

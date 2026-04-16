@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(.venv/Scripts/pip install:*)",
-      "Bash(.venv/Scripts/python -m pytest tests/test_no_leakage.py -v)"
+      "Bash(.venv/Scripts/python -m pytest tests/test_no_leakage.py -v)",
+      "Bash(cmd /c \"taskkill /F /IM python.exe 2>&1\")",
+      "Bash(cmd /c \"cd \\\\\"c:\\\\Progaming by Toon\\\\SNProject\\\\Senior_Project_Explainable_Pipeline\\\\\" && .venv\\\\Scripts\\\\python.exe -c \\\\\"from app import navigate; print\\('OK:', navigate\\)\\\\\" 2>&1\")",
+      "Bash(cmd /c \"cd \\\\\"c:\\\\Progaming by Toon\\\\SNProject\\\\Senior_Project_Explainable_Pipeline\\\\\" && .venv\\\\Scripts\\\\python.exe -c \\\\\"from app import navigate; print\\('OK'\\)\\\\\" 2>&1\")",
+      "Bash(.venv/Scripts/python.exe -c \"from app import navigate; print\\('OK', navigate\\)\")",
+      "Bash(.venv/Scripts/streamlit.exe run:*)"
     ]
   }
 }

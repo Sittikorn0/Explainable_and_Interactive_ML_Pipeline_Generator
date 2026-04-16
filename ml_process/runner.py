@@ -74,8 +74,8 @@ def get_available_models(task_type: str) -> dict:
 
 def _safe_cv(y_train, task_type: str) -> int:
     if task_type == "classification":
-        return max(2, min(3, int(pd.Series(y_train).value_counts().min())))
-    return max(2, min(3, len(y_train) // 2))
+        return max(2, min(5, int(pd.Series(y_train).value_counts().min())))
+    return max(2, min(5, len(y_train) // 2))
 
 
 def _grid_size(grid): 
@@ -110,7 +110,7 @@ def run_competition(X_train, X_test, y_train, y_test,
             grid = PARAM_GRIDS.get(key, {})
             best_params = {}
             if grid:
-                search = RandomizedSearchCV(m, grid, n_iter=min(8, _grid_size(grid)),
+                search = RandomizedSearchCV(m, grid, n_iter=min(15, _grid_size(grid)),
                                             cv=cv, scoring=scorer, random_state=42,
                                             n_jobs=-1, refit=True, error_score="raise")
                 search.fit(X_tr, y_tr)
