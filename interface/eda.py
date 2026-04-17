@@ -81,6 +81,7 @@ def render_eda():
     target_col = st.session_state.get("target_col", df.columns[-1])
     if target_col not in df.columns:
         target_col = df.columns[-1]
+        st.warning(f"Target column ที่เลือกไว้ไม่พบใน dataset — ใช้ **{target_col}** แทน")
     st.info(f"**Target Column:** {target_col}  \n{describe_target(df, target_col)}")
 
     # Proactive class imbalance check — แสดงในหน้า Overview โดยไม่ต้องรอให้ user เลือก column
@@ -138,16 +139,18 @@ def render_eda():
         )
 
         # คำอธิบาย Attribute Types
-        with st.expander("Attribute Types & ML Category คืออะไร?"):
+        with st.expander("Attribute Types & ML Category คืออะไร? (อ้างอิง Topic 2)"):
             st.markdown(
-                "**ประเภทข้อมูลตาม Machine Learning** (อ้างอิง Topic 2 - Getting to Know Your Data):\n\n"
+                "**ประเภทข้อมูลตาม Machine Learning** (อ้างอิง Topic 2 — Getting to Know Your Data):\n\n"
                 "| ประเภท | ความหมาย | ตัวอย่าง | ค่ากลางที่ใช้ได้ |\n"
                 "|--------|---------|---------|----------------|\n"
                 "| **Categorical/Nominal** | ข้อมูลเชิงหมวดหมู่ ไม่มีลำดับ | สีผม, เพศ, จังหวัด | Mode เท่านั้น |\n"
                 "| **Numeric/Discrete** | ตัวเลขจำนวนเต็ม นับได้ | จำนวนสินค้า, อายุ | Mean, Median, Mode |\n"
                 "| **Numeric/Continuous** | ตัวเลขทศนิยม วัดได้ | น้ำหนัก, อุณหภูมิ | Mean, Median |\n"
                 "| **Datetime** | วันที่/เวลา | 2024-01-01 | — |\n\n"
-                "**Target** คือคอลัมน์ที่ต้องการทำนาย ซึ่งเลือกไว้ในขั้นตอน Upload"
+                "**Target** คือคอลัมน์ที่ต้องการทำนาย ซึ่งเลือกไว้ในขั้นตอน Upload\n\n"
+                "> Topic 2 ยังอธิบายถึง **Ordinal** (ข้อมูลที่มีลำดับ เช่น Low/Medium/High) "
+                "และ **Binary** (ข้อมูล 2 ค่า เช่น Yes/No) ซึ่งระบบจัดอยู่ในกลุ่ม Categorical"
             )
 
     # Distributions
@@ -199,13 +202,23 @@ def render_eda():
                     if abs(col_skew) >= 1:
                         col_min = float(col_data.min())
                         if col_min <= 0:
-                            # Log และ Box-Cox ใช้ไม่ได้กับค่า 0 หรือลบ
                             transform_rec = "**Yeo-Johnson Transformation** (รองรับค่า 0 และค่าลบ)"
                         else:
                             transform_rec = "Log, Box-Cox, หรือ Yeo-Johnson Transformation"
                         insight += (
-                            f"\n\n**คำแนะนำ:** ข้อมูลเบ้มาก อาจต้อง Transform ก่อนสร้างโมเดล "
-                            f"เช่น {transform_rec}"
+                            f"\n\n**คำแนะนำ** (อ้างอิง Topic 9): ข้อมูลเบ้มาก (|Skew| ≥ 1) "
+                            f"อาจต้อง Transform ก่อนสร้างโมเดล เช่น {transform_rec}"
+                        )
+                    elif abs(col_skew) >= 0.5:
+                        insight += (
+                            "\n\n**เกณฑ์การตัดสิน** (อ้างอิง Topic 2): "
+                            "|Skew| ≥ 0.5 = เบ้เล็กน้อย — ยังใช้ได้กับโมเดลส่วนใหญ่ "
+                            "แต่ควรพิจารณา Transform ถ้า |Skew| ≥ 1"
+                        )
+                    else:
+                        insight += (
+                            "\n\n**เกณฑ์การตัดสิน** (อ้างอิง Topic 2): "
+                            "|Skew| < 0.5 = ใกล้ Normal — เหมาะสำหรับทุกโมเดล ไม่จำเป็นต้อง Transform"
                         )
 
                     st.info(f"**{selected_col}:** {insight}")
@@ -576,7 +589,7 @@ def render_eda():
                         [f"**{a}** ↔ **{b}** (r={r})" for a, b, r in high_corr_pairs]
                     )
                     st.warning(
-                        f"**Multicollinearity ที่อาจเป็นปัญหา:** {pairs_text}\n\n"
+                        f"**Multicollinearity ที่อาจเป็นปัญหา** (อ้างอิง Topic 2): {pairs_text}\n\n"
                         "คอลัมน์ที่มี Correlation สูง (|r| > 0.8) อาจให้ข้อมูลซ้ำซ้อนกัน "
                         "ซึ่งอาจทำให้โมเดลบางชนิด (เช่น Linear Regression) ทำงานได้ไม่ดี "
                         "อาจพิจารณาลบคอลัมน์ใดคอลัมน์หนึ่งออก"
