@@ -200,3 +200,195 @@ EDA คือขั้นตอนที่ data scientist ใช้สร้า
 
 ### ทำไมต้องทำขั้นตอนนี้
 EDA ช่วยตอบคำถามสำคัญที่ algorithm ไม่สามารถตอบแทนได้เอง เช่น "ควร log transform ไหม?", "feature นี้กับ feature นั้น measure เรื่องเดียวกันไหม?", "ข้อมูลกลุ่มนี้มีน้อยเกินไปจนโมเดลไม่เคยเห็นหรือเปล่า?" การทำ EDA ก่อนทำให้ตัดสินใจได้ดีขึ้นและประหยัดเวลา trial-and-error ในขั้นตอน modeling
+
+---
+
+## หน้า Data Transformation
+
+### ทำอะไรได้บ้าง
+
+ระบบวิเคราะห์ข้อมูลอัตโนมัติแล้วแนะนำ transformation method ที่เหมาะสมพร้อมเหตุผล ผู้ใช้สามารถ override ได้ทุกรายการก่อน apply
+
+**1. Encoding — แปลง Categorical เป็นตัวเลข**
+
+ระบบวิเคราะห์ทุก categorical column แล้วแนะนำ method ตาม cardinality และ ratio:
+
+| เงื่อนไข | Recommended |
+|----------|-------------|
+| Unique = 2 (binary) | Label Encoding (0/1) |
+| Unique ≤ 10 (low cardinality) | One-hot Encoding |
+| Unique ≤ 20 | One-hot Encoding (พร้อม warning ว่าจะเพิ่ม columns) |
+| Unique > 50% ของ rows (ID/free-text) | Drop Column |
+| Unique > 20 (high cardinality) | Label Encoding |
+
+- แสดง sample values, cardinality badge, และ warning สำหรับแต่ละ column
+- Radio button เลือกได้ 4 ตัวเลือก: `One-hot`, `Label`, `Ordinal`, `Drop`
+- **Ordinal Encoding**: เรียง categories alphabetical แล้ว map เป็น integer (0, 1, 2, ...) พร้อมแสดง order ให้ user ตรวจสอบก่อนใช้
+- ตารางเปรียบเทียบ method ทั้งหมดใน expander
+
+**2. Scaling — ปรับ Scale ของ Numeric Features**
+
+ระบบวิเคราะห์ numeric columns ด้วย IQR outlier detection และ skewness แล้วแนะนำ:
+
+| เงื่อนไข | Recommended |
+|----------|-------------|
+| มี outlier (>5% ของข้อมูล) | Robust Scaler (ใช้ Median/IQR แทน Mean/Std) |
+| Skewed รุนแรง (\|skew\| > 2) | Log Transform (log1p) ตามด้วย Standard Scaler |
+| Skewed ปานกลาง (\|skew\| > 1) | MinMax Scaler |
+| ไม่มี outlier, ไม่ skewed | Standard Scaler (Z-score) |
+
+- แสดงตาราง statistics (min, max, mean, std, skew, outlier%) ของทุก numeric column
+- Histogram + box plot ของ column ที่เลือก
+- Radio button เลือกได้ 5 ตัวเลือก: `Log Transform`, `Standard`, `MinMax`, `Robust`, `ไม่ scale`
+- **หมายเหตุ**: Scaling จะ**ไม่ถูก apply ที่นี่** — บันทึกแค่ method ไว้ให้ ML Process ทำหลัง train/test split เพื่อป้องกัน Data Leakage
+
+**3. Feature Selection — ตัด Feature ที่ไม่จำเป็นออก**
+
+- **High Correlation Pairs** (`|r| ≥ 0.85`): แสดง heatmap และรายการคู่ที่ correlation สูง พร้อม checkbox เลือกตัดทีละ column
+- **Low Variance Features** (CV < 0.01): แสดง column ที่ค่าแทบไม่เปลี่ยนแปลง (std/mean < 1%) ซึ่ง model ไม่สามารถเรียนรู้ pattern ได้
+- Safety: ตัด target column ออกได้ไม่
+
+**4. Apply Transformation**
+- ปุ่ม Apply Transformation: ทำ Feature Selection → Encoding ตามลำดับ
+- แสดง summary: Original Columns, Dropped, After Encoding, Scaling method ที่เลือก
+- แสดง Transformed Data 5 แถวแรกใน expander
+- Validate ว่าต้องเหลือ feature อย่างน้อย 1 column หลัง feature selection (ป้องกัน crash)
+
+### มีประโยชน์ต่องานอย่างไร
+ML algorithm ส่วนใหญ่ทำงานกับตัวเลขเท่านั้น ไม่สามารถรับ string โดยตรงได้ การเลือก encoding ที่ผิดสร้าง ordinal relationship ปลอม (เช่น Label Encoding บน "Bangkok"=0, "Chiang Mai"=1 ทำให้ model คิดว่า Chiang Mai "มากกว่า" Bangkok) Feature ที่ redundant เพิ่ม computation โดยไม่เพิ่ม information และอาจทำให้ model overfit
+
+### ทำไมต้องทำขั้นตอนนี้
+ข้อมูลดิบที่มี categorical columns และ scale ต่างกันมาก (เช่น อายุ 20-80 กับรายได้ 10,000-100,000) ทำให้ algorithm ที่ใช้ distance หรือ gradient (SVM, KNN, Linear model) ให้ความสำคัญกับ feature ที่มี scale ใหญ่กว่าโดยไม่ตั้งใจ Transformation แก้ปัญหานี้ก่อนที่จะ train
+
+---
+
+## หน้า ML Process (Model Competition)
+
+### ทำอะไรได้บ้าง
+
+**1. Target Column Confirmation**
+- แสดง target column ที่เลือกจากขั้นตอน Transformation พร้อม ML task ที่อนุมาน (Classification / Regression) และจำนวน unique values
+
+**2. Data Splitting (80/20)**
+- แสดง Total Rows, Train Set (80%), Test Set (20%)
+- **Stratified Split**: สำหรับ Classification จะใช้ stratified sampling เพื่อให้สัดส่วน class ในทุก split เหมือนกัน (ถ้าทุก class มีอย่างน้อย 2 ตัวอย่าง)
+- **Dataset Sampling**: ถ้า dataset ใหญ่กว่า 5,000 rows จะ sample ลงมาก่อน เพื่อให้ train ได้ในเวลาที่เหมาะสม
+
+**3. Model Competition + Auto Hyperparameter Tuning**
+
+ระบบ train ทุก model พร้อมกันและเปรียบเทียบ Cross-Validation score:
+
+**Classification models:**
+| Model | หมายเหตุ |
+|-------|---------|
+| Logistic Regression | — |
+| Decision Tree | — |
+| Random Forest | ช้า — sample 2,500 rows |
+| Gradient Boosting | ช้า — sample 2,500 rows |
+| KNN | ช้า — sample 2,500 rows |
+| SGD (Linear SVM) | — |
+
+**Regression models:**
+| Model | หมายเหตุ |
+|-------|---------|
+| Linear Regression | — |
+| Ridge Regression | — |
+| Decision Tree | — |
+| Random Forest | ช้า — sample 2,500 rows |
+| Gradient Boosting | ช้า — sample 2,500 rows |
+| KNN | ช้า — sample 2,500 rows |
+
+- **Hyperparameter Tuning**: `RandomizedSearchCV` (3-fold CV, 10 combinations) สำหรับ model ที่มี parameter grid
+- Progress bar แสดง training progress ทีละ model
+- **Data Leakage Detection**: ตรวจหา columns ที่มี correlation > 0.99, bijective mapping, หรือชื่อคล้าย target ก่อนแสดงผล
+
+**4. Leaderboard Tab**
+- ตาราง ranking ทุก model ตาม CV score (สูงสุดขึ้นก่อน) พร้อม ±Std
+- Model ที่ train ไม่ผ่านแสดง error ใน expander
+- **Best Model Card**: อธิบายว่าทำไม model นี้ถึงชนะ — CV score สูงสุด, ห่างจากอันดับ 2 เท่าไร, stability (std เทียบกับ average), และลักษณะของ model นั้น
+- แสดง best hyperparameters ที่ tuned ได้
+
+**5. Evaluation Tab**
+- ประเมิน best model บน Test set (20%) ที่ไม่เคยใช้ระหว่าง training
+
+**Classification metrics:**
+| Metric | ความหมาย |
+|--------|---------|
+| Accuracy | % ที่ทำนายถูกทั้งหมด |
+| Precision (Macro) | ค่าเฉลี่ย Precision ทุก class เท่ากัน |
+| Recall (Macro) | ค่าเฉลี่ย Recall ทุก class เท่ากัน |
+| F1 (Macro) | ค่าเฉลี่ย F1 ทุก class เท่ากัน |
+
+**Regression metrics:**
+| Metric | ความหมาย |
+|--------|---------|
+| R² Score | อธิบาย variance ได้กี่ % (1.0 = perfect) |
+| RMSE | error เฉลี่ยในหน่วยเดียวกับ target |
+| MSE | RMSE ยกกำลัง 2 |
+
+- Confusion Matrix (Classification) พร้อมอ่านค่า diagonal (ถูก) vs off-diagonal (ผิด)
+- Actual vs Predicted Scatter Plot (Regression) พร้อม perfect line
+- **Perfect Score Warning**: แจ้งเตือนถ้า metrics ทั้งหมด = 1.0 ซึ่งน่าสงสัยว่ามี Data Leakage
+
+**6. Feature Importance Tab**
+- คำนวณ feature importance สำหรับ best model:
+  - Tree-based models: ใช้ `feature_importances_` (Gini impurity reduction)
+  - Linear models: ใช้ `|coef_|` (mean absolute coefficient)
+- Horizontal bar chart Top 20 features เรียงตาม importance ลดลง
+- แสดง Top 3 features พร้อม rank, importance score, และ % ของ total importance
+- ถ้า model ไม่รองรับ feature importance แจ้ง user แทนที่จะ crash
+
+**7. Data Visualization Tab**
+- Histogram + box plot ของ column ที่เลือก (numeric) หรือ bar chart (categorical)
+- Color by categorical column
+- Correlation Heatmap ของ numeric columns (ถ้ามี ≥ 2 columns)
+
+### มีประโยชน์ต่องานอย่างไร
+แทนที่จะเลือก algorithm เดาๆ หรือลองทีละตัว ระบบ train ทุก model พร้อมกันและเปรียบเทียบอย่างยุติธรรมบน test set ที่ไม่เคยเห็น Feature Importance ช่วยให้เข้าใจว่า model ตัดสินใจจาก feature ไหน ซึ่งเป็นหัวใจของ "Explainable ML" — ผู้ใช้ไม่ใช่แค่รู้ว่า model ได้ accuracy เท่าไร แต่รู้ว่า model ให้เหตุผลอย่างไร
+
+### ทำไมต้องทำขั้นตอนนี้
+การเลือก algorithm ที่เหมาะสมกับข้อมูลเป็นสิ่งที่ต้องทดลองจริง ไม่มี algorithm ไหนดีที่สุดทุกกรณี (No Free Lunch Theorem) การประเมินบน test set ที่แยกออกมาก่อน train ทำให้ metric ที่ได้สะท้อนความสามารถจริงในการทำนายข้อมูลใหม่ ไม่ใช่แค่ "จำ" training data
+
+---
+
+## โครงสร้างโปรเจค
+
+```
+Senior_Project_Explainable_Pipeline/
+├── app.py                          # Entry point, navigation, session state management
+├── interface/
+│   ├── upload.py                   # หน้า Upload Dataset
+│   ├── cleaning.py                 # หน้า Data Cleaning
+│   ├── eda.py                      # หน้า EDA
+│   ├── data_transformation.py      # หน้า Data Transformation
+│   ├── model_process.py            # หน้า ML Process
+│   └── ui_helpers.py               # Shared UI components (_badge, _rec_box)
+├── data_prepare/
+│   └── features/
+│       ├── loading_data.py         # File I/O, cache management (Parquet)
+│       ├── process_data.py         # CSV/Excel/JSON parsing
+│       ├── cleaning_logic.py       # Missing value & outlier treatment logic
+│       ├── data_distribute.py      # Outlier detection (Z-Score / IQR)
+│       ├── data_type_detection.py  # Column type inference
+│       └── target_col.py           # Target column suggestion & description
+└── ml_process/
+    └── features/
+        ├── config.py               # Model registry, hyperparameter grids, limits
+        ├── data_analyzer.py        # Encoding/Scaling/Feature Selection analysis
+        ├── data_transformer.py     # Apply encoding & feature selection
+        ├── preprocessing.py        # Train/test split, encode, scale (leakage-safe)
+        ├── runner.py               # Model competition, RandomizedSearchCV
+        ├── evaluation.py           # Metrics calculation & visualization
+        ├── logic.py                # Data leakage detection, feature importance
+        ├── encoding.py             # Encoding UI rendering
+        ├── scaling.py              # Scaling UI rendering
+        ├── feature_select.py       # Feature selection UI rendering
+        └── views.py                # Model result visualization
+```
+
+## การรัน
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
