@@ -12,6 +12,8 @@ MISSING_STRATEGY_INFO = {
     "median": "แทนค่าว่างด้วยค่ากลาง — เหมาะกับข้อมูลที่มี Skew หรือมี Outlier",
     "median (rounded)": "แทนค่าว่างด้วยค่ากลาง แล้วปัดเป็นจำนวนเต็ม — เหมาะกับข้อมูล Discrete เช่น อายุ จำนวนสินค้า",
     "most frequent": "แทนค่าว่างด้วยค่าที่พบบ่อยสุด (Mode) — เหมาะกับข้อมูล Categorical หรือ Discrete",
+    "forward fill": "ใช้ค่าแถวก่อนหน้ามาแทน (Forward Fill) — เหมาะกับข้อมูลที่เรียงตามเวลา เช่น Time Series (อ้างอิง Topic 7)",
+    "backward fill": "ใช้ค่าแถวถัดไปมาแทน (Backward Fill) — เหมาะกับข้อมูลที่เรียงตามเวลา เช่น Time Series (อ้างอิง Topic 7)",
     "drop rows": "ลบทั้งแถวที่มีค่าว่าง (Listwise Deletion) — ข้อมูลสะอาด แต่อาจสูญเสียข้อมูล",
 }
 
@@ -82,6 +84,7 @@ def render_cleaning():
         st.session_state["working_df_source_shape"] = current_shape
         st.session_state["original_dup_count"] = int(df.duplicated().sum())
         st.session_state.pop("original_outlier_count", None)
+        st.session_state.pop("_treated_outlier_cols", None)
 
     # original_df เก็บข้อมูลดิบก่อน cleaning ใดๆ — ตั้งค่าครั้งเดียวตอนเปิดหน้าครั้งแรก
     if "original_df" not in st.session_state:
@@ -248,32 +251,37 @@ def render_cleaning():
         if not missing_cols:
             st.success("ไม่มี Missing Values")
         else:
-            with st.expander("Missing Data คืออะไร?", expanded=False):
+            with st.expander("Missing Data คืออะไร? (อ้างอิง Topic 7)", expanded=False):
                 st.markdown(
                     "**Missing Data** คือค่าว่างที่ขาดหายไปในชุดข้อมูล "
                     "อาจเกิดจากการป้อนข้อมูลไม่สมบูรณ์ อุปกรณ์ทำงานผิดพลาด หรือไฟล์สูญหาย\n\n"
-                    "**ประเภทของ Missing Data**:\n"
+                    "**ประเภทของ Missing Data** (Little and Rubin, 1987):\n"
                     "- **MCAR** (Missing Completely at Random): หายไปโดยบังเอิญ ไม่เกี่ยวกับตัวแปรใดเลย\n"
                     "- **MAR** (Missing at Random): การหายไปเกี่ยวข้องกับตัวแปรอื่น เช่น ผู้หญิงมักไม่เปิดเผยน้ำหนัก\n"
-                    "- **MNAR** (Missing Not at Random): การหายไปเกี่ยวข้องกับค่าของตัวเอง เช่น คนน้ำหนักมากมักไม่ตอบ"
+                    "- **MNAR** (Missing Not at Random): การหายไปเกี่ยวข้องกับค่าของตัวเอง เช่น คนน้ำหนักมากมักไม่ตอบ\n\n"
+                    "**วิธีจัดการ** (อ้างอิง Topic 7 — Handling Missing Data):\n"
+                    "- **Mean/Median Imputation**: แทนด้วยค่ากลาง เหมาะกับข้อมูลตัวเลข\n"
+                    "- **Most Frequent**: แทนด้วย Mode เหมาะกับข้อมูล Categorical\n"
+                    "- **Forward/Backward Fill**: ใช้ค่าแถวข้างเคียง เหมาะกับ Time Series\n"
+                    "- **Listwise Deletion (Drop Rows)**: ลบแถวที่มีค่าว่าง"
                 )
 
             # ── Action bar ─────────────────────────────────────
             col_sel_all, col_desel_all, _, col_global_strat, col_apply_sel, col_apply_all = st.columns(_ACTION_BAR_COLS)
             with col_sel_all:
-                if st.button("Select All", key="miss_sel_all", use_container_width=True):
+                if st.button("Select All", key="miss_sel_all", width="stretch"):
                     for col in missing_cols:
                         st.session_state[f"miss_check_{col}"] = True
                     st.rerun()
             with col_desel_all:
-                if st.button("Deselect All", key="miss_desel_all", use_container_width=True):
+                if st.button("Deselect All", key="miss_desel_all", width="stretch"):
                     for col in missing_cols:
                         st.session_state[f"miss_check_{col}"] = False
                     st.rerun()
             with col_global_strat:
                 global_miss_strategy = st.selectbox(
                     "Global Strategy",
-                    ["mean", "median", "median (rounded)", "most frequent", "drop rows"],
+                    ["mean", "median", "median (rounded)", "most frequent", "forward fill", "backward fill", "drop rows"],
                     key="miss_global_strategy",
                     label_visibility="collapsed",
                 )
@@ -281,38 +289,37 @@ def render_cleaning():
                 col for col in missing_cols
                 if st.session_state.get(f"miss_check_{col}", False)
             ]
+
+            def _miss_compatible(col_type: str) -> list[str]:
+                if col_type == "float":
+                    return ["mean", "median", "forward fill", "backward fill", "drop rows"]
+                elif col_type == "int":
+                    return ["median (rounded)", "most frequent", "forward fill", "backward fill", "drop rows"]
+                elif col_type == "datetime":
+                    return ["forward fill", "backward fill", "drop rows"]
+                else:
+                    return ["most frequent", "forward fill", "backward fill", "drop rows"]
+
             with col_apply_sel:
                 if st.button(
                     "Apply Selected",
                     key="miss_apply_selected",
                     disabled=not checked_miss_cols,
-                    use_container_width=True,
+                    width="stretch",
                 ):
                     df_work = st.session_state["working_df"]
                     for col in checked_miss_cols:
-                        col_type = actual_type(df_work[col])
-                        if col_type == "float":
-                            compatible = ["mean", "median", "drop rows"]
-                        elif col_type == "int":
-                            compatible = ["median (rounded)", "most frequent", "drop rows"]
-                        else:
-                            compatible = ["most frequent", "drop rows"]
+                        compatible = _miss_compatible(actual_type(df_work[col]))
                         strategy = global_miss_strategy if global_miss_strategy in compatible else compatible[0]
                         df_work = use_missing_strategy(df_work, col, strategy)
                     st.session_state["working_df"] = df_work
                     st.session_state["cleaning_confirmed"] = False
                     st.rerun()
             with col_apply_all:
-                if st.button("Apply All", key="miss_apply_all", use_container_width=True):
+                if st.button("Apply All", key="miss_apply_all", width="stretch"):
                     df_work = st.session_state["working_df"]
                     for col in missing_cols:
-                        col_type = actual_type(df_work[col])
-                        if col_type == "float":
-                            compatible = ["mean", "median", "drop rows"]
-                        elif col_type == "int":
-                            compatible = ["median (rounded)", "most frequent", "drop rows"]
-                        else:
-                            compatible = ["most frequent", "drop rows"]
+                        compatible = _miss_compatible(actual_type(df_work[col]))
                         strategy = global_miss_strategy if global_miss_strategy in compatible else compatible[0]
                         df_work = use_missing_strategy(df_work, col, strategy)
                     st.session_state["working_df"] = df_work
@@ -322,7 +329,7 @@ def render_cleaning():
             st.markdown(_HR, unsafe_allow_html=True)
 
             # ── Per-column rows ────────────────────────────────
-            last_missing_col = next(reversed(missing_cols))
+            last_missing_col = list(missing_cols)[-1]
             for col, count in missing_cols.items():
                 pct = count / len(working_df) * 100
                 col_type = actual_type(working_df[col])
@@ -333,12 +340,7 @@ def render_cleaning():
                 with col_name:
                     st.markdown(f"**{col}** — {count:,} ค่า ({pct:.1f}%)")
                 with col_strategy:
-                    if col_type == "float":
-                        options = ["mean", "median", "drop rows"]
-                    elif col_type == "int":
-                        options = ["median (rounded)", "most frequent", "drop rows"]
-                    else:
-                        options = ["most frequent", "drop rows"]
+                    options = _miss_compatible(col_type)
                     strategy = st.selectbox(
                         "Strategy",
                         options,
@@ -373,25 +375,29 @@ def render_cleaning():
         if not outlier_cols:
             st.success("ไม่พบ Outliers")
         else:
-            with st.expander("ระบบตรวจจับ Outlier อย่างไร?", expanded=False):
+            with st.expander("ระบบตรวจจับ Outlier อย่างไร? (อ้างอิง Topic 8)", expanded=False):
                 st.markdown(
-                    "**Outlier** คือค่าที่ผิดปกติ ห่างจากข้อมูลส่วนใหญ่อย่างมีนัยสำคัญ\n\n"
-                    "ระบบเลือกวิธีตรวจจับอัตโนมัติตาม Skewness ของข้อมูล:\n"
-                    "- |Skew| < 0.5 ข้อมูลใกล้ Normal ใช้ **Z-Score** "
-                    "(ค่าที่ห่างจาก Mean เกิน 3 เท่าของ SD)\n"
-                    "- |Skew| >= 0.5 ข้อมูลเบ้ ใช้ **IQR** "
-                    "(ค่านอกช่วง Q1 - 1.5 x IQR ถึง Q3 + 1.5 x IQR)"
+                    "**Outlier** คือค่าที่ผิดปกติ ห่างจากข้อมูลส่วนใหญ่อย่างมีนัยสำคัญ "
+                    "(อ้างอิง Topic 8 — Outlier Detection)\n\n"
+                    "ระบบเลือกวิธีตรวจจับ **อัตโนมัติตาม Skewness** ของข้อมูล:\n"
+                    "- **|Skew| < 0.5** → ข้อมูลใกล้ Normal → ใช้ **Z-Score** "
+                    "(ค่าที่ห่างจาก Mean เกิน **3 SD** — 3-sigma rule ครอบคลุม 99.7% ของข้อมูล Normal)\n"
+                    "- **|Skew| ≥ 0.5** → ข้อมูลเบ้ → ใช้ **IQR** "
+                    "(ค่านอกช่วง Q1 − 1.5×IQR ถึง Q3 + 1.5×IQR)\n\n"
+                    "**เหตุผลที่ใช้ Skewness = 0.5 เป็น threshold**: "
+                    "|Skew| < 0.5 ถือว่าข้อมูลสมมาตรเพียงพอที่จะสมมติการกระจายแบบ Normal ได้ "
+                    "จึงใช้ Z-Score ได้อย่างน่าเชื่อถือ (อ้างอิง Topic 2 — Basic Statistical Description of Data)"
                 )
 
             # ── Action bar ─────────────────────────────────────
             col_sel_all, col_desel_all, _, col_global_strat, col_apply_sel, col_apply_all = st.columns(_ACTION_BAR_COLS)
             with col_sel_all:
-                if st.button("Select All", key="out_sel_all", use_container_width=True):
+                if st.button("Select All", key="out_sel_all", width="stretch"):
                     for col in outlier_cols:
                         st.session_state[f"out_check_{col}"] = True
                     st.rerun()
             with col_desel_all:
-                if st.button("Deselect All", key="out_desel_all", use_container_width=True):
+                if st.button("Deselect All", key="out_desel_all", width="stretch"):
                     for col in outlier_cols:
                         st.session_state[f"out_check_{col}"] = False
                     st.rerun()
@@ -411,7 +417,7 @@ def render_cleaning():
                     "Apply Selected",
                     key="out_apply_selected",
                     disabled=not checked_out_cols,
-                    use_container_width=True,
+                    width="stretch",
                 ):
                     df_work = st.session_state["working_df"]
                     for col in checked_out_cols:
@@ -419,20 +425,26 @@ def render_cleaning():
                         df_work = use_outlier_strategy(df_work, col, global_out_strategy, bounds["Lower"], bounds["Upper"])
                     st.session_state["working_df"] = df_work
                     st.session_state["cleaning_confirmed"] = False
+                    treated = st.session_state.setdefault("_treated_outlier_cols", {})
+                    for col in checked_out_cols:
+                        treated[col] = global_out_strategy
                     st.rerun()
             with col_apply_all:
-                if st.button("Apply All", key="out_apply_all", use_container_width=True):
+                if st.button("Apply All", key="out_apply_all", width="stretch"):
                     df_work = st.session_state["working_df"]
                     for col, bounds in outlier_cols.items():
                         df_work = use_outlier_strategy(df_work, col, global_out_strategy, bounds["Lower"], bounds["Upper"])
                     st.session_state["working_df"] = df_work
                     st.session_state["cleaning_confirmed"] = False
+                    treated = st.session_state.setdefault("_treated_outlier_cols", {})
+                    for col in outlier_cols:
+                        treated[col] = global_out_strategy
                     st.rerun()
             st.caption(OUTLIER_STRATEGY_INFO.get(global_out_strategy, ""))
             st.markdown(_HR, unsafe_allow_html=True)
 
             # ── Per-column rows ────────────────────────────────
-            last_outlier_col = next(reversed(outlier_cols))
+            last_outlier_col = list(outlier_cols)[-1]
             for col, bounds in outlier_cols.items():
                 count = bounds["Outliers"]
                 reason = bounds["Reason"]
@@ -458,9 +470,27 @@ def render_cleaning():
                         df_work = use_outlier_strategy(st.session_state["working_df"], col, strategy, lower, upper)
                         st.session_state["working_df"] = df_work
                         st.session_state["cleaning_confirmed"] = False
+                        st.session_state.setdefault("_treated_outlier_cols", {})[col] = strategy
                         st.rerun()
 
                 st.caption(OUTLIER_STRATEGY_INFO.get(strategy, ""))
+
+                treated_cols = st.session_state.get("_treated_outlier_cols", {})
+                if col in treated_cols:
+                    prev_strategy = treated_cols[col]
+                    if prev_strategy == "clip":
+                        st.warning(
+                            f"**{col}** ถูก Clip ไปแล้ว แต่ระบบยังตรวจพบ {count:,} Outlier อยู่ "
+                            "เนื่องจาก Clip เปลี่ยน distribution → bounds ถูกคำนวณใหม่แล้วแคบลง "
+                            "ค่าที่อยู่ขอบจึงยังถูกจับซ้ำ — "
+                            "**หากต้องการกำจัดให้หมด ให้เปลี่ยนเป็น Drop Rows แทน**"
+                        )
+                    else:
+                        st.warning(
+                            f"**{col}** ถูก Drop Rows ไปแล้ว แต่ระบบยังตรวจพบ {count:,} Outlier อยู่ "
+                            "— ลองกด Reset แล้ว Apply ใหม่อีกครั้ง "
+                            "หรือเปลี่ยนเป็น **Clip** เพื่อจำกัดค่าแทนการลบแถว"
+                        )
 
                 if col != last_outlier_col:
                     st.markdown(_HR, unsafe_allow_html=True)
@@ -512,6 +542,7 @@ def render_cleaning():
             if st.button("Reset", type="secondary", width="stretch"):
                 st.session_state["working_df"] = st.session_state["original_df"].copy()
                 st.session_state["cleaning_confirmed"] = False
+                st.session_state.pop("_treated_outlier_cols", None)
                 st.info("Reset กลับ original data แล้ว")
                 st.rerun()
 
@@ -540,6 +571,7 @@ def render_cleaning():
             st.session_state.pop("working_df", None)
             st.session_state.pop("working_df_source_shape", None)
             st.session_state.pop("cleaning_confirmed", None)
+            st.session_state.pop("_treated_outlier_cols", None)
             navigate("upload")
     with col2:
         if st.button(

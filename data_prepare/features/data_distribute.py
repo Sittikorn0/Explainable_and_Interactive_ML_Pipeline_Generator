@@ -1,5 +1,4 @@
 from scipy.stats import skew
-import numpy as np
 
 
 def data_distribution(df):
@@ -34,10 +33,9 @@ def data_distribution(df):
         if abs(col_skew) < 0.5:
             mean = series.mean()
             std = series.std()
-            z_scores = np.abs((series - mean) / std)
-            count = int((z_scores > 3).sum())
             lower = mean - 3 * std
             upper = mean + 3 * std
+            count = int(((series < lower) | (series > upper)).sum())
             method = "Z-Score"
             reason = f"Skewness = {col_skew:.2f} (ใกล้ 0 → กระจายแบบ Normal → เหมาะกับ Z-Score)"
         else:
@@ -72,8 +70,8 @@ def data_distribution(df):
             "Outliers": count,
             "Method": method,
             "Skewness": round(col_skew, 2),
-            "Lower": round(lower, 4),
-            "Upper": round(upper, 4),
+            "Lower": lower,
+            "Upper": upper,
             "Reason": reason,
         })
 
