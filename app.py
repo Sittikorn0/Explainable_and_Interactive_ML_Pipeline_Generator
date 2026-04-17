@@ -149,6 +149,9 @@ def main():
     elif url_step == "transformation":
         from interface.data_transformation import render_transformation
         render_transformation()
+    elif url_step == "model_process":
+        from interface.model_process import render_ml_process
+        render_ml_process()
     else:
         from interface.upload import render_upload
         render_upload()
