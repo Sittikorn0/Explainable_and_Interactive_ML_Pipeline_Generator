@@ -93,6 +93,8 @@
 | `median` | Float column ที่มี Skew หรือ Outlier |
 | `median (rounded)` | Int column แบบ Discrete เช่น อายุ |
 | `most frequent` | String/Categorical column |
+| `forward fill` | Time-series หรือข้อมูลที่เรียงลำดับ — ใช้ค่าแถวก่อนหน้าแทน |
+| `backward fill` | Time-series หรือข้อมูลที่เรียงลำดับ — ใช้ค่าแถวถัดไปแทน |
 | `drop rows` | ทุกประเภท (ลบแถวที่มี missing) |
 
 - Dropdown ต่อ column แสดงเฉพาะ strategy ที่เหมาะกับ data type นั้นๆ
@@ -105,7 +107,7 @@
   - `|skew| ≥ 0.5` → **IQR** (ค่านอกช่วง Q1−1.5×IQR ถึง Q3+1.5×IQR)
 - แสดง bounds [lower, upper] และเหตุผลที่เลือก method นั้นต่อ column
 - 2 strategies:
-  - `clip` — วนซ้ำสูงสุด 5 รอบด้วย bounds ที่ recalculate ใหม่ทุกรอบ จนกว่าจะไม่มี outlier เหลือ
+  - `clip` — จำกัดค่าให้อยู่ใน [lower, upper] แล้ว recalculate bounds ใหม่วนซ้ำสูงสุด 10 รอบ โดยใช้ผลจาก outlier detection เป็น convergence oracle จนกว่าจะไม่มี outlier เหลือหรือ bounds หยุดเปลี่ยน
   - `drop rows` — ลบแถวที่มีค่าเกิน bounds
 
 **4. Before/After Comparison Table**
