@@ -32,11 +32,20 @@ def render_upload():
                 st.session_state["last_uploaded_file"] = uploaded_file.name
                 st.session_state["json_warnings"] = json_warnings
                 st.session_state.pop("target_col", None)  # reset เมื่อโหลดไฟล์ใหม่
-                # reset cleaning state ทั้งหมดเมื่อโหลดไฟล์ใหม่
+                # reset state ทั้งหมดเมื่อโหลดไฟล์ใหม่
                 for _k in [
+                    # cleaning
                     "working_df", "working_df_source_shape", "cleaning_confirmed",
                     "original_df", "original_dup_count", "original_outlier_count",
-                    "_dist_key", "_dist_result",
+                    "_dist_key", "_dist_result", "_treated_outlier_cols",
+                    # transformation
+                    "transformed_df", "trans_confirmed", "trans_summary",
+                    "_trans_cache_key", "_trans_analysis",
+                    "_trans_target_saved", "ml_target_col_preset",
+                    "_main_df_backup",
+                    # ml
+                    "ml_result", "ml_metrics", "_fi_data", "ml_task_type",
+                    "_ml_scaling_used", "_ml_leakage_warnings",
                 ]:
                     st.session_state.pop(_k, None)
                 save_to_local(df, uploaded_file.name)
