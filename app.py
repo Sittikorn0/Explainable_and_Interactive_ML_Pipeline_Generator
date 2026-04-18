@@ -51,12 +51,39 @@ def main():
         initial_sidebar_state="collapsed",
     )
 
+    # Override Streamlit internal metric font (ต้อง inject หลัง set_page_config)
+    st.markdown("""
+<style>
+[data-testid="stMetricValue"] * {
+    font-size: 2.25rem !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+}
+[data-testid="stMetricLabel"] * {
+    font-size: 1rem !important;
+    opacity: 0.8 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
     # Recovery Cache
     if st.session_state.get("main_df") is None:
         recovered_df, recover_name = load_from_local()
         if recovered_df is not None:
             st.session_state["main_df"] = recovered_df
             st.session_state["last_uploaded_file"] = recover_name
+
+    # Restore ML results หลัง refresh
+    if st.session_state.get("ml_result") is None:
+        from data_prepare.features.loading_data import load_ml_cache
+        ml_result, ml_metrics, trans_summary, ml_target = load_ml_cache()
+        if ml_result is not None:
+            st.session_state["ml_result"]          = ml_result
+            st.session_state["ml_metrics"]         = ml_metrics
+            st.session_state["trans_summary"]      = trans_summary
+            st.session_state["ml_task_type"]       = ml_result.get("task_type")
+            if ml_target:
+                st.session_state["_trans_target_saved"] = ml_target
 
     # Restore target_col ถ้าหายไปหลัง refresh (session_state ว่าง)
     if "target_col" not in st.session_state and st.session_state.get("main_df") is not None:
@@ -72,14 +99,14 @@ def main():
     # ถ้ามี _step ใน session_state ให้ใช้ค่านั้นก่อน (ป้องกัน race condition กับ rerun)
     url_step = st.session_state.get("_step") or st.query_params.get("step", "upload")
     # guard: ถ้าไม่มีข้อมูลแต่พยายามเข้าหน้า inner → กลับ upload
-    if url_step in ("cleaning", "eda", "transformation", "model_process") and st.session_state.get("main_df") is None:
+    if url_step in ("cleaning", "eda", "transformation", "model_process", "explainable") and st.session_state.get("main_df") is None:
         url_step = "upload"
     # sync URL ให้ตรงกับ step จริง
     st.session_state["_step"] = url_step
     if st.query_params.get("step") != url_step:
         st.query_params["step"] = url_step
 
-    is_upload_page = url_step not in ("cleaning", "eda", "transformation", "model_process")
+    is_upload_page = url_step not in ("cleaning", "eda", "transformation", "model_process", "explainable")
 
     # แสดงปุ่ม New Dataset เฉพาะหน้าที่ไม่ใช่ Upload
     if is_upload_page:
@@ -152,6 +179,9 @@ def main():
     elif url_step == "model_process":
         from interface.model_process import render_ml_process
         render_ml_process()
+    elif url_step == "explainable":
+        from interface.explainable import render_explainable
+        render_explainable()
     else:
         from interface.upload import render_upload
         render_upload()
