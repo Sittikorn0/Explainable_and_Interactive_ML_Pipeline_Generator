@@ -371,3 +371,55 @@ def save_cleaned_data(df: pd.DataFrame, original_filename: str) -> str:
     st.session_state["cleaned_csv_path"] = csv_path
 
     return cleaned_filename
+
+
+# ── ML Result Cache ───────────────────────────────────────────────────────────
+
+import pickle
+
+def _ml_cache_path() -> str:
+    _ensure_cache_dir()
+    return _cache_path("ml_result", "pkl")
+
+def _ml_meta_path() -> str:
+    _ensure_cache_dir()
+    return _cache_path("ml_meta", "json")
+
+
+def save_ml_cache(ml_result: dict, ml_metrics: dict,
+                  trans_summary: dict, target_col: str) -> None:
+    """บันทึกผล ML ลง disk เพื่อกู้คืนหลัง Refresh"""
+    try:
+        with open(_ml_cache_path(), "wb") as f:
+            pickle.dump(ml_result, f)
+        meta = {
+            "ml_metrics":    ml_metrics,
+            "trans_summary": trans_summary,
+            "target_col":    target_col,
+        }
+        with open(_ml_meta_path(), "w", encoding="utf-8") as f:
+            json.dump(meta, f, ensure_ascii=False)
+    except Exception as e:
+        print(f"save_ml_cache error: {e}")
+
+
+def load_ml_cache() -> tuple[dict | None, dict, dict, str | None]:
+    """โหลดผล ML จาก disk คืน (ml_result, ml_metrics, trans_summary, target_col)"""
+    pkl_path  = _ml_cache_path()
+    meta_path = _ml_meta_path()
+    if not os.path.exists(pkl_path):
+        return None, {}, {}, None
+    try:
+        with open(pkl_path, "rb") as f:
+            ml_result = pickle.load(f)
+        ml_metrics, trans_summary, target_col = {}, {}, None
+        if os.path.exists(meta_path):
+            with open(meta_path, "r", encoding="utf-8") as f:
+                meta = json.load(f)
+            ml_metrics    = meta.get("ml_metrics", {})
+            trans_summary = meta.get("trans_summary", {})
+            target_col    = meta.get("target_col")
+        return ml_result, ml_metrics, trans_summary, target_col
+    except Exception as e:
+        print(f"load_ml_cache error: {e}")
+        return None, {}, {}, None
