@@ -39,7 +39,7 @@ def show_leaderboard(competition: dict):
                     key=lambda x: x[1]["cv_score"], reverse=True)
     errors = [(k, v) for k, v in competition.items() if v["cv_score"] is None]
 
-    medals = ["🥇", "🥈", "🥉"]
+    medals = ["#1", "#2", "#3"]
     rows = []
     for i, (_, res) in enumerate(ranked):
         params = " | ".join(f"{k}={v}" for k, v in res["best_params"].items()) if res["best_params"] else "—"
@@ -61,7 +61,7 @@ def show_leaderboard(competition: dict):
         },
     )
     if errors:
-        with st.expander(f"⚠ {len(errors)} model ที่ข้ามไป"):
+        with st.expander(f"{len(errors)} model ที่ข้ามไป"):
             for _, res in errors:
                 st.caption(f"**{res['label']}**: {res['error']}")
 

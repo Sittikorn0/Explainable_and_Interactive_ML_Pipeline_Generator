@@ -177,7 +177,7 @@ def render_fi(fi_df: pd.DataFrame | None, best_label: str, fi_error: str | None)
         st.plotly_chart(fig_fi, width="stretch")
 
         total  = fi_df["Importance"].sum()
-        medals = ["🥇", "🥈", "🥉"]
+        medals = ["#1", "#2", "#3"]
         html = ('<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px 16px;margin:8px 0">'
                 '<div style="font-size:0.81rem;color:#c9d1d9;line-height:1.8">'
                 '• ยิ่งแท่งยาว = feature มีผลต่อ model มากกว่า<br>'

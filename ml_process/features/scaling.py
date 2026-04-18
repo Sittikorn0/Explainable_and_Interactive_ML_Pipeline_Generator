@@ -79,7 +79,7 @@ padding:10px 14px;margin:6px 0;font-size:0.81rem;color:#c9d1d9;line-height:1.7">
   ใช้ <code>log1p(x) = log(x + 1)</code> กับทุก column ที่มีค่า ≥ 0<br>
   ({', '.join(f'<code>{c}</code>' for c in heavy_cols[:3])}{'...' if len(heavy_cols)>3 else ''})<br>
   จากนั้นตามด้วย Standard Scaler เพื่อ normalize<br><br>
-  <b style="color:#d29922">⚠ หมายเหตุ:</b> ใช้ได้เฉพาะ column ที่มีค่า ≥ 0 เท่านั้น
+  <span style="background:#d2992233;color:#d29922;padding:2px 8px;border-radius:4px;font-size:0.78rem;font-weight:700;vertical-align:middle">NOTE</span> <b style="color:#d29922">หมายเหตุ:</b> ใช้ได้เฉพาะ column ที่มีค่า ≥ 0 เท่านั้น
   column ที่มีค่าติดลบจะไม่ถูก log transform
 </div>
 """, unsafe_allow_html=True)

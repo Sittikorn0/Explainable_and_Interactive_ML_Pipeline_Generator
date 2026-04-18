@@ -42,7 +42,7 @@ padding:12px 16px;margin:10px 0">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
     <span style="font-family:monospace;font-weight:700;font-size:0.9rem;color:#e6edf3">{col}</span>
     {_badge(f"{cardinality} unique", "gray")}
-    {_badge("⚠ " + info["warning"], "orange") if info["warning"] else ""}
+    {_badge(info["warning"], "orange") if info["warning"] else ""}
   </div>
   <div style="font-size:0.78rem;color:#8b949e;margin-bottom:8px">
     ตัวอย่าง: {samples}{"..." if len(info["sample_values"]) >= 5 else ""}
@@ -61,7 +61,7 @@ padding:12px 16px;margin:10px 0">
             st.markdown(f"""
 <div style="background:#2d1f0a;border:1px solid #d29922;border-radius:6px;
 padding:10px 14px;margin:6px 0;font-size:0.81rem;color:#d29922">
-  ⚠ <b>กรุณายืนยัน order ที่ถูกต้อง</b><br>
+  <span style="background:#d2992233;color:#d29922;padding:2px 8px;border-radius:4px;font-size:0.78rem;font-weight:700;vertical-align:middle">NOTE</span> <b>กรุณายืนยัน order ที่ถูกต้อง</b><br>
   <span style="color:#c9d1d9">
   ระบบเรียง alphabetical อัตโนมัติ: 
   <b>{" &lt; ".join(sorted(str(v) for v in info["sample_values"]))}</b><br>
