@@ -5,7 +5,7 @@ from ml_process.features.data_analyzer    import analyze_all
 from ml_process.features.data_transformer import apply_all
 from ml_process.features.scaling           import _render_scaling, SCALING_LABELS
 from ml_process.features.encoding          import _render_encoding
-from ml_process.features.feature_select    import _render_feature_selection
+from ml_process.features.feature_select    import _render_feature_selection, _render_leakage_check
 
 def _render_summary(df: pd.DataFrame, transformed_df: pd.DataFrame,
                     summary: dict, target_col: str):
@@ -50,8 +50,8 @@ def render_transformation():
     target_col   = saved_target if saved_target in cols else cols[-1]
     st.markdown("**Target Column** (จะไม่ถูก transform)")
     st.markdown(f"""
-<div style="background:#0d1117;border:1px solid #30363d;border-left:3px solid #58a6ff;
-border-radius:6px;padding:10px 14px;font-family:monospace;font-size:0.95rem;
+<div style="background:#0d1117;border:1px solid #30363d;border-left:5px solid #58a6ff;
+border-radius:6px;padding:10px 14px;font-family:monospace;font-size:1.2rem;
 color:#58a6ff;font-weight:600">
 {target_col}
 </div>
@@ -63,7 +63,7 @@ color:#58a6ff;font-weight:600">
     _df_fingerprint = hash((df.shape, tuple(df.columns), str(df.iloc[0].values.tolist()) if len(df) else ""))
     cache_key = f"trans_analysis_{_df_fingerprint}_{target_col}"
     if st.session_state.get("_trans_cache_key") != cache_key:
-        with st.spinner("🔍 วิเคราะห์ข้อมูล..."):
+        with st.spinner("วิเคราะห์ข้อมูล..."):
             analysis = analyze_all(df, target_col)
         st.session_state["_trans_analysis"]  = analysis
         st.session_state["_trans_cache_key"] = cache_key
@@ -79,7 +79,9 @@ color:#58a6ff;font-weight:600">
     st.markdown("---")
     scaling_method = _render_scaling(df, target_col, sc_analysis)
     st.markdown("---")
-    drop_cols      = _render_feature_selection(df, target_col, fs_analysis)
+    leakage_drops  = _render_leakage_check(df, target_col)
+    st.markdown("---")
+    drop_cols      = list(set(_render_feature_selection(df, target_col, fs_analysis) + leakage_drops))
 
     # ── Apply + Preview ───────────────────────────────────────
     st.markdown("---")
@@ -97,6 +99,8 @@ color:#58a6ff;font-weight:600">
                 for _k in ["ml_result", "ml_metrics", "_fi_data", "ml_task_type",
                            "_ml_scaling_used", "_ml_leakage_warnings"]:
                     st.session_state.pop(_k, None)
+                from explainable.features.trace_log import log_transformation
+                log_transformation(summary, enc_decisions, scaling_method, drop_cols)
                 st.rerun()
             except Exception as e:
                 st.error(f"Transform ล้มเหลว: {e}")
@@ -108,7 +112,7 @@ color:#58a6ff;font-weight:600">
         transformed_df = st.session_state["transformed_df"]
         summary        = st.session_state["trans_summary"]
         _render_summary(df, transformed_df, summary, target_col)
-        st.success("✅ Transform เสร็จแล้ว — กด Next Step เพื่อไป ML Process")
+        st.success("Transform เสร็จแล้ว — กด Next Step เพื่อไป ML Process")
 
     # ── Navigation ────────────────────────────────────────────
     st.markdown("---")

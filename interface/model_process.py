@@ -5,7 +5,7 @@ from ml_process.features.preprocessing  import preprocess, detect_task
 from ml_process.features.runner      import run_competition, get_available_models
 from ml_process.features.evaluation  import get_metrics, show_metrics, show_leaderboard, show_confusion_matrix, show_pred_vs_actual
 from ml_process.features.config      import MODEL_DESC
-from ml_process.features.logic       import detect_leakage, compute_fi
+from ml_process.features.logic       import detect_leakage, analyze_leakage, compute_fi
 from ml_process.features.views       import (
     render_target_info, render_competition_desc, render_model_cards,
     render_best_model_card, render_metrics_explain, render_cm_explain,
@@ -85,7 +85,7 @@ def render_ml_process():
                 return
 
         # เก็บ leakage warnings ไว้ใน session_state เพื่อแสดงหลัง rerun
-        st.session_state["_ml_leakage_warnings"] = detect_leakage(df, target_col)
+        st.session_state["_ml_leakage_warnings"] = analyze_leakage(df, target_col)
 
         bar = st.progress(0, text="กำลัง train...")
         def _prog(label, i, total):
@@ -97,6 +97,14 @@ def render_ml_process():
             bar.empty()
             st.session_state["ml_result"]  = result
             st.session_state["ml_metrics"] = metrics
+            from explainable.features.trace_log import log_model_process
+            log_model_process(result, metrics)
+            from data_prepare.features.loading_data import save_ml_cache
+            save_ml_cache(
+                result, metrics,
+                st.session_state.get("trans_summary", {}),
+                target_col,
+            )
             st.rerun()
         except Exception as e:
             bar.empty()
@@ -122,11 +130,43 @@ def render_ml_process():
     if scaling_used:
         st.caption(f"Scaling: **{scaling_used}** (fit บน Train set เท่านั้น — ป้องกัน Data Leakage)")
 
-    leakage_warnings = st.session_state.get("_ml_leakage_warnings", [])
-    if leakage_warnings:
-        st.warning(
-            "⚠️ **ตรวจพบ Data Leakage ที่อาจทำให้ค่า Evaluation สูงผิดปกติ:**\n\n" +
-            "\n".join(f"- {w}" for w in leakage_warnings)
+    leakage_items = st.session_state.get("_ml_leakage_warnings", [])
+    if leakage_items:
+        high   = [x for x in leakage_items if x["severity"] == "high"]
+        medium = [x for x in leakage_items if x["severity"] == "medium"]
+
+        color  = "#f85149" if high else "#d29922"
+        title  = "ตรวจพบ Data Leakage — ค่า Metric อาจสูงผิดปกติ" if high \
+                 else "พบ column ที่น่าสงสัย — ควรตรวจสอบ"
+
+        rows_html = ""
+        for item in leakage_items:
+            sev_color = "#f85149" if item["severity"] == "high" else \
+                        "#d29922" if item["severity"] == "medium" else "#8b949e"
+            sev_label = {"high": "HIGH", "medium": "MED", "low": "LOW"}[item["severity"]]
+            reasons_str = " · ".join(item["reasons"])
+            rows_html += (
+                f'<div style="display:flex;gap:12px;align-items:flex-start;'
+                f'padding:8px 0;border-bottom:1px solid #30363d">'
+                f'<span style="background:{sev_color}22;color:{sev_color};'
+                f'font-size:0.75rem;font-weight:700;padding:2px 7px;border-radius:4px;'
+                f'flex-shrink:0;margin-top:2px">{sev_label}</span>'
+                f'<div><code style="color:#e6edf3">{item["col"]}</code>'
+                f'<div style="color:#8b949e;font-size:0.85rem;margin-top:2px">{reasons_str}</div>'
+                f'</div></div>'
+            )
+
+        st.markdown(
+            f'<div style="background:#1a0f0f;border:1px solid {color};border-radius:10px;'
+            f'padding:16px 20px;margin:12px 0">'
+            f'<div style="color:{color};font-weight:700;font-size:1rem;margin-bottom:4px">'
+            f'Data Leakage Warning</div>'
+            f'<div style="color:#c9d1d9;font-size:0.9rem;margin-bottom:12px">{title}</div>'
+            f'{rows_html}'
+            f'<div style="color:#8b949e;font-size:0.85rem;margin-top:12px">'
+            f'ย้อนกลับไป <b>Transformation</b> แล้ว drop column ที่น่าสงสัยออกก่อน Run ใหม่</div>'
+            f'</div>',
+            unsafe_allow_html=True,
         )
 
     st.success(f"Best Model: **{best_label}**")
@@ -147,11 +187,46 @@ def render_ml_process():
     with tab_eval:
         st.caption(f"ผลลัพธ์จาก **{best_label}** บน Test set ที่ยังไม่เคยเห็น")
         if task_type == "classification" and all(v >= 1.0 for v in metrics.values()):
-            st.error(
-                "⚠️ **ค่า Metrics ทั้งหมด = 1.0 — สงสัยว่ามี Data Leakage!**\n\n"
-                "ตรวจสอบ dataset ว่ามี column ที่คำนวณมาจาก target โดยตรงหรือไม่ "
-                "(เช่น target_encoded, target_label, หรือ column ที่มีชื่อคล้าย target) "
-                "ให้ย้อนกลับไป Transformation แล้วตัด column นั้นออก"
+            # คำนวณ feature importance จาก best model เพื่อหาตัวการ
+            fi_rows = ""
+            try:
+                trans_summary = st.session_state.get("trans_summary", {})
+                fi_df, _ = compute_fi(df, target_col, best_key, best_params, trans_summary)
+                if fi_df is not None:
+                    top = fi_df[fi_df["Importance"] > 0].head(5)
+                    for _, row in top.iterrows():
+                        pct = row["Importance"] * 100
+                        bar = int(pct / 5)
+                        fi_rows += (
+                            f'<div style="display:flex;align-items:center;gap:10px;padding:4px 0">'
+                            f'<code style="color:#e6edf3;min-width:160px;font-size:0.85rem">{row["Feature"]}</code>'
+                            f'<div style="flex:1;background:#21262d;border-radius:4px;height:8px">'
+                            f'<div style="width:{min(bar*5,100)}%;background:#f85149;height:8px;border-radius:4px"></div></div>'
+                            f'<span style="color:#f85149;font-size:0.85rem;min-width:45px">{pct:.1f}%</span>'
+                            f'</div>'
+                        )
+            except Exception:
+                pass
+
+            fi_section = (
+                f'<div style="margin-top:12px">'
+                f'<div style="color:#8b949e;font-size:0.875rem;margin-bottom:8px">'
+                f'Feature ที่ model ใช้ตัดสินใจ (feature importance):</div>'
+                f'{fi_rows}</div>'
+            ) if fi_rows else ""
+
+            st.markdown(
+                f'<div style="background:#1a0f0f;border:1px solid #f85149;border-radius:10px;'
+                f'padding:16px 20px;margin:8px 0">'
+                f'<div style="color:#f85149;font-weight:700;font-size:1rem;margin-bottom:8px">'
+                f'ค่า Metrics ทั้งหมด = 1.0 — สงสัยว่ามี Data Leakage</div>'
+                f'<div style="color:#c9d1d9;font-size:0.9rem;line-height:1.7">'
+                f'Feature ที่มี importance สูงสุดคือตัวการที่น่าสงสัยที่สุด<br>'
+                f'ย้อนกลับไป <b>Transformation → Data Leakage Check</b> แล้ว drop feature นั้นออก'
+                f'</div>'
+                f'{fi_section}'
+                f'</div>',
+                unsafe_allow_html=True,
             )
         show_metrics(metrics)
         render_metrics_explain(metrics, task_type)
