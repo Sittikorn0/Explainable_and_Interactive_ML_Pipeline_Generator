@@ -5,6 +5,8 @@ from data_prepare.features.data_distribute import data_distribution
 from data_prepare.features.loading_data import save_cleaned_data
 from data_prepare.features.cleaning_logic import use_missing_strategy, use_outlier_strategy
 from data_prepare.features.data_type_detection import actual_type
+from explainable.features.trace_log import track_cleaning, track_cleaning_bulk, commit_cleaning
+from explainable.domains.cleaning import suggest_missing, suggest_outlier
 
 
 MISSING_STRATEGY_INFO = {
@@ -195,6 +197,7 @@ def render_cleaning():
                         working_df.drop(columns=cols_to_drop).reset_index(drop=True)
                     )
                     st.session_state["cleaning_confirmed"] = False
+                    track_cleaning_bulk("drop_col", cols_to_drop, "dropped manually")
                     st.rerun()
         with c_drop2:
             # แนะนำคอลัมน์ที่ควรลบ (missing > 80% หรือ unique == 1)
@@ -211,6 +214,7 @@ def render_cleaning():
                         working_df.drop(columns=suggested_drops).reset_index(drop=True)
                     )
                     st.session_state["cleaning_confirmed"] = False
+                    track_cleaning_bulk("drop_col", suggested_drops, "dropped (missing>80% or single unique)")
                     st.rerun()
 
         if suggested_drops:
@@ -236,6 +240,7 @@ def render_cleaning():
                     working_df.drop_duplicates().reset_index(drop=True)
                 )
                 st.session_state["cleaning_confirmed"] = False
+                track_cleaning("drop_dup", "_duplicates_", f"dropped {duplicate_count:,} duplicate rows")
                 st.rerun()
 
         st.divider()
@@ -312,6 +317,7 @@ def render_cleaning():
                         compatible = _miss_compatible(actual_type(df_work[col]))
                         strategy = global_miss_strategy if global_miss_strategy in compatible else compatible[0]
                         df_work = use_missing_strategy(df_work, col, strategy)
+                        track_cleaning("missing", col, strategy)
                     st.session_state["working_df"] = df_work
                     st.session_state["cleaning_confirmed"] = False
                     st.rerun()
@@ -322,6 +328,7 @@ def render_cleaning():
                         compatible = _miss_compatible(actual_type(df_work[col]))
                         strategy = global_miss_strategy if global_miss_strategy in compatible else compatible[0]
                         df_work = use_missing_strategy(df_work, col, strategy)
+                        track_cleaning("missing", col, strategy)
                     st.session_state["working_df"] = df_work
                     st.session_state["cleaning_confirmed"] = False
                     st.rerun()
@@ -352,6 +359,7 @@ def render_cleaning():
                         df_work = use_missing_strategy(st.session_state["working_df"], col, strategy)
                         st.session_state["working_df"] = df_work
                         st.session_state["cleaning_confirmed"] = False
+                        track_cleaning("missing", col, strategy)
                         st.rerun()
 
                 st.caption(MISSING_STRATEGY_INFO.get(strategy, ""))
@@ -423,6 +431,7 @@ def render_cleaning():
                     for col in checked_out_cols:
                         bounds = outlier_cols[col]
                         df_work = use_outlier_strategy(df_work, col, global_out_strategy, bounds["Lower"], bounds["Upper"])
+                        track_cleaning("outlier", col, global_out_strategy)
                     st.session_state["working_df"] = df_work
                     st.session_state["cleaning_confirmed"] = False
                     treated = st.session_state.setdefault("_treated_outlier_cols", {})
@@ -434,6 +443,7 @@ def render_cleaning():
                     df_work = st.session_state["working_df"]
                     for col, bounds in outlier_cols.items():
                         df_work = use_outlier_strategy(df_work, col, global_out_strategy, bounds["Lower"], bounds["Upper"])
+                        track_cleaning("outlier", col, global_out_strategy)
                     st.session_state["working_df"] = df_work
                     st.session_state["cleaning_confirmed"] = False
                     treated = st.session_state.setdefault("_treated_outlier_cols", {})
@@ -471,6 +481,7 @@ def render_cleaning():
                         st.session_state["working_df"] = df_work
                         st.session_state["cleaning_confirmed"] = False
                         st.session_state.setdefault("_treated_outlier_cols", {})[col] = strategy
+                        track_cleaning("outlier", col, strategy)
                         st.rerun()
 
                 st.caption(OUTLIER_STRATEGY_INFO.get(strategy, ""))
@@ -536,6 +547,7 @@ def render_cleaning():
                     original_filename,
                 )
                 st.session_state["cleaning_confirmed"] = True
+                commit_cleaning(st.session_state["original_df"], st.session_state["working_df"])
                 st.success("บันทึกข้อมูลที่ Cleaned แล้ว")
                 st.rerun()
         with cf2:

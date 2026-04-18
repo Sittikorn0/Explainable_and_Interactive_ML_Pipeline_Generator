@@ -121,5 +121,11 @@ def render_upload():
             with col1:
                 if st.button("Next Step", type="primary", width="stretch"):
                     from app import navigate
+                    from explainable.features.trace_log import clear, log_upload
+                    from ml_process.features.preprocessing import detect_task
                     save_target_col(st.session_state["target_col"])
+                    _target = st.session_state["target_col"]
+                    _task   = detect_task(df, _target)
+                    clear()
+                    log_upload(df, uploaded_file.name, _target, _task)
                     navigate("cleaning")
