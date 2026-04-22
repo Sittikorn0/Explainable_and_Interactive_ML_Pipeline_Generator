@@ -68,6 +68,8 @@ def render_ml_process():
         st.session_state.pop("_fi_data",              None)
         st.session_state.pop("_ml_scaling_used",      None)
         st.session_state.pop("_ml_leakage_warnings",  None)
+        for _k in [k for k in st.session_state.keys() if k.startswith("_xai_")]:
+            st.session_state.pop(_k, None)
 
         with st.spinner("กำลัง preprocess..."):
             try:

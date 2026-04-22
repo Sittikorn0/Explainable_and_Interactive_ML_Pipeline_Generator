@@ -396,7 +396,8 @@ def render_explainable():
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ── Fit model (cached) ────────────────────────────────────────────────────
-    cache_key = f"_xai_cache_{best_key}_{hash(str(sorted(best_params.items())))}"
+    dataset_id = st.session_state.get("last_uploaded_file", "")
+    cache_key = f"_xai_cache_{best_key}_{hash(str(sorted(best_params.items())))}_{dataset_id}"
     if st.session_state.get("_xai_cache_id") != cache_key:
         with st.spinner(f"กำลัง train {best_label} เพื่อวิเคราะห์..."):
             try:

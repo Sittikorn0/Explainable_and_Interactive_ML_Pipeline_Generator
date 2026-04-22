@@ -1,5 +1,5 @@
 import streamlit as st
-from data_prepare.features.loading_data import process_data, save_to_local, save_target_col
+from data_prepare.features.loading_data import process_data, save_to_local, save_target_col, delete_ml_cache
 from data_prepare.features.target_col import suggest_target, describe_target, get_column_reasons
 
 def render_upload():
@@ -48,6 +48,10 @@ def render_upload():
                     "_ml_scaling_used", "_ml_leakage_warnings",
                 ]:
                     st.session_state.pop(_k, None)
+                # ล้าง XAI cache (dynamic keys _xai_*) และ ML disk cache
+                for _k in [k for k in st.session_state.keys() if k.startswith("_xai_")]:
+                    st.session_state.pop(_k, None)
+                delete_ml_cache()
                 save_to_local(df, uploaded_file.name)
             else:
                 st.error("Failed to load data. Please check the file format and content.")

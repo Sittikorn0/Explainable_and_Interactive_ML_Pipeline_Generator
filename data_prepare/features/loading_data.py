@@ -403,6 +403,16 @@ def save_ml_cache(ml_result: dict, ml_metrics: dict,
         print(f"save_ml_cache error: {e}")
 
 
+def delete_ml_cache() -> None:
+    """ลบ ML result cache files ของ session นี้ — เรียกเมื่อ upload dataset ใหม่"""
+    for path in [_ml_cache_path(), _ml_meta_path()]:
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+        except Exception as e:
+            print(f"Could not delete ML cache: {e}")
+
+
 def load_ml_cache() -> tuple[dict | None, dict, dict, str | None]:
     """โหลดผล ML จาก disk คืน (ml_result, ml_metrics, trans_summary, target_col)"""
     pkl_path  = _ml_cache_path()
