@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 
 from explainable.features.explainer import get_fitted_model, compute_permutation_importance
 from explainable.features.trace_log import get_log
+from ml_process.features.export import build_leaderboard_df, build_predictions_df, build_html_report
 
 # ── Design tokens ─────────────────────────────────────────────────────────────
 
@@ -438,11 +439,62 @@ def render_explainable():
         _render_trace()
 
     st.divider()
-    col1, _space, col2 = st.columns([0.8, 8, 0.8])
-    with col1:
+
+    # ── Export + Nav ──────────────────────────────────────────────────────────
+    import datetime as _dt, io as _io, zipfile as _zf
+    from data_prepare.features.loading_data import delete_local
+
+    fi_df_export = st.session_state.get("_fi_data", {}).get("fi_df")
+    ts        = _dt.datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe_name = best_label.replace(" ", "_")
+
+    html_report = build_html_report(result, metrics, fi_df_export).encode("utf-8")
+
+    buf = _io.BytesIO()
+    with _zf.ZipFile(buf, "w", _zf.ZIP_DEFLATED) as zf:
+        zf.writestr("leaderboard.csv", build_leaderboard_df(result["competition"]).to_csv(index=False))
+        zf.writestr("predictions.csv", build_predictions_df(result["y_test"], result["y_pred"], task_type).to_csv(index=False))
+        zf.writestr("metrics.csv",     "\n".join(["Metric,Value"] + [f"{k},{v}" for k, v in metrics.items()]))
+        if fi_df_export is not None:
+            zf.writestr("feature_importance.csv", fi_df_export.to_csv(index=False))
+
+    col_back, _sp, col_html, col_zip, col_finish = st.columns([0.8, 3.5, 1.2, 1.2, 0.8])
+    with col_back:
         if st.button("Back", type="secondary", width="stretch"):
             navigate("model_process")
-    with col2:
+    with col_html:
+        st.download_button(
+            "HTML Report",
+            html_report,
+            file_name=f"ml_report_{safe_name}_{ts}.html",
+            mime="text/html",
+            use_container_width=True,
+        )
+    with col_zip:
+        st.download_button(
+            "All CSV (ZIP)",
+            buf.getvalue(),
+            file_name=f"ml_results_{safe_name}_{ts}.zip",
+            mime="application/zip",
+            use_container_width=True,
+        )
+    with col_finish:
+        @st.dialog("จบ Pipeline?")
+        def confirm_finish():
+            st.markdown(
+                f"ผลลัพธ์ทั้งหมดของ **{best_label}** จะถูกล้างออก\n\n"
+                "คุณต้องการจบและกลับไปหน้า Upload เพื่อเริ่มใหม่หรือไม่?"
+            )
+            c1, c2 = st.columns(2)
+            with c1:
+                if st.button("ยืนยัน", type="primary", width="stretch"):
+                    delete_local()
+                    for key in list(st.session_state.keys()):
+                        del st.session_state[key]
+                    navigate("upload")
+            with c2:
+                if st.button("ยกเลิก", width="stretch"):
+                    st.rerun()
+
         if st.button("Finish", type="primary", width="stretch"):
-            st.balloons()
-            st.success("Pipeline เสร็จสมบูรณ์!")
+            confirm_finish()

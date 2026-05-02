@@ -4,6 +4,7 @@ import streamlit as st
 from ml_process.features.preprocessing  import preprocess, detect_task
 from ml_process.features.runner      import run_competition, get_available_models
 from ml_process.features.evaluation  import get_metrics, show_metrics, show_leaderboard, show_confusion_matrix, show_pred_vs_actual
+from ml_process.features.export      import build_leaderboard_df, build_predictions_df
 from ml_process.features.config      import MODEL_DESC
 from ml_process.features.logic       import detect_leakage, analyze_leakage, compute_fi
 from ml_process.features.views       import (
@@ -185,6 +186,9 @@ def render_ml_process():
                 for k, v in best_params.items():
                     st.write(f"- **{k}**: `{v}`")
         render_best_model_card(result, best_label)
+        lb_csv = build_leaderboard_df(result["competition"]).to_csv(index=False).encode("utf-8-sig")
+        st.markdown('<div style="margin-top:24px"></div>', unsafe_allow_html=True)
+        st.download_button("Leaderboard CSV", lb_csv, file_name=f"leaderboard_{best_label}.csv", mime="text/csv")
 
     with tab_eval:
         st.caption(f"ผลลัพธ์จาก **{best_label}** บน Test set ที่ยังไม่เคยเห็น")
@@ -239,6 +243,9 @@ def render_ml_process():
         else:
             show_pred_vs_actual(result["y_test"].values, result["y_pred"])
             render_scatter_explain()
+        pred_csv = build_predictions_df(result["y_test"], result["y_pred"], task_type).to_csv(index=False).encode("utf-8-sig")
+        st.markdown('<div style="margin-top:24px"></div>', unsafe_allow_html=True)
+        st.download_button("Predictions CSV", pred_csv, file_name=f"predictions_{best_label}.csv", mime="text/csv")
 
     with tab_fi:
         trans_summary = st.session_state.get("trans_summary", {})
@@ -251,6 +258,10 @@ def render_ml_process():
                 }
             fi_data = st.session_state["_fi_data"]
         render_fi(fi_data.get("fi_df"), best_label, fi_data.get("error"))
+        if fi_data.get("fi_df") is not None:
+            fi_csv = fi_data["fi_df"].to_csv(index=False).encode("utf-8-sig")
+            st.markdown('<div style="margin-top:24px"></div>', unsafe_allow_html=True)
+            st.download_button("Feature Importance CSV", fi_csv, file_name=f"feature_importance_{best_label}.csv", mime="text/csv")
 
     with tab_viz:
         render_viz(df)
