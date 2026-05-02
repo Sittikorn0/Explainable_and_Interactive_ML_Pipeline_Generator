@@ -33,7 +33,7 @@ except ImportError:
 
 def get_model_map() -> dict:
     m = {
-        "logistic_regression":         lambda: LogisticRegression(max_iter=1000, solver="lbfgs"),
+        "logistic_regression":         lambda: LogisticRegression(max_iter=5000, solver="saga", n_jobs=-1),
         "decision_tree":               lambda: DecisionTreeClassifier(max_depth=8, random_state=42),
         "random_forest":               lambda: RandomForestClassifier(n_estimators=50, n_jobs=-1, random_state=42),
         "gradient_boosting":           lambda: HistGradientBoostingClassifier(max_iter=50, max_depth=4, random_state=42),
