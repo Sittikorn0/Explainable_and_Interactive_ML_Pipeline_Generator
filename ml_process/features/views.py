@@ -132,6 +132,8 @@ def render_metrics_explain(metrics: dict, task_type: str):
 
 def render_cm_explain(y_test, y_pred):
     from sklearn.metrics import confusion_matrix as _cm
+    y_test = np.array(y_test).flatten()
+    y_pred = np.array(y_pred).flatten()
     labels  = sorted(list(set(y_test) | set(y_pred)), key=str)
     cm_arr  = _cm(y_test, y_pred, labels=labels)
     correct   = int(np.trace(cm_arr))

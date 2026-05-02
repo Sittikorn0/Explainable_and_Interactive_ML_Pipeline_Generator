@@ -67,6 +67,8 @@ def show_leaderboard(competition: dict):
 
 
 def show_confusion_matrix(y_test, y_pred):
+    y_test = np.array(y_test).flatten()
+    y_pred = np.array(y_pred).flatten()
     labels = sorted(list(set(y_test) | set(y_pred)), key=str)
     cm     = confusion_matrix(y_test, y_pred, labels=labels)
     fig    = px.imshow(cm, x=[str(l) for l in labels], y=[str(l) for l in labels],
