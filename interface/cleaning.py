@@ -514,19 +514,39 @@ def render_cleaning():
         dup_before = st.session_state.get("original_dup_count", int(df.duplicated().sum()))
         outl_before = st.session_state["original_outlier_count"]
 
-        changed_values = [
-            working_df.shape[0] - df.shape[0],
-            working_df.shape[1] - df.shape[1],
-            total_missing - int(df.isnull().sum().sum()),
-            duplicate_count - dup_before,
-            total_outl - outl_before,
-        ]
-        summary_df = pd.DataFrame({
-            "Metric": ["Rows", "Columns", "Missing Values", "Duplicates", "Outliers"],
-            "Before": [f"{df.shape[0]:,}", f"{df.shape[1]}", f"{int(df.isnull().sum().sum()):,}", f"{dup_before:,}", f"{outl_before:,}"],
-            "After": [f"{working_df.shape[0]:,}", f"{working_df.shape[1]}", f"{int(working_df.isnull().sum().sum()):,}", f"{duplicate_count:,}", f"{total_outl:,}"],
-            "Changed": changed_values,
-        })
+        # หลัง Confirm ให้ใช้ snapshot ที่บันทึกไว้ก่อน rerun แทน
+        # เพราะ rerun จะทำให้ main_df กลายเป็น cleaned data ทำให้ Before = After
+        if st.session_state.get("cleaning_confirmed") and "cleaning_summary_snapshot" in st.session_state:
+            snap = st.session_state["cleaning_summary_snapshot"]
+            b = snap["before"]
+            a = snap["after"]
+            changed_values = [
+                a["rows"] - b["rows"],
+                a["cols"] - b["cols"],
+                a["missing"] - b["missing"],
+                a["dups"] - b["dups"],
+                a["outliers"] - b["outliers"],
+            ]
+            summary_df = pd.DataFrame({
+                "Metric": ["Rows", "Columns", "Missing Values", "Duplicates", "Outliers"],
+                "Before": [f"{b['rows']:,}", f"{b['cols']}", f"{b['missing']:,}", f"{b['dups']:,}", f"{b['outliers']:,}"],
+                "After":  [f"{a['rows']:,}", f"{a['cols']}", f"{a['missing']:,}", f"{a['dups']:,}", f"{a['outliers']:,}"],
+                "Changed": changed_values,
+            })
+        else:
+            changed_values = [
+                working_df.shape[0] - df.shape[0],
+                working_df.shape[1] - df.shape[1],
+                total_missing - int(df.isnull().sum().sum()),
+                duplicate_count - dup_before,
+                total_outl - outl_before,
+            ]
+            summary_df = pd.DataFrame({
+                "Metric": ["Rows", "Columns", "Missing Values", "Duplicates", "Outliers"],
+                "Before": [f"{df.shape[0]:,}", f"{df.shape[1]}", f"{int(df.isnull().sum().sum()):,}", f"{dup_before:,}", f"{outl_before:,}"],
+                "After": [f"{working_df.shape[0]:,}", f"{working_df.shape[1]}", f"{int(working_df.isnull().sum().sum()):,}", f"{duplicate_count:,}", f"{total_outl:,}"],
+                "Changed": changed_values,
+            })
 
         styled_summary = (
             summary_df.style
@@ -542,6 +562,23 @@ def render_cleaning():
                 original_filename = st.session_state.get(
                     "last_uploaded_file", "dataset.csv"
                 )
+                # snapshot ค่า Before/After ก่อน save เพื่อให้ตารางยังแสดงถูกหลัง rerun
+                st.session_state["cleaning_summary_snapshot"] = {
+                    "before": {
+                        "rows": df.shape[0],
+                        "cols": df.shape[1],
+                        "missing": int(df.isnull().sum().sum()),
+                        "dups": dup_before,
+                        "outliers": outl_before,
+                    },
+                    "after": {
+                        "rows": working_df.shape[0],
+                        "cols": working_df.shape[1],
+                        "missing": total_missing,
+                        "dups": duplicate_count,
+                        "outliers": total_outl,
+                    },
+                }
                 save_cleaned_data(
                     st.session_state["working_df"].copy(),
                     original_filename,
@@ -555,6 +592,7 @@ def render_cleaning():
                 st.session_state["working_df"] = st.session_state["original_df"].copy()
                 st.session_state["cleaning_confirmed"] = False
                 st.session_state.pop("_treated_outlier_cols", None)
+                st.session_state.pop("cleaning_summary_snapshot", None)
                 st.info("Reset กลับ original data แล้ว")
                 st.rerun()
 
