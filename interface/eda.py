@@ -54,10 +54,15 @@ def render_eda():
 
     # Dataset Overview
     st.subheader("Dataset Overview")
-    _dist_key = ("_eda_dist_cache", df.shape, int(pd.util.hash_pandas_object(df).sum()))
+    # ใช้ขอบเขต Outlier เดียวกับหน้า Cleaning (fixed_bounds) ถ้ามี
+    # เพื่อให้ตัวเลข Outlier card ตรงกันทั้งสองหน้า
+    fixed_bounds = st.session_state.get("original_outlier_bounds", None)
+
+    _bounds_sig = id(fixed_bounds) if fixed_bounds else 0
+    _dist_key = ("_eda_dist_cache", df.shape, int(pd.util.hash_pandas_object(df).sum()), _bounds_sig)
     if st.session_state.get("_eda_dist_key") != _dist_key:
         with st.spinner("Calculating Data..."):
-            total_outl, outls_details = data_distribution(df)
+            total_outl, outls_details = data_distribution(df, fixed_bounds=fixed_bounds)
         st.session_state["_eda_dist_key"] = _dist_key
         st.session_state["_eda_dist_result"] = (total_outl, outls_details)
     else:
