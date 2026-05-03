@@ -21,6 +21,18 @@ def get_session_id() -> str:
         if url_uid:
             st.session_state["user_uuid"] = url_uid
         else:
+            # พยายามหา Session ID ล่าสุดจาก temp_cache (แก้ปัญหา Refresh แล้ว uid หายจาก URL)
+            _ensure_cache_dir()
+            files = _list_cache_files()
+            if files:
+                files_with_time = [(f, os.path.getmtime(os.path.join(_CACHE_DIR, f))) for f in files]
+                latest_file = max(files_with_time, key=lambda x: x[1])[0]
+                latest_sid = _session_id_of(latest_file)
+                if latest_sid:
+                    st.session_state["user_uuid"] = latest_sid
+                    st.query_params["uid"] = latest_sid
+                    return latest_sid
+
             new_id = str(uuid.uuid4())[:8]
             st.session_state["user_uuid"] = new_id
             st.query_params["uid"] = new_id
