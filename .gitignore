@@ -3,5 +3,8 @@
 temp_cache/*.csv
 temp_cache/*.parquet
 temp_cache/*.txt
+temp_cache/*.json
+temp_cache/*.pkl
+
 
 __pycache__/
