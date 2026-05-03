@@ -62,8 +62,8 @@ def _cleanup_old_files() -> None:
             if (now - os.path.getmtime(fpath)) > _CACHE_TTL:
                 try:
                     os.remove(fpath)
-                except Exception:
-                    pass
+                except (FileNotFoundError, PermissionError) as e:
+                    print(f"Cleanup warning: Could not remove old file {fname}: {e}")
 
         # 2. จัดกลุ่มไฟล์ที่เหลือตาม session id → หา mtime ล่าสุดของแต่ละ session
         session_mtime: dict[str, float] = {}
@@ -84,8 +84,8 @@ def _cleanup_old_files() -> None:
                 if _session_id_of(fname) in to_delete:
                     try:
                         os.remove(os.path.join(_CACHE_DIR, fname))
-                    except Exception:
-                        pass
+                    except (FileNotFoundError, PermissionError) as e:
+                        print(f"Cleanup warning: Could not remove session file {fname}: {e}")
 
     except Exception as e:
         print(f"Cleanup error: {e}")
@@ -124,7 +124,7 @@ def _read_csv_with_fallback(file_bytes: bytes) -> pd.DataFrame:
     try:
         dialect = csv.Sniffer().sniff(sample_text)
         delimiter = dialect.delimiter
-    except Exception:
+    except csv.Error:
         delimiter = ','
         
     last_err = None
@@ -615,7 +615,7 @@ def delete_local() -> None:
         try:
             if os.path.exists(path):
                 os.remove(path)
-        except Exception as e:
+        except (FileNotFoundError, PermissionError) as e:
             print(f"Could not delete temp file: {e}")
 
 
@@ -686,7 +686,7 @@ def delete_ml_cache() -> None:
         try:
             if os.path.exists(path):
                 os.remove(path)
-        except Exception as e:
+        except (FileNotFoundError, PermissionError) as e:
             print(f"Could not delete ML cache: {e}")
 
 
