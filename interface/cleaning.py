@@ -55,10 +55,21 @@ def render_cleaning():
     # ── Dataset Overview ──────────────────────────────────────
     st.subheader("Dataset Overview")
 
+    if "original_outlier_bounds" not in st.session_state:
+        from data_prepare.features.statistics import get_outlier_bounds
+        bounds_dict = {}
+        for col in df.select_dtypes(include=["number"]).columns:
+            series = df[col].dropna()
+            if len(series) > 0:
+                bounds_dict[col] = get_outlier_bounds(series)
+        st.session_state["original_outlier_bounds"] = bounds_dict
+
+    fixed_bounds = st.session_state["original_outlier_bounds"]
+
     _dist_key = ("_dist_cache", working_df.shape, int(pd.util.hash_pandas_object(working_df).sum()))
     if st.session_state.get("_dist_key") != _dist_key:
         with st.spinner("Calculating Data..."):
-            total_outl, outls_details = data_distribution(working_df)
+            total_outl, outls_details = data_distribution(working_df, fixed_bounds=fixed_bounds)
         st.session_state["_dist_key"] = _dist_key
         st.session_state["_dist_result"] = (total_outl, outls_details)
     else:
@@ -135,6 +146,7 @@ def render_cleaning():
                     },
                 }
                 save_cleaned_data(st.session_state["working_df"], original_filename)
+                st.session_state["main_df"] = st.session_state["working_df"].copy()
                 st.session_state["cleaning_confirmed"] = True
                 commit_cleaning(df, st.session_state["working_df"])
                 st.success("บันทึกข้อมูลที่ Cleaned แล้ว")
@@ -145,6 +157,7 @@ def render_cleaning():
                 st.session_state["cleaning_confirmed"] = False
                 st.session_state.pop("_treated_outlier_cols", None)
                 st.session_state.pop("cleaning_summary_snapshot", None)
+                st.session_state.pop("original_outlier_bounds", None)
                 st.info("Reset กลับ original data แล้ว")
                 st.rerun()
 

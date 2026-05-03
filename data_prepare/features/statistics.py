@@ -3,7 +3,8 @@ from scipy.stats import skew
 
 def get_outlier_bounds(series: pd.Series) -> dict:
     """คำนวณขอบเขตของ Outlier โดยพิจารณาจาก Skewness อัตโนมัติ"""
-    if series.nunique() <= 1 or series.std() == 0:
+    clean = series.dropna()
+    if len(clean) == 0 or clean.nunique() <= 1 or clean.std() == 0:
         return {
             "method": "N/A",
             "lower": float(series.min()),
@@ -12,7 +13,17 @@ def get_outlier_bounds(series: pd.Series) -> dict:
             "reason": "ค่าทุกแถวเหมือนกัน — ไม่สามารถตรวจจับ Outlier ได้"
         }
         
-    col_skew = float(skew(series))
+    # ต้อง dropna() ก่อนคำนวณ skewness เสมอ ไม่เช่นนั้นจะรีเทิร์น NaN ถ้ามีค่าว่าง
+    series_clean = series.dropna()
+    if series_clean.empty:
+        return {
+            "method": "N/A",
+            "lower": 0.0,
+            "upper": 0.0,
+            "skewness": 0.0,
+            "reason": "ไม่มีข้อมูลเหลือหลังจากตัดค่าว่าง"
+        }
+    col_skew = float(skew(series_clean))
     
     if abs(col_skew) < 0.5:
         mean = series.mean()

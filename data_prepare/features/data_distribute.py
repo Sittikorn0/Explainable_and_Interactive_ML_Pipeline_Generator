@@ -1,6 +1,6 @@
 from data_prepare.features.statistics import get_outlier_bounds
 
-def data_distribution(df):
+def data_distribution(df, fixed_bounds=None):
     """ตรวจจับ Outlier ในคอลัมน์ตัวเลข โดยใช้ statistics helper"""
     numeric_cols = df.select_dtypes(include=["number"]).columns
     total_outliers = 0
@@ -11,7 +11,10 @@ def data_distribution(df):
         if len(series) == 0:
             continue
             
-        bounds = get_outlier_bounds(series)
+        if fixed_bounds and col in fixed_bounds:
+            bounds = fixed_bounds[col]
+        else:
+            bounds = get_outlier_bounds(series)
         lower = bounds["lower"]
         upper = bounds["upper"]
         

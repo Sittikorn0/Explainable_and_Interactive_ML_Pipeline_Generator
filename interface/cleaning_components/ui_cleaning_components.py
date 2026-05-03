@@ -381,20 +381,7 @@ def render_outliers(working_df: pd.DataFrame, outlier_cols: dict, outls_details:
 
         treated_cols = st.session_state.get("_treated_outlier_cols", {})
         if col in treated_cols:
-            prev_strategy = treated_cols[col]
-            if prev_strategy == "clip":
-                st.warning(
-                    f"**{col}** ถูก Clip ไปแล้ว แต่ระบบยังตรวจพบ {count:,} Outlier อยู่ "
-                    "เนื่องจาก Clip เปลี่ยน distribution → bounds ถูกคำนวณใหม่แล้วแคบลง "
-                    "ค่าที่อยู่ขอบจึงยังถูกจับซ้ำ — "
-                    "**หากต้องการกำจัดให้หมด ให้เปลี่ยนเป็น Drop Rows แทน**"
-                )
-            else:
-                st.warning(
-                    f"**{col}** ถูก Drop Rows ไปแล้ว แต่ระบบยังตรวจพบ {count:,} Outlier อยู่ "
-                    "— ลองกด Reset แล้ว Apply ใหม่อีกครั้ง "
-                    "หรือเปลี่ยนเป็น **Clip** เพื่อจำกัดค่าแทนการลบแถว"
-                )
+            st.success(f"**{col}** ถูกจัดการ Outliers เรียบร้อยแล้ว")
 
         if col != last_outlier_col:
             st.markdown(_HR, unsafe_allow_html=True)

@@ -60,6 +60,7 @@ def render_upload():
             for _k in [
                 "working_df", "working_df_source_shape", "cleaning_confirmed",
                 "original_df", "original_dup_count", "original_outlier_count",
+                "original_outlier_bounds",
                 "_dist_key", "_dist_result", "_treated_outlier_cols",
                 "transformed_df", "trans_confirmed", "trans_summary",
                 "_trans_cache_key", "_trans_analysis",
@@ -178,8 +179,9 @@ def render_upload():
                 save_target_col(st.session_state["target_col"])
                 _target = st.session_state["target_col"]
                 _task   = detect_task(df, _target)
+                _reasons = get_column_reasons(df, _target)
                 clear()
-                log_upload(df, uploaded_file.name, _target, _task)
+                log_upload(df, uploaded_file.name, _target, _task, target_reasons=_reasons)
                 navigate("cleaning")
             except Exception as e:
                 st.error(f"ไม่สามารถไปขั้นตอนต่อไปได้ — {e}")
