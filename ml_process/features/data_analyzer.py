@@ -118,7 +118,7 @@ def analyze_scaling(df: pd.DataFrame, target_col: str) -> dict:
         if len(series) == 0:
             continue
 
-        col_skew = float(skew(series))
+        col_skew = 0.0 if series.std() < 1e-10 else float(skew(series))
 
         # ตรวจ outlier ด้วย IQR
         q1, q3 = series.quantile(0.25), series.quantile(0.75)
