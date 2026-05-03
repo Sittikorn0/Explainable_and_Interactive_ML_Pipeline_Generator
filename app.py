@@ -38,10 +38,10 @@ load_css("interface/styles/app.css")
 def page_header(title: str, subtitle: str = "") -> None:
     st.markdown(
         f'<div style="margin-bottom:1.75rem;">'
-        f'<h2 style="font-family:{SANS};font-size:1.35rem;font-weight:600;'
-        f'color:#f1f5f9;margin:0 0 5px;">{title}</h2>'
+        f'<h2 style="font-family:{SANS};font-size:1.45rem;font-weight:700;'
+        f'color:#F1F5F9;margin:0 0 5px;">{title}</h2>'
         + (
-            f'<p style="font-family:{SANS};font-size:0.9rem;color:#64748b;margin:0;">{subtitle}</p>'
+            f'<p style="font-family:{SANS};font-size:1rem;color:#94A3B8;margin:0;">{subtitle}</p>'
             if subtitle
             else ""
         )
@@ -79,10 +79,12 @@ def main():
     font-size: 2.25rem !important;
     font-weight: 700 !important;
     line-height: 1.2 !important;
+    color: #F8FAFC !important;
 }
 [data-testid="stMetricLabel"] * {
-    font-size: 1rem !important;
-    opacity: 0.8 !important;
+    font-size: 1.05rem !important;
+    font-weight: 600 !important;
+    color: #94A3B8 !important;
 }
 </style>
 """, unsafe_allow_html=True)
