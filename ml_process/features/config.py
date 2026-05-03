@@ -1,7 +1,7 @@
 """ml_process/config.py — constants ทั้งหมด"""
 
-MAX_ROWS_TRAIN = 5_000
-MAX_ROWS_SLOW  = 2_000
+MAX_ROWS_TRAIN = 50_000
+MAX_ROWS_SLOW  = 5_000
 SLOW_MODELS    = {"knn", "knn_regressor", "svm"}
 
 MODELS_CLF = {
