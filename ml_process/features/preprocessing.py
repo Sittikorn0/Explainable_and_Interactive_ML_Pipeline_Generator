@@ -63,7 +63,6 @@ def _encode_fit_transform(X_train: pd.DataFrame, X_test: pd.DataFrame) -> tuple:
                 cat_val = c[len(prefix):]
                 X_test[c] = (X_test[col].astype(str) == cat_val).astype(int)
             X_test = X_test.drop(columns=[col])
-            X_test = X_test.reindex(columns=X_train.columns, fill_value=0)
         else:
             # LabelEncoder: fit บน X_train เท่านั้น
             le = LabelEncoder()
@@ -77,6 +76,9 @@ def _encode_fit_transform(X_train: pd.DataFrame, X_test: pd.DataFrame) -> tuple:
                 lambda v: le.transform([v])[0] if v in known else fallback
             )
 
+    # reindex ครั้งเดียวหลัง encode ทุก column เสร็จ
+    # (ถ้าทำในลูปจะตัด column ที่ยัง encode ไม่เสร็จออก)
+    X_test = X_test.reindex(columns=X_train.columns, fill_value=0)
     return X_train, X_test
 
 
