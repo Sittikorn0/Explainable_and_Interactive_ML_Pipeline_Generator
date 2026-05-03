@@ -1,5 +1,6 @@
 import io
 import json
+import csv
 import os
 import time
 import uuid
@@ -115,14 +116,21 @@ _JSON_MAX_LEVEL = 5
 
 
 def _read_csv_with_fallback(file_bytes: bytes) -> pd.DataFrame:
-    """ลอง encoding หลายตัวตามลำดับ กรอง UnicodeDecodeError เท่านั้น
-    ใช้ sep=None + engine='python' เพื่อให้ pandas sniff delimiter อัตโนมัติ
-    รองรับ comma (,), semicolon (;), tab (\\t) และ delimiter อื่นๆ
+    """ลองดมกลิ่น 10KB แรกด้วย csv.Sniffer แล้วโหลดด้วย C engine เพื่อความเร็วสูงสุด
+    หากไม่สำเร็จจะลอง fallback ถอด encoding ที่เป็นไปได้
     """
+    sample_text = file_bytes[:10240].decode('utf-8', errors='ignore')
+    
+    try:
+        dialect = csv.Sniffer().sniff(sample_text)
+        delimiter = dialect.delimiter
+    except Exception:
+        delimiter = ','
+        
     last_err = None
     for enc in _CSV_ENCODINGS:
         try:
-            return pd.read_csv(io.BytesIO(file_bytes), encoding=enc, sep=None, engine="python")
+            return pd.read_csv(io.BytesIO(file_bytes), encoding=enc, sep=delimiter, engine="c")
         except UnicodeDecodeError as e:
             last_err = e
     raise last_err
