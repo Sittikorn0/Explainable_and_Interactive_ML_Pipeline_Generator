@@ -1,10 +1,13 @@
 """explainable/features/explainer.py — XAI logic (no Streamlit)"""
+import os
 import numpy as np
 import pandas as pd
 from sklearn.inspection import permutation_importance, partial_dependence
 
 from ml_process.features.preprocessing import preprocess
 from ml_process.features.runner import get_model_map
+
+_N_JOBS = min(4, os.cpu_count() or 1)
 
 
 def get_fitted_model(df, target_col, best_key, best_params, trans_summary):
@@ -28,7 +31,7 @@ def compute_permutation_importance(model, X_test, y_test, task_type, n_repeats=1
     scoring = "f1_macro" if task_type == "classification" else "r2"
     result = permutation_importance(
         model, X_test, y_test,
-        n_repeats=n_repeats, scoring=scoring, random_state=42, n_jobs=-1
+        n_repeats=n_repeats, scoring=scoring, random_state=42, n_jobs=_N_JOBS
     )
     return (pd.DataFrame({
         "Feature":    X_test.columns,
