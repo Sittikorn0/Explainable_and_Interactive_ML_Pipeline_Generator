@@ -187,11 +187,11 @@ def build_html_report(result: dict, metrics: dict, fi_df=None) -> str:
     if has_fi:
         fi_section_html = f"""
       <section id="fi">
-        <div class="sec-hd"><span class="sec-num">04</span><div><div class="sec-title">Feature Importance</div><div class="sec-sub">feature ที่มีผลต่อการตัดสินใจของ model มากที่สุด</div></div></div>
+        <div class="sec-hd"><span class="sec-num">03</span><div><div class="sec-title">Feature Importance</div><div class="sec-sub">feature ที่มีผลต่อการตัดสินใจของ model มากที่สุด</div></div></div>
         {_fi_html(fi_df)}
       </section>"""
-        fi_nav   = '<a href="#fi"><span class="nav-num">04</span>Feature Importance</a>'
-        pred_num = "05"
+        fi_nav   = '<a href="#fi"><span class="nav-num">03</span>Feature Importance</a>'
+        pred_num = "04"
 
     # summary strip values
     strip = "".join(
