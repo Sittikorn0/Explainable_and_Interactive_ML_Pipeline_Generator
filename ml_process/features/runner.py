@@ -10,7 +10,7 @@ from sklearn.ensemble import (
 )
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.naive_bayes import GaussianNB
-from sklearn.model_selection import RandomizedSearchCV, cross_val_score
+from sklearn.model_selection import RandomizedSearchCV, cross_val_score, KFold
 from ml_process.features.config import MODELS_CLF, MODELS_REG, PARAM_GRIDS, SLOW_MODELS, MAX_ROWS_SLOW
 
 try:
@@ -34,11 +34,11 @@ except ImportError:
 
 def get_model_map() -> dict:
     m = {
-        "logistic_regression":         lambda: LogisticRegression(max_iter=5000, solver="saga"),
-        "decision_tree":               lambda: DecisionTreeClassifier(max_depth=8, random_state=42),
-        "random_forest":               lambda: RandomForestClassifier(n_estimators=50, n_jobs=-1, random_state=42),
+        "logistic_regression":         lambda: LogisticRegression(max_iter=5000, solver="saga", class_weight="balanced"),
+        "decision_tree":               lambda: DecisionTreeClassifier(max_depth=8, random_state=42, class_weight="balanced"),
+        "random_forest":               lambda: RandomForestClassifier(n_estimators=50, n_jobs=-1, random_state=42, class_weight="balanced"),
         "gradient_boosting":           lambda: HistGradientBoostingClassifier(max_iter=50, max_depth=4, random_state=42),
-        "svm":                         lambda: SGDClassifier(loss="hinge", max_iter=500, random_state=42),
+        "svm":                         lambda: SGDClassifier(loss="hinge", max_iter=500, random_state=42, class_weight="balanced"),
         "knn":                         lambda: KNeighborsClassifier(n_neighbors=5, n_jobs=-1),
         "naive_bayes":                 lambda: GaussianNB(),
         "linear_regression":           lambda: LinearRegression(),
@@ -51,10 +51,10 @@ def get_model_map() -> dict:
         m["xgboost"]           = lambda: XGBClassifier(n_estimators=50, max_depth=4, learning_rate=0.1, eval_metric="logloss", random_state=42, verbosity=0)
         m["xgboost_regressor"] = lambda: XGBRegressor(n_estimators=50, max_depth=4, learning_rate=0.1, random_state=42, verbosity=0)
     if _HAS_LGB:
-        m["lightgbm"]           = lambda: LGBMClassifier(n_estimators=50, max_depth=4, learning_rate=0.1, random_state=42, verbose=-1)
+        m["lightgbm"]           = lambda: LGBMClassifier(n_estimators=50, max_depth=4, learning_rate=0.1, random_state=42, verbose=-1, class_weight="balanced")
         m["lightgbm_regressor"] = lambda: LGBMRegressor(n_estimators=50, max_depth=4, learning_rate=0.1, random_state=42, verbose=-1)
     if _HAS_CAT:
-        m["catboost"]           = lambda: CatBoostClassifier(iterations=50, depth=4, learning_rate=0.1, random_seed=42, verbose=0)
+        m["catboost"]           = lambda: CatBoostClassifier(iterations=50, depth=4, learning_rate=0.1, random_seed=42, verbose=0, auto_class_weights="Balanced")
         m["catboost_regressor"] = lambda: CatBoostRegressor(iterations=50, depth=4, learning_rate=0.1, random_seed=42, verbose=0)
     return m
 
@@ -72,9 +72,15 @@ def get_available_models(task_type: str) -> dict:
     return base
 
 
-def _safe_cv(y_train, task_type: str) -> int:
+def _safe_cv(y_train, task_type: str):
     if task_type == "classification":
-        return max(2, min(5, int(pd.Series(y_train).value_counts().min())))
+        min_class_count = int(pd.Series(y_train).value_counts().min())
+        cv = max(2, min(5, min_class_count))
+        # ถ้ามี class ที่มีข้อมูลไม่พอสำหรับ StratifiedKFold (ต้องมี >= cv)
+        # ให้เปลี่ยนไปใช้ KFold ธรรมดาเพื่อป้องกัน Error
+        if min_class_count < cv:
+            return KFold(n_splits=cv, shuffle=True, random_state=42)
+        return cv
     return max(2, min(5, len(y_train) // 2))
 
 
@@ -117,15 +123,20 @@ def run_competition(X_train, X_test, y_train, y_test,
                 if grid:
                     search = RandomizedSearchCV(m, grid, n_iter=min(25, _grid_size(grid)),
                                                 cv=cv, scoring=scorer, random_state=42,
-                                                n_jobs=-1, refit=True, error_score="raise")
+                                                n_jobs=-1, refit=False, error_score="raise")
                     search.fit(X_tr, y_tr)
-                    m, best_params = search.best_estimator_, search.best_params_
+                    best_params = search.best_params_
                     cv_mean = float(search.best_score_)
                     cv_std = float(search.cv_results_["std_test_score"][search.best_index_])
+                    
+                    # ตั้งค่า best parameter ให้โมเดล
+                    m.set_params(**best_params)
                 else:
                     scores  = cross_val_score(m, X_tr, y_tr, cv=cv, scoring=scorer, n_jobs=-1)
                     cv_mean, cv_std = float(scores.mean()), float(scores.std())
-                    m.fit(X_tr, y_tr)
+                    
+                # Retrain โมเดลด้วยพารามิเตอร์ที่ดีที่สุดบนชุดข้อมูล X_train เต็มเสมอ (ไม่ใช้ตัวที่สุ่มมาทำ Grid Search)
+                m.fit(X_train, y_train)
 
             competition[key] = {"label": label, "cv_score": round(cv_mean, 4),
                                  "cv_std": round(cv_std, 4), "best_params": best_params, "error": None}
