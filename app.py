@@ -2,8 +2,30 @@ import streamlit as st
 from data_prepare.features.loading_data import load_from_local, load_target_col, delete_local
 from data_prepare.features.target_col import suggest_target
 
-SANS = "'DM Sans','Sarabun',sans-serif"
+from interface.upload import render_upload
+from interface.cleaning import render_cleaning
+from interface.eda import render_eda
+from interface.data_transformation import render_transformation
+from interface.model_process import render_ml_process
+from interface.explainable import render_explainable
 
+upload_page = st.Page(render_upload, title="Upload Dataset", url_path="upload")
+cleaning_page = st.Page(render_cleaning, title="Data Cleaning", url_path="cleaning")
+eda_page = st.Page(render_eda, title="Exploratory Data Analysis", url_path="eda")
+trans_page = st.Page(render_transformation, title="Data Transformation", url_path="transformation")
+ml_page = st.Page(render_ml_process, title="ML Process & Leaderboard", url_path="model_process")
+explain_page = st.Page(render_explainable, title="Explainable & Insights", url_path="explainable")
+
+pages = {
+    "upload": upload_page,
+    "cleaning": cleaning_page,
+    "eda": eda_page,
+    "transformation": trans_page,
+    "model_process": ml_page,
+    "explainable": explain_page
+}
+
+SANS = "'DM Sans','Sarabun',sans-serif"
 
 def load_css(file_name):
     with open(file_name) as f:
@@ -29,9 +51,8 @@ def page_header(title: str, subtitle: str = "") -> None:
 
 
 def navigate(step: str):
-    """เปลี่ยนหน้าโดยใช้ session_state เป็น source of truth แล้วค่อย sync URL"""
+    """เปลี่ยนหน้าโดยใช้ st.switch_page ร่วมกับ session_state"""
     st.session_state["_step"] = step
-    st.query_params["step"] = step
     st.rerun()
 
 
@@ -95,21 +116,22 @@ def main():
             suggested, _ = suggest_target(st.session_state["main_df"])
             st.session_state["target_col"] = suggested
 
-    # Navigation — session_state เป็น source of truth, query_params แค่ sync URL
-    # ถ้ามี _step ใน session_state ให้ใช้ค่านั้นก่อน (ป้องกัน race condition กับ rerun)
-    url_step = st.session_state.get("_step") or st.query_params.get("step", "upload")
-    # guard: ถ้าไม่มีข้อมูลแต่พยายามเข้าหน้า inner → กลับ upload
-    if url_step in ("cleaning", "eda", "transformation", "model_process", "explainable") and st.session_state.get("main_df") is None:
-        url_step = "upload"
-    # sync URL ให้ตรงกับ step จริง
-    st.session_state["_step"] = url_step
-    if st.query_params.get("step") != url_step:
-        st.query_params["step"] = url_step
+    # Navigation
+    if st.session_state.get("main_df") is None:
+        nav_pages = [upload_page]
+    else:
+        nav_pages = [upload_page, cleaning_page, eda_page, trans_page, ml_page, explain_page]
 
-    is_upload_page = url_step not in ("cleaning", "eda", "transformation", "model_process", "explainable")
+    pg = st.navigation(nav_pages)
+
+    if "_step" in st.session_state:
+        target_page = pages.get(st.session_state["_step"])
+        del st.session_state["_step"]
+        if target_page and target_page in nav_pages:
+            st.switch_page(target_page)
 
     # แสดงปุ่ม New Dataset เฉพาะหน้าที่ไม่ใช่ Upload
-    if is_upload_page:
+    if pg == upload_page:
         st.title("Explainable & Interactive ML Pipeline Generator")
         st.caption("Data Science 1312414 | Education Only")
     else:
@@ -167,24 +189,7 @@ def main():
             )
 
     # ── Render Page ───────────────────────────────────
-    if url_step == "cleaning":
-        from interface.cleaning import render_cleaning
-        render_cleaning()
-    elif url_step == "eda":
-        from interface.eda import render_eda
-        render_eda()
-    elif url_step == "transformation":
-        from interface.data_transformation import render_transformation
-        render_transformation()
-    elif url_step == "model_process":
-        from interface.model_process import render_ml_process
-        render_ml_process()
-    elif url_step == "explainable":
-        from interface.explainable import render_explainable
-        render_explainable()
-    else:
-        from interface.upload import render_upload
-        render_upload()
+    pg.run()
 
 
 if __name__ == "__main__":
