@@ -192,7 +192,7 @@ def render_ml_process():
 
     with tab_eval:
         st.caption(f"ผลลัพธ์จาก **{best_label}** บน Test set ที่ยังไม่เคยเห็น")
-        if task_type == "classification" and all(v >= 1.0 for v in metrics.values()):
+        if task_type == "classification" and all(v >= 0.9999 for v in metrics.values()):
             # คำนวณ feature importance จาก best model เพื่อหาตัวการ
             fi_rows = ""
             try:
