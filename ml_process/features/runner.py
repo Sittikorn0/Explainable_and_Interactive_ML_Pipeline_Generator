@@ -11,6 +11,7 @@ from sklearn.ensemble import (
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import RandomizedSearchCV, cross_val_score, KFold
+from sklearn.preprocessing import LabelEncoder
 from ml_process.features.config import MODELS_CLF, MODELS_REG, PARAM_GRIDS, SLOW_MODELS, MAX_ROWS_SLOW
 
 try:
@@ -106,6 +107,19 @@ def run_competition(X_train, X_test, y_train, y_test,
     competition = {}
     best_key, best_score, best_model = "", -float("inf"), None
 
+    target_le = None
+    if task_type == "classification" and y_train.dtype == object:
+        target_le = LabelEncoder()
+        y_train = pd.Series(target_le.fit_transform(y_train), index=y_train.index)
+        
+        known = set(target_le.classes_)
+        # ใช้ mode เป็น fallback ปลอดภัยกว่าตัวแรกสุด
+        fallback = target_le.transform([pd.Series(target_le.classes_).mode()[0]])[0] 
+        y_test = pd.Series(
+            y_test.apply(lambda x: target_le.transform([x])[0] if x in known else fallback),
+            index=y_test.index
+        )
+
     for i, (key, label) in enumerate(models.items()):
         if on_progress:
             on_progress(label, i, len(models))
@@ -155,6 +169,13 @@ def run_competition(X_train, X_test, y_train, y_test,
         )
         raise ValueError(f"ทุก model ล้มเหลว:\n{error_lines}")
 
+    y_pred = best_model.predict(X_test)
+    
+    # ถ้ามีการเข้ารหัส Target ให้แปลงกลับเป็น String เพื่อให้กราฟและ UI อ่านรู้เรื่อง
+    if target_le is not None:
+        y_test = pd.Series(target_le.inverse_transform(y_test), index=y_test.index)
+        y_pred = target_le.inverse_transform(y_pred)
+
     return {"competition": competition, "best_key": best_key,
             "best_label": models[best_key], "best_params": competition[best_key]["best_params"],
-            "y_test": y_test, "y_pred": best_model.predict(X_test), "task_type": task_type}
+            "y_test": y_test, "y_pred": y_pred, "task_type": task_type}
