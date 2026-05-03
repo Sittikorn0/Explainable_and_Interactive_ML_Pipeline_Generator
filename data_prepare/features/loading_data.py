@@ -116,12 +116,13 @@ _JSON_MAX_LEVEL = 5
 
 def _read_csv_with_fallback(file_bytes: bytes) -> pd.DataFrame:
     """ลอง encoding หลายตัวตามลำดับ กรอง UnicodeDecodeError เท่านั้น
-    error ประเภทอื่น (parse error, format error) raise ทันทีโดยไม่ลอง encoding ถัดไป
+    ใช้ sep=None + engine='python' เพื่อให้ pandas sniff delimiter อัตโนมัติ
+    รองรับ comma (,), semicolon (;), tab (\\t) และ delimiter อื่นๆ
     """
     last_err = None
     for enc in _CSV_ENCODINGS:
         try:
-            return pd.read_csv(io.BytesIO(file_bytes), encoding=enc)
+            return pd.read_csv(io.BytesIO(file_bytes), encoding=enc, sep=None, engine="python")
         except UnicodeDecodeError as e:
             last_err = e
     raise last_err
@@ -203,94 +204,362 @@ def _parse_json_raw(text: str) -> list[dict]:
     return raw
 
 
-def _read_json_normalized(file_bytes: bytes) -> tuple[pd.DataFrame, list[str]]:
-    """โหลด JSON แล้ว flatten nested objects และ join nested arrays เป็น string
+# ── JSON Column Analysis Helpers ─────────────────────────────────────────────
+
+def _get_nested_fields(sample: pd.Series) -> list[str]:
+    """รวบรวม field names จาก nested array of dicts เรียงตาม frequency"""
+    freq: dict[str, int] = {}
+    for lst in sample.head(20).tolist():
+        if isinstance(lst, list):
+            for item in lst:
+                if isinstance(item, dict):
+                    for k in item.keys():
+                        freq[k] = freq.get(k, 0) + 1
+    return sorted(freq, key=lambda k: -freq[k])
+
+
+def _recommend_for_col(
+    sample: pd.Series, col_type: str, available_fields: list[str]
+) -> tuple[str, str]:
+    """คำนวณ recommended action และเหตุผล — คืน (action, reason)"""
+    if col_type == "array":
+        non_empty = sample.apply(lambda x: isinstance(x, list) and len(x) > 0)
+        if not non_empty.any():
+            return "join", "ไม่มีข้อมูลใน list"
+        avg_len   = sample[non_empty].apply(len).mean()
+        all_items = [v for lst in sample[non_empty] for v in lst if not isinstance(v, (list, dict))]
+        n_unique  = len(set(str(x) for x in all_items))
+        if avg_len <= 1.2:
+            return "first", f"array มี 1 ค่าโดยเฉลี่ย (avg {avg_len:.1f}) — First เหมาะกว่า"
+        if n_unique > 30:
+            return "count", f"มี {n_unique} unique values — Count ดีกว่าการ Join"
+        return "join", f"มี {n_unique} unique values — Join เป็น string ใช้ได้"
+
+    if col_type == "dict":
+        all_keys: set[str] = set()
+        for x in sample.head(5):
+            if isinstance(x, dict):
+                all_keys.update(x.keys())
+        if len(all_keys) <= 10:
+            return "flatten_more", f"มี {len(all_keys)} keys — Flatten ให้ข้อมูลที่ใช้ได้มากกว่า"
+        return "to_string", f"มี {len(all_keys)} keys — ซับซ้อนเกินไป แนะนำแปลงเป็น string"
+
+    if col_type == "nested_array_of_dicts":
+        if not available_fields:
+            return "count", "ไม่สามารถตรวจ field ได้ — Count ปลอดภัยที่สุด"
+        if len(available_fields) == 1:
+            return (
+                f"extract_field:{available_fields[0]}",
+                f"มีแค่ 1 field ('{available_fields[0]}') — ดึงตรงๆ ได้เลย",
+            )
+        name_like = [
+            f for f in available_fields
+            if f.lower() in {"name", "label", "title", "value", "text", "key"}
+        ]
+        if name_like:
+            return (
+                f"extract_field:{name_like[0]}",
+                f"พบ field '{name_like[0]}' — น่าจะเป็น label ที่ต้องการ",
+            )
+        list_mask = sample.apply(lambda x: isinstance(x, list))
+        avg = sample[list_mask].apply(len).mean() if list_mask.any() else 0
+        return "count", f"avg {avg:.1f} items/แถว — Count บอกปริมาณ relationship ได้"
+
+    return "drop", "ไม่แน่ใจ — Drop ปลอดภัยที่สุด"
+
+
+def _generate_previews(sample: pd.Series, available_actions: list[str]) -> dict[str, str]:
+    """สร้าง preview ผลลัพธ์ของแต่ละ action จาก sample data"""
+    _MAX  = 70
+    head2 = sample.head(2).tolist()
+
+    def _fmt(vals: list) -> str:
+        s = "  |  ".join(str(v) for v in vals)
+        return s[:_MAX] + "…" if len(s) > _MAX else s
+
+    previews: dict[str, str] = {}
+    for action in available_actions:
+        if action == "drop":
+            previews[action] = "(column จะถูกลบ)"
+        elif action == "join":
+            previews[action] = _fmt(
+                [", ".join(str(v) for v in x) if isinstance(x, list) else str(x) for x in head2]
+            )
+        elif action == "first":
+            previews[action] = _fmt(
+                [x[0] if isinstance(x, list) and x else None for x in head2]
+            )
+        elif action == "count":
+            previews[action] = _fmt([len(x) if isinstance(x, (list, dict)) else x for x in head2])
+        elif action == "to_string":
+            previews[action] = _fmt([str(x)[:50] for x in head2])
+        elif action == "count_keys":
+            previews[action] = _fmt([len(x) if isinstance(x, dict) else x for x in head2])
+        elif action == "flatten_more":
+            keys: set[str] = set()
+            for x in head2:
+                if isinstance(x, dict):
+                    keys.update(x.keys())
+            key_list = ", ".join(f"`{k}`" for k in sorted(keys)[:5])
+            extra    = f" …+{len(keys) - 5}" if len(keys) > 5 else ""
+            previews[action] = f"เพิ่ม {len(keys)} columns ใหม่: {key_list}{extra}"
+        elif action.startswith("extract_field:"):
+            field = action.removeprefix("extract_field:")
+            previews[action] = _fmt([
+                ", ".join(str(item.get(field, "")) for item in x if isinstance(item, dict))
+                if isinstance(x, list) else str(x)
+                for x in head2
+            ])
+    return previews
+
+
+# ── Core JSON Processing ──────────────────────────────────────────────────────
+
+def _read_json_normalized(file_bytes: bytes) -> tuple[pd.DataFrame, list[str], dict]:
+    """โหลด JSON แล้ว flatten nested objects และจัดการ nested columns
+
+    ตรวจจับ 3 ประเภท column ที่ต้องการจัดการ:
+    - array              : list ของค่าธรรมดา — join / count / first / drop
+    - dict               : object ที่ลึกเกิน max_level — flatten_more / to_string / count_keys / drop
+    - nested_array_of_dicts: list ของ objects — count / extract_field / to_string / drop
 
     Returns:
-        df: DataFrame ที่ flatten แล้ว
-        warnings: รายชื่อ column ที่ถูก join from array
-
-    Raises:
-        ValueError: ถ้า JSON ไม่ใช่ array of objects หรือโครงสร้างไม่รองรับ
+        df         : DataFrame ที่ใช้ default actions แล้ว
+        joined_cols: รายชื่อ columns ที่ถูกแปลง (backward-compat format)
+        json_meta  : {"raw_df": DataFrame ก่อน apply actions, "col_decisions": list[dict]}
     """
-    text = _decode_json_bytes(file_bytes)
-    raw = _parse_json_raw(text)
+    text   = _decode_json_bytes(file_bytes)
+    raw    = _parse_json_raw(text)
+    df_raw = pd.json_normalize(raw, max_level=_JSON_MAX_LEVEL)
 
-    # flatten nested objects ด้วย json_normalize (max_level ป้องกัน column explosion)
-    df = pd.json_normalize(raw, max_level=_JSON_MAX_LEVEL)
+    col_decisions: list[dict] = []
+    for col in df_raw.columns:
+        sample = df_raw[col].dropna()
+        if len(sample) == 0:
+            continue
 
-    # ตรวจสอบว่ามี column ที่เป็น list of dicts (nested arrays of objects)
-    # ซึ่ง json_normalize ไม่สามารถ flatten ได้อัตโนมัติ → แจ้ง error ทันที
-    for col in df.columns:
-        sample = df[col].dropna()
-        if len(sample) > 0:
-            first_val = sample.iloc[0]
-            if (
-                isinstance(first_val, list)
-                and len(first_val) > 0
-                and isinstance(first_val[0], dict)
-            ):
-                raise ValueError(
-                    f"ไฟล์ JSON มีโครงสร้าง Nested Arrays ที่ซับซ้อนเกินไป\n\n"
-                    f"Column '{col}' เป็น array of objects ซึ่งระบบไม่สามารถ flatten ได้อัตโนมัติ\n\n"
-                    "ระบบรองรับเฉพาะ JSON ที่มีโครงสร้างแบบนี้:\n"
-                    "• Flat objects: [{\"a\": 1, \"b\": 2}, ...]\n"
-                    "• Nested objects: [{\"a\": {\"x\": 1}}, ...] (ถูก flatten เป็น a.x)\n\n"
-                    "กรุณา flatten ข้อมูลก่อน upload โดยใช้ pandas.json_normalize() "
-                    "พร้อม record_path ที่เหมาะสมกับโครงสร้างไฟล์ของคุณ"
+        is_list_mask = sample.apply(lambda x: isinstance(x, list))
+        if is_list_mask.any():
+            has_dict_items = sample[is_list_mask].apply(
+                lambda x: len(x) > 0 and isinstance(x[0], dict)
+            ).any()
+            if has_dict_items:
+                col_type      = "nested_array_of_dicts"
+                avail_fields  = _get_nested_fields(sample)
+                avail_actions = (
+                    ["count"]
+                    + [f"extract_field:{f}" for f in avail_fields[:5]]
+                    + ["to_string", "drop"]
                 )
+            else:
+                col_type      = "array"
+                avail_fields  = []
+                avail_actions = ["join", "count", "first", "drop"]
 
-    # detect column ที่ยังเป็น list หรือ dict อยู่หลัง flatten → แปลงเป็น string
-    # cache mask ก่อนเพื่อไม่ต้อง apply isinstance ซ้ำในรอบเดียวกัน
-    joined_cols = []
-    for col in df.columns:
-        is_list = df[col].apply(lambda x: isinstance(x, list))
-        if is_list.any():
+            rec_action, rec_reason = _recommend_for_col(sample, col_type, avail_fields)
+            # nested_array_of_dicts: ใช้ recommendation เป็น default (ดีกว่า "drop" เสมอ)
+            # array: คง "join" เป็น default (safe, backward-compat)
+            default_action = rec_action if col_type == "nested_array_of_dicts" else "join"
+
+            col_decisions.append({
+                "col": col, "type": col_type,
+                "default_action":        default_action,
+                "recommended_action":    rec_action,
+                "recommendation_reason": rec_reason,
+                "available_actions":     avail_actions,
+                "available_fields":      avail_fields,
+                "sample_before":         "  |  ".join(str(x)[:60] for x in sample.head(2).tolist()),
+                "previews":              _generate_previews(sample, avail_actions),
+            })
+            continue
+
+        is_dict_mask = sample.apply(lambda x: isinstance(x, dict))
+        if is_dict_mask.any():
+            avail_actions          = ["flatten_more", "to_string", "count_keys", "drop"]
+            rec_action, rec_reason = _recommend_for_col(sample, "dict", [])
+            col_decisions.append({
+                "col": col, "type": "dict",
+                "default_action":        "to_string",   # conservative auto-apply
+                "recommended_action":    rec_action,
+                "recommendation_reason": rec_reason,
+                "available_actions":     avail_actions,
+                "available_fields":      [],
+                "sample_before":         "  |  ".join(str(x)[:60] for x in sample.head(2).tolist()),
+                "previews":              _generate_previews(sample, avail_actions),
+            })
+
+    df_auto = apply_json_overrides(df_raw, col_decisions, {})
+    df_auto = df_auto.replace("", pd.NA)
+
+    joined_cols = [d["col"] for d in col_decisions if d["default_action"] != "drop"]
+    return df_auto, joined_cols, {"raw_df": df_raw, "col_decisions": col_decisions}
+
+
+def apply_json_overrides(
+    df_raw: pd.DataFrame,
+    col_decisions: list[dict],
+    user_choices: dict[str, str],
+) -> pd.DataFrame:
+    """Apply user choices (หรือ defaults) ต่อ raw normalized DataFrame
+
+    Actions รองรับ:
+        join, first, count, to_string, count_keys, flatten_more,
+        extract_field:{field_name}, drop
+    """
+    df         = df_raw.copy()
+    drop_cols: list[str]              = []
+    expand_ops: dict[str, pd.DataFrame] = {}   # col → sub-DataFrame จาก flatten_more
+
+    for d in col_decisions:
+        col    = d["col"]
+        action = user_choices.get(col, d["default_action"])
+        if col not in df.columns:
+            continue
+
+        if action == "drop":
+            drop_cols.append(col)
+        elif action == "join":
             df[col] = df[col].apply(
                 lambda x: ", ".join(str(v) for v in x) if isinstance(x, list) else x
             )
-            joined_cols.append(col)
-            continue
+        elif action == "first":
+            df[col] = df[col].apply(
+                lambda x: x[0] if isinstance(x, list) and x else (None if isinstance(x, list) else x)
+            )
+        elif action == "count":
+            df[col] = df[col].apply(
+                lambda x: len(x) if isinstance(x, (list, dict)) else x
+            )
+        elif action == "to_string":
+            df[col] = df[col].apply(
+                lambda x: str(x) if isinstance(x, (list, dict)) else x
+            )
+        elif action == "count_keys":
+            df[col] = df[col].apply(
+                lambda x: len(x) if isinstance(x, dict) else x
+            )
+        elif action == "flatten_more":
+            try:
+                vals     = df[col].apply(lambda x: x if isinstance(x, dict) else {})
+                expanded = pd.json_normalize(vals.tolist())
+                expanded.index = df.index
+                if not expanded.empty and len(expanded.columns) > 0:
+                    expanded.columns = [f"{col}.{c}" for c in expanded.columns]
+                    expand_ops[col]  = expanded
+                else:
+                    df[col] = df[col].apply(lambda x: str(x) if isinstance(x, dict) else x)
+            except Exception:
+                df[col] = df[col].apply(lambda x: str(x) if isinstance(x, dict) else x)
+        elif action.startswith("extract_field:"):
+            field   = action.removeprefix("extract_field:")
+            df[col] = df[col].apply(
+                lambda x: ", ".join(
+                    str(item.get(field, "")) for item in x if isinstance(item, dict)
+                ) if isinstance(x, list) else x
+            )
 
-        is_dict = df[col].apply(lambda x: isinstance(x, dict))
-        if is_dict.any():
-            df[col] = df[col].apply(lambda x: str(x) if isinstance(x, dict) else x)
-            joined_cols.append(f"{col} (object → string)")
+    if drop_cols:
+        df = df.drop(columns=drop_cols)
 
-    # แปลง empty string → NaN เพื่อให้ isnull() ตรวจจับได้ (JSON อาจมี "" แทน null)
-    df = df.replace("", pd.NA)
+    # แทรก expanded columns ตำแหน่งเดิมของ original column
+    for orig_col, expanded in expand_ops.items():
+        if orig_col in df.columns:
+            pos = df.columns.get_loc(orig_col)
+            df  = df.drop(columns=[orig_col])
+            for i, new_col in enumerate(expanded.columns):
+                df.insert(min(pos + i, len(df.columns)), new_col, expanded[new_col])
 
-    return df, joined_cols
+    return df
 
 
 @st.cache_data(show_spinner="Loading data...", ttl=3600, max_entries=5)
-def _process_cached(file_name: str, file_size: int, file_bytes: bytes) -> tuple[pd.DataFrame | None, list[str]]:
-    """Returns (df, json_warnings) — json_warnings ว่างเสมอยกเว้นไฟล์ JSON ที่มี nested columns"""
+def _process_cached(file_name: str, file_size: int, file_bytes: bytes) -> tuple[pd.DataFrame | None, list[str], dict]:
+    """Returns (df, file_warnings, json_meta)
+    - file_warnings: columns ที่ถูกแปลง + Excel sheet warnings
+    - json_meta    : {"raw_df": df, "col_decisions": [...]} สำหรับ JSON; {} สำหรับ format อื่น
+    """
     try:
         if file_name.endswith(".csv"):
-            return _read_csv_with_fallback(file_bytes), []
+            df = _coerce_object_columns(_read_csv_with_fallback(file_bytes))
+            return df, [], {}
         elif file_name.endswith((".xlsx", ".xls")):
-            return pd.read_excel(io.BytesIO(file_bytes)), []
+            xf = pd.ExcelFile(io.BytesIO(file_bytes))
+            sheet_names = xf.sheet_names
+            df_excel = _coerce_object_columns(xf.parse(sheet_names[0]))
+            warnings_excel = (
+                [f"__excel_sheets__:{','.join(str(s) for s in sheet_names)}"]
+                if len(sheet_names) > 1
+                else []
+            )
+            return df_excel, warnings_excel, {}
         elif file_name.endswith(".json"):
-            return _read_json_normalized(file_bytes)
+            df, joined_cols, json_meta = _read_json_normalized(file_bytes)
+            df = _coerce_object_columns(df)
+            if json_meta.get("raw_df") is not None:
+                json_meta = {**json_meta, "raw_df": _coerce_object_columns(json_meta["raw_df"])}
+            return df, joined_cols, json_meta
     except ValueError as e:
         raise
     except Exception as e:
         print(f"Error processing data: {e}")
-    return None, []
+    return None, [], {}
 
 
-def process_data(uploaded_file) -> tuple[pd.DataFrame | None, list[str]]:
-    """รับ UploadedFile จาก st.file_uploader แล้ว return (DataFrame, json_warnings)"""
+def process_data(uploaded_file) -> tuple[pd.DataFrame | None, list[str], dict]:
+    """รับ UploadedFile จาก st.file_uploader แล้ว return (DataFrame, file_warnings, json_meta)"""
     if uploaded_file is None:
-        return None, []
+        return None, [], {}
     file_bytes = uploaded_file.getvalue()
-    return _process_cached(uploaded_file.name, len(file_bytes), file_bytes)
+    df, warnings, json_meta = _process_cached(uploaded_file.name, len(file_bytes), file_bytes)
+    # coerce อยู่นอก @st.cache_data เพื่อให้รันเสมอ แม้ cache จะ hit
+    if df is not None:
+        df = _coerce_object_columns(df)
+    if json_meta.get("raw_df") is not None:
+        json_meta = {**json_meta, "raw_df": _coerce_object_columns(json_meta["raw_df"])}
+    return df, warnings, json_meta
+
+
+def _coerce_object_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """แปลง object columns ให้ Arrow-compatible:
+    - ตัวเลขล้วน → numeric dtype (int64/float64)
+    - มี non-string objects (dict, list, int ปน) → string
+    - pure string → คงไว้
+    """
+    df = df.copy()
+    for col in df.select_dtypes(include="object").columns:
+        non_null = df[col].dropna()
+        if non_null.size == 0:
+            continue
+        numeric = pd.to_numeric(non_null, errors="coerce")
+        if numeric.notna().all():
+            # ทุกค่าแปลงเป็น numeric ได้ → ใช้ int64/float64
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+        elif not non_null.map(lambda v: isinstance(v, (str, bytes))).all():
+            # มี non-string objects (เช่น int, dict, list ปน) → แปลงเป็น string
+            def _to_str(v):
+                try:
+                    return v if pd.isna(v) else str(v)
+                except (ValueError, TypeError):
+                    # pd.isna ล้มเหลวเมื่อ v เป็น list/array → ไม่ใช่ null
+                    return str(v)
+            df[col] = df[col].apply(_to_str)
+    return df
+
+
+def _sanitize_for_parquet(df: pd.DataFrame) -> pd.DataFrame:
+    """แปลง object columns ที่มี mixed types (เช่น int ปนกับ str) เป็น string
+    เพื่อป้องกัน pyarrow ArrowTypeError ตอน write parquet"""
+    df = df.copy()
+    for col in df.select_dtypes(include="object").columns:
+        non_null = df[col].dropna()
+        if non_null.size > 0 and not all(isinstance(v, (str, bytes)) for v in non_null):
+            df[col] = df[col].where(df[col].isna(), df[col].astype(str))
+    return df
 
 
 def save_to_local(df: pd.DataFrame, filename: str) -> None:
     """บันทึก DataFrame และชื่อไฟล์ลง disk เพื่อป้องกันข้อมูลหายตอน Refresh"""
-    df.to_parquet(_local_path(), index=False)
+    _sanitize_for_parquet(df).to_parquet(_local_path(), index=False)
     with open(_metadata_path(), "w", encoding="utf-8") as f:
         f.write(filename)
 
@@ -361,7 +630,7 @@ def save_cleaned_data(df: pd.DataFrame, original_filename: str) -> str:
     _ensure_cache_dir()
     csv_path = _cleaned_csv_path()
     df.to_csv(csv_path, index=False)
-    df.to_parquet(_local_path(), index=False)
+    _sanitize_for_parquet(df).to_parquet(_local_path(), index=False)
 
     with open(_metadata_path(), "w", encoding="utf-8") as f:
         f.write(cleaned_filename)
