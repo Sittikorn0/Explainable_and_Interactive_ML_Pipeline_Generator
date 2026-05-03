@@ -2,9 +2,10 @@ import pandas as pd
 from data_prepare.features.data_distribute import data_distribution
 
 
-def use_missing_strategy(df: pd.DataFrame, col: str, strategy: str) -> pd.DataFrame:
-    """แก้ Missing Values ในคอลัมน์ด้วย strategy ที่กำหนด"""
-    df = df.copy()
+def use_missing_strategy(df: pd.DataFrame, col: str, strategy: str, inplace: bool = False) -> pd.DataFrame:
+    """แก้ Missing Values ในคอลัมน์เดียว"""
+    if not inplace:
+        df = df.copy()
     if strategy == "mean":
         df[col] = df[col].fillna(df[col].mean())
     elif strategy == "median":
@@ -24,42 +25,66 @@ def use_missing_strategy(df: pd.DataFrame, col: str, strategy: str) -> pd.DataFr
     return df
 
 
-def use_outlier_strategy(
-    df: pd.DataFrame, col: str, strategy: str, lower: float, upper: float
-) -> pd.DataFrame:
-    """จัดการ Outliers ในคอลัมน์ด้วย strategy ที่กำหนด
-
-    loop จนกว่า data_distribution() จะรายงาน 0 outlier (สูงสุด 10 รอบ)
-    ใช้ data_distribution() เป็น oracle โดยตรง — รับประกัน consistent กับ UI เสมอ
-    """
+def use_missing_strategy_bulk(df: pd.DataFrame, strategies: dict) -> pd.DataFrame:
+    """แก้ Missing Values หลายคอลัมน์ในครั้งเดียวเพื่อลดการสร้าง DataFrame ซ้ำซ้อน (Performance optimization)"""
     df = df.copy()
+    drop_cols = []
+    
+    for col, strategy in strategies.items():
+        if strategy == "drop rows":
+            drop_cols.append(col)
+        else:
+            use_missing_strategy(df, col, strategy, inplace=True)
+            
+    if drop_cols:
+        df = df.dropna(subset=drop_cols).reset_index(drop=True)
+        
+    return df
 
-    for _ in range(10):
-        series = df[col]
+
+def use_outlier_strategy(
+    df: pd.DataFrame, col: str, strategy: str, lower: float, upper: float, inplace: bool = False
+) -> pd.DataFrame:
+    """จัดการ Outliers ในคอลัมน์ด้วย Vectorized Operations (ทำงานรอบเดียว ไม่วนลูปซ้ำ)"""
+    if not inplace:
+        df = df.copy()
+
+    series = df[col]
+    if strategy == "clip":
+        df[col] = series.clip(lower=lower, upper=upper)
+    else:  # drop rows
         is_out = series.notna() & ((series < lower) | (series > upper))
-        if not is_out.any():
-            # floating-point boundary: values clipped to exact bound may not satisfy > upper
-            # check oracle first before declaring done
-            _, check = data_distribution(df[[col]])
-            check_match = next((d for d in check if d["Column"] == col), None)
-            if check_match is None or check_match["Outliers"] == 0:
-                break
-            eps = max(abs(upper - lower), 1.0) * 1e-10
-            is_out = series.notna() & ((series < lower + eps) | (series > upper - eps))
-            if not is_out.any():
-                break
-        if strategy == "clip":
-            df[col] = series.clip(lower=lower, upper=upper)
-        else:  # drop rows — NaN ไม่ถือเป็น outlier
-            df = df[~is_out].reset_index(drop=True)
-        _, details = data_distribution(df[[col]])
-        match = next((d for d in details if d["Column"] == col), None)
-        if match is None or match["Outliers"] == 0:
-            break
-        new_lower, new_upper = match["Lower"], match["Upper"]
-        # bounds หยุดเปลี่ยน → clip converged แล้ว (floating point precision)
-        if abs(new_lower - lower) < 1e-9 and abs(new_upper - upper) < 1e-9:
-            break
-        lower, upper = new_lower, new_upper
+        df = df[~is_out].reset_index(drop=True)
 
     return df
+
+
+def use_outlier_strategy_bulk(
+    df: pd.DataFrame, strategies: dict
+) -> pd.DataFrame:
+    """จัดการ Outliers หลายคอลัมน์ในครั้งเดียว (Performance optimization)
+    strategies = { "col_name": {"strategy": "clip", "lower": -1.0, "upper": 1.0} }
+    """
+    df = df.copy()
+    outlier_mask = None
+    
+    for col, params in strategies.items():
+        strategy = params["strategy"]
+        lower = params["lower"]
+        upper = params["upper"]
+        
+        if strategy == "clip":
+            df[col] = df[col].clip(lower=lower, upper=upper)
+        else:  # drop rows
+            series = df[col]
+            is_out = series.notna() & ((series < lower) | (series > upper))
+            if outlier_mask is None:
+                outlier_mask = is_out
+            else:
+                outlier_mask = outlier_mask | is_out
+                
+    if outlier_mask is not None:
+        df = df[~outlier_mask].reset_index(drop=True)
+        
+    return df
+
