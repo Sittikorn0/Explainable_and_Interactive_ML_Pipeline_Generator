@@ -80,20 +80,31 @@ def _encode_fit_transform(X_train: pd.DataFrame, X_test: pd.DataFrame) -> tuple:
     return X_train, X_test
 
 
-def _clean(X: pd.DataFrame) -> pd.DataFrame:
+def _clean_fit_transform(X_train: pd.DataFrame, X_test: pd.DataFrame) -> tuple:
     """
-    Defensive cleanup — ไม่มี fit จึงปลอดภัยทั้ง X_train และ X_test
-    หมายเหตุ: ไม่ encode categorical ที่นี่ เพราะจะได้ LabelEncoder คนละตัว
-              ต่อ split ทำให้ mapping ไม่ตรงกัน — ใช้ _encode_fit_transform() แทน
+    เติม Missing Value โดยคำนวณสถิติ (Median) จาก X_train เท่านั้น
+    แล้วนำค่านั้นไปเติมให้ทั้ง X_train และ X_test เพื่อป้องกัน Data Leakage
     """
-    for col in X.select_dtypes(include="bool").columns:
-        X[col] = X[col].astype(int)
-    X = X.replace([np.inf, -np.inf], 0)
-    for col in X.columns:
-        if X[col].isna().any():
-            fill = X[col].median() if pd.api.types.is_numeric_dtype(X[col]) else 0
-            X[col] = X[col].fillna(fill if not pd.isna(fill) else 0)
-    return X
+    # จัดการ bool และ inf
+    for df_x in [X_train, X_test]:
+        for col in df_x.select_dtypes(include="bool").columns:
+            df_x[col] = df_x[col].astype(int)
+        df_x.replace([np.inf, -np.inf], 0, inplace=True)
+
+    # คำนวณ Median จาก X_train
+    fill_values = {}
+    for col in X_train.columns:
+        if X_train[col].isna().any() or X_test[col].isna().any():
+            fill_values[col] = X_train[col].median() if pd.api.types.is_numeric_dtype(X_train[col]) else 0
+            if pd.isna(fill_values[col]):
+                fill_values[col] = 0
+
+    # เติมค่าให้ทั้งสองชุด
+    if fill_values:
+        X_train = X_train.fillna(fill_values)
+        X_test  = X_test.fillna(fill_values)
+
+    return X_train, X_test
 
 
 def _scale(X_train: pd.DataFrame, X_test: pd.DataFrame, method: str) -> tuple:
@@ -189,9 +200,8 @@ def preprocess(df: pd.DataFrame, target_col: str,
     # encode categorical ที่เหลือหลัง split — fit บน X_train เท่านั้น
     X_train, X_test = _encode_fit_transform(X_train, X_test)
 
-    # clean (ไม่มี fit — ทำได้หลัง split ได้เลย)
-    X_train = _clean(X_train)
-    X_test  = _clean(X_test)
+    # clean (fit median บน X_train เท่านั้น ป้องกัน Leakage)
+    X_train, X_test = _clean_fit_transform(X_train, X_test)
 
     # scale หลัง split — fit บน X_train เท่านั้น
     X_train, X_test = _scale(X_train, X_test, scaling_method)
