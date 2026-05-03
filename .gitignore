@@ -1,10 +1,28 @@
+# Python
 .env
 .venv
+.python-version
+__pycache__/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Tools
+.ngrok.exe.old
+ngrok.exe
+
+# Project Files
 temp_cache/*.csv
 temp_cache/*.parquet
 temp_cache/*.txt
 temp_cache/*.json
 temp_cache/*.pkl
+catboost_info/
 
+# AI (Optional)
+.claude/
 
-__pycache__/
+# Files (Optional)
+classroom_knowledge/
