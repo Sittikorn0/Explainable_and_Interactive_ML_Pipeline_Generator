@@ -153,9 +153,9 @@ _MODEL_GUIDE = {
         "weakness": "จับ pattern โค้งหรือซับซ้อนไม่ได้",
     },
     "SVM": {
-        "simple":   "หาเส้นแบ่ง (hyperplane) ที่แยก class ออกจากกันด้วยระยะห่างสูงสุด",
-        "strength": "แม่นกับข้อมูลที่มี feature เยอะ",
-        "weakness": "ตีความยาก ช้ากับข้อมูลขนาดใหญ่",
+        "simple":   "หาเส้นตรง (hyperplane) ที่แบ่ง class ออกจากกัน train ด้วย SGD ทำให้เร็วมากแม้ข้อมูลใหญ่",
+        "strength": "เร็วมาก รองรับข้อมูลขนาดใหญ่ได้ดี เหมาะกับ high-dimensional data",
+        "weakness": "จับ pattern ที่ไม่เป็นเส้นตรงไม่ได้ ต้องการ feature scaling",
     },
     "kNN": {
         "simple":   "ทำนายโดยดูจาก k ตัวอย่างที่ใกล้เคียงที่สุด — ถ้าเพื่อนบ้าน k คนส่วนใหญ่เป็น class A ก็ทำนายว่าเป็น class A",
@@ -163,18 +163,18 @@ _MODEL_GUIDE = {
         "weakness": "ช้ากับข้อมูลใหญ่ ต้องการ scaling",
     },
     "Naive Bayes": {
-        "simple":   "คำนวณความน่าจะเป็นว่าข้อมูลนี้อยู่ใน class ไหน โดยสมมติว่าแต่ละ feature ไม่ขึ้นกัน",
-        "strength": "เร็วมากที่สุด เหมาะกับ text classification",
-        "weakness": "สมมติว่า feature อิสระกัน ซึ่งมักไม่จริงในทางปฏิบัติ",
+        "simple":   "คำนวณความน่าจะเป็นว่าข้อมูลนี้อยู่ใน class ไหน โดยสมมติว่าแต่ละ feature กระจายแบบ Normal และไม่ขึ้นต่อกัน",
+        "strength": "เร็วมากที่สุด เหมาะเป็น baseline สำหรับข้อมูลตัวเลขที่กระจายใกล้เคียง Normal",
+        "weakness": "สมมติว่า feature อิสระกัน ซึ่งมักไม่จริงในทางปฏิบัติ ทำให้แม่นยำน้อยลงกับข้อมูลที่มี feature สัมพันธ์กัน",
     },
 }
 
 _METRIC_EXPLAIN = {
     "classification": [
-        ("Accuracy",   "#58a6ff", "% ที่ทำนายถูกจากทั้งหมด — ใช้ได้ดีเมื่อ class ไม่เสียสมดุล"),
-        ("F1 (Macro)", "#3fb950", "ค่าเฉลี่ยของ F1 ทุก class — เหมาะกับ class ที่ไม่สมดุล"),
-        ("Precision",  "#d29922", "บรรดาที่ทำนายว่าเป็น class X — มีกี่ % ที่ถูกจริง"),
-        ("Recall",     "#bc8cff", "บรรดาที่เป็น class X จริงๆ — model ตรวจพบได้กี่ %"),
+        ("Accuracy",        "#58a6ff", "% ที่ทำนายถูกจากทั้งหมด — ใช้ได้ดีเมื่อ class ไม่เสียสมดุล"),
+        ("F1(Mac)",         "#3fb950", "ค่าเฉลี่ยของ F1 ทุก class — เหมาะกับ class ที่ไม่สมดุล"),
+        ("Precision(Mac)",  "#d29922", "บรรดาที่ทำนายว่าเป็น class X — มีกี่ % ที่ถูกจริง"),
+        ("Recall(Mac)",     "#bc8cff", "บรรดาที่เป็น class X จริงๆ — model ตรวจพบได้กี่ %"),
     ],
     "regression": [
         ("R² Score", "#58a6ff", "model อธิบาย variance ของข้อมูลได้กี่ % (1.0 = perfect)"),
@@ -262,13 +262,19 @@ _STEP_COLOR = {
     "Data Transformation": "#d29922",
     "ML Process":          "#bc8cff",
 }
+_STEP_ICON = {
+    "Upload":              "📂",
+    "Data Cleaning":       "🧹",
+    "Data Transformation": "⚙️",
+    "ML Process":          "🏆",
+}
 _STEP_ORDER = ["Upload", "Data Cleaning", "Data Transformation", "ML Process"]
 
 
 def _render_trace():
     _section_header(
         "บันทึกการตัดสินใจตลอด Pipeline",
-        "ทุกขั้นตอนตั้งแต่ Upload ถึง ML Process",
+        "ทุกขั้นตอนตั้งแต่ Upload ถึง ML Process — พร้อมเหตุผลว่า \"ทำไม\" ระบบจึงตัดสินใจแบบนั้น",
     )
 
     log = get_log()
@@ -276,20 +282,33 @@ def _render_trace():
         st.info("ยังไม่มีข้อมูล — ต้องเริ่ม pipeline ตั้งแต่ขั้นตอน Upload ใหม่")
         return
 
-    # ── Step progress ──────────────────────────────────────────────────────────
+    # ── Step progress bar ──────────────────────────────────────────────────────
     completed = {e.get("step") for e in log}
+    n_done = sum(1 for s in _STEP_ORDER if s in completed)
+
+    # progress bar
+    pct = int(n_done / len(_STEP_ORDER) * 100)
+    st.markdown(
+        f'<div style="background:{_BORDER};border-radius:6px;height:6px;margin-bottom:8px">'
+        f'<div style="background:linear-gradient(90deg,#58a6ff,#bc8cff);width:{pct}%;'
+        f'height:6px;border-radius:6px;transition:width 0.3s"></div></div>',
+        unsafe_allow_html=True,
+    )
+
     prog_cols = st.columns(len(_STEP_ORDER))
     for col, step in zip(prog_cols, _STEP_ORDER):
         color   = _STEP_COLOR[step]
+        icon    = _STEP_ICON[step]
         done    = step in completed
         opacity = "1" if done else "0.28"
+        check   = "✓" if done else ""
         with col:
             st.markdown(
                 f'<div style="text-align:center;opacity:{opacity};padding:4px 0">'
-                f'<div style="width:8px;height:8px;border-radius:50%;'
-                f'background:{color};margin:0 auto 6px"></div>'
+                f'<div style="font-size:1.4rem;margin-bottom:4px">{icon}</div>'
                 f'<div style="color:{color};font-size:0.85rem;font-weight:600;'
                 f'letter-spacing:0.03em">{step}</div>'
+                f'<div style="color:{color};font-size:0.7rem;margin-top:2px">{check}</div>'
                 f'</div>',
                 unsafe_allow_html=True,
             )
@@ -297,52 +316,121 @@ def _render_trace():
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ── Timeline cards ─────────────────────────────────────────────────────────
-    for entry in log:
+    for idx, entry in enumerate(log):
         step  = entry.get("step", "")
         items = entry.get("items", [])
+        explanations = entry.get("explanations", [])
         color = _STEP_COLOR.get(step, "#8b949e")
+        icon  = _STEP_ICON.get(step, "📋")
 
         header_items = [it for it in items if not it.startswith("  ")]
         detail_items = [it for it in items if it.startswith("  ")]
 
+        # ── WHAT happened rows ─────────────────────────────────────────────
         rows_html = ""
         for it in header_items:
             if it.endswith(":"):
                 rows_html += (
-                    f'<div style="color:{color};font-size:0.9rem;font-weight:700;'
+                    f'<div style="color:{color};font-size:0.85rem;font-weight:700;'
                     f'letter-spacing:0.04em;text-transform:uppercase;padding:10px 0 4px">{it}</div>'
                 )
             else:
                 rows_html += (
-                    f'<div style="color:{_TEXT};font-size:1rem;padding:3px 0;'
-                    f'border-bottom:1px solid rgba(48,54,61,0.5)">{it}</div>'
+                    f'<div style="color:{_TEXT};font-size:0.95rem;padding:4px 0;'
+                    f'border-bottom:1px solid rgba(48,54,61,0.4)">{it}</div>'
                 )
 
+        # ── Detail items (expandable) ──────────────────────────────────────
         detail_html = "".join(
-            f'<div style="color:{_TEXT_DIM};font-size:0.9rem;padding:3px 0">'
+            f'<div style="color:{_TEXT_DIM};font-size:0.88rem;padding:3px 0">'
             f'<code style="color:{_TEXT};background:rgba(255,255,255,0.04);'
             f'border-radius:4px;padding:1px 6px">{it.strip()}</code></div>'
             for it in detail_items
         )
 
-        expandable = ""
+        detail_section = ""
         if detail_items:
-            expandable = (
+            detail_section = (
                 f'<details style="margin-top:10px">'
-                f'<summary style="cursor:pointer;color:{_TEXT_DIM};font-size:0.9rem;'
+                f'<summary style="cursor:pointer;color:{_TEXT_DIM};font-size:0.88rem;'
                 f'font-weight:600;user-select:none">'
                 f'ดูรายละเอียด ({len(detail_items)} รายการ)</summary>'
                 f'<div style="padding:8px 0 0 4px">{detail_html}</div>'
                 f'</details>'
             )
 
+        # ── WHY explanations ───────────────────────────────────────────────
+        why_section = ""
+        if explanations:
+            why_items_html = ""
+            for exp in explanations:
+                # Warning items
+                if exp.startswith("⚠"):
+                    why_items_html += (
+                        f'<div style="color:#d29922;font-size:0.9rem;padding:6px 10px;'
+                        f'background:rgba(210,153,34,0.08);border-radius:6px;'
+                        f'margin:4px 0;line-height:1.6">{exp}</div>'
+                    )
+                # Success items
+                elif exp.startswith("✓"):
+                    why_items_html += (
+                        f'<div style="color:#3fb950;font-size:0.9rem;padding:6px 10px;'
+                        f'background:rgba(63,185,80,0.08);border-radius:6px;'
+                        f'margin:4px 0;line-height:1.6">{exp}</div>'
+                    )
+                # Info items
+                elif exp.startswith("ℹ"):
+                    why_items_html += (
+                        f'<div style="color:#8b949e;font-size:0.9rem;padding:6px 10px;'
+                        f'background:rgba(139,148,158,0.08);border-radius:6px;'
+                        f'margin:4px 0;line-height:1.6">{exp}</div>'
+                    )
+                # Question headers (ทำไม...?)
+                elif exp.startswith("ทำไม"):
+                    why_items_html += (
+                        f'<div style="color:{_TEXT};font-size:0.92rem;padding:6px 10px;'
+                        f'background:rgba(88,166,255,0.06);border-left:2px solid {color};'
+                        f'border-radius:0 6px 6px 0;'
+                        f'margin:4px 0;line-height:1.7">{exp}</div>'
+                    )
+                # Sub-items (  → ...)
+                elif exp.startswith("  →"):
+                    why_items_html += (
+                        f'<div style="color:{_TEXT_DIM};font-size:0.88rem;'
+                        f'padding:2px 10px 2px 20px;line-height:1.5">{exp}</div>'
+                    )
+                # General explanations
+                else:
+                    why_items_html += (
+                        f'<div style="color:{_TEXT};font-size:0.9rem;padding:5px 10px;'
+                        f'margin:3px 0;line-height:1.6">{exp}</div>'
+                    )
+
+            why_section = (
+                f'<div style="margin-top:14px;padding-top:14px;'
+                f'border-top:1px dashed rgba(48,54,61,0.6)">'
+                f'<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">'
+                f'<span style="font-size:1rem">💡</span>'
+                f'<span style="color:{color};font-weight:700;font-size:0.88rem;'
+                f'letter-spacing:0.05em;text-transform:uppercase">ทำไม?</span></div>'
+                f'{why_items_html}'
+                f'</div>'
+            )
+
+        # ── Assemble card ──────────────────────────────────────────────────
         st.markdown(
             f'<div style="background:{_BG};border:1px solid {_BORDER};'
             f'border-left:3px solid {color};border-radius:0 {_R} {_R} 0;'
             f'padding:{_PAD};{_GAP}">'
-            f'<div style="color:{color};font-weight:700;font-size:0.9rem;'
-            f'letter-spacing:0.04em;text-transform:uppercase;margin-bottom:12px">{step}</div>'
-            f'{rows_html}{expandable}'
+            # Header with icon + step name
+            f'<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'
+            f'<span style="font-size:1.3rem">{icon}</span>'
+            f'<span style="color:{color};font-weight:700;font-size:0.95rem;'
+            f'letter-spacing:0.04em;text-transform:uppercase">{step}</span></div>'
+            # WHAT
+            f'{rows_html}{detail_section}'
+            # WHY
+            f'{why_section}'
             f'</div>',
             unsafe_allow_html=True,
         )

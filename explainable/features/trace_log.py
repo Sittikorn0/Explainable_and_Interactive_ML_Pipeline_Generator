@@ -1,65 +1,96 @@
 """
 explainable/features/trace_log.py
-Pipeline trace log — สะสม decisions ตลอด pipeline แล้วแสดงที่หน้า Explainable
+Pipeline trace log — สะสมการตัดสินใจ + เหตุผล ตลอด pipeline
 """
+import pandas as pd
 import streamlit as st
 
 _LOG_KEY     = "_trace_log"
-_ACTIONS_KEY = "_cleaning_actions"   # accumulate cleaning before Confirm
+_ACTIONS_KEY = "_cleaning_actions"
 
 
 # ── Core ──────────────────────────────────────────────────────────────────────
 
 def append(entry: dict):
-    """
-    เพิ่ม log entry หนึ่งรายการ
-    entry format: {step, icon, items: list[str], type: "success"|"info"|"warning"}
-    """
     st.session_state.setdefault(_LOG_KEY, []).append(entry)
-
 
 def get_log() -> list[dict]:
     return st.session_state.get(_LOG_KEY, [])
 
-
 def clear():
-    """เรียกเมื่อ upload ไฟล์ใหม่ — reset log ทั้งหมด"""
+    """เรียกเมื่อ upload ไฟล์ใหม่"""
     st.session_state[_LOG_KEY]     = []
     st.session_state[_ACTIONS_KEY] = []
 
 
 # ── Upload ────────────────────────────────────────────────────────────────────
 
-def log_upload(df, file_name: str, target_col: str, task_hint: str):
+def log_upload(df, file_name: str, target_col: str, task_hint: str,
+               target_reasons: list = None):
     n_numeric = df.select_dtypes(include="number").shape[1]
     n_categ   = df.select_dtypes(include=["object", "category"]).shape[1]
-    append({
-        "step":  "Upload",
-        "icon":  "",
-        "type":  "success",
-        "items": [
-            f"File: {file_name}",
-            f"Shape: {df.shape[0]:,} rows × {df.shape[1]} columns",
-            f"Numeric: {n_numeric} cols  |  Categorical: {n_categ} cols",
-            f"Missing values: {int(df.isnull().sum().sum()):,} cells",
-            f"Target column: {target_col}  →  {task_hint}",
-        ],
-    })
+    n_miss    = int(df.isnull().sum().sum())
+
+    items = [
+        f"ไฟล์: {file_name}",
+        f"ขนาด: {df.shape[0]:,} แถว × {df.shape[1]} คอลัมน์",
+        f"ตัวเลข: {n_numeric} คอลัมน์  |  ข้อความ: {n_categ} คอลัมน์",
+        f"ข้อมูลที่ขาดหาย: {n_miss:,} ช่อง",
+        f"เป้าหมายที่ต้องทำนาย: {target_col}  →  {task_hint}",
+    ]
+
+    explanations = []
+
+    # ทำไมเลือก target นี้
+    if target_reasons:
+        explanations.append(f"ทำไมเลือก '{target_col}' เป็นสิ่งที่ต้องทำนาย?")
+        for r in target_reasons:
+            explanations.append(f"  → {r}")
+
+    # ทำไมเป็น classification / regression
+    y = df[target_col]
+    if task_hint == "classification":
+        if not pd.api.types.is_numeric_dtype(y):
+            explanations.append(
+                f"ทำไมเป็นงาน Classification? → เพราะ '{target_col}' เป็นข้อความ "
+                f"(มี {y.nunique()} กลุ่ม) ระบบจึงต้อง \"แยกกลุ่ม\" ไม่ใช่ทำนายตัวเลข"
+            )
+        else:
+            explanations.append(
+                f"ทำไมเป็นงาน Classification? → เพราะ '{target_col}' แม้เป็นตัวเลข "
+                f"แต่มีแค่ {y.nunique()} ค่า จึงถือว่าเป็นกลุ่มที่นับได้"
+            )
+    else:
+        explanations.append(
+            f"ทำไมเป็นงาน Regression? → เพราะ '{target_col}' เป็นตัวเลขต่อเนื่อง "
+            f"({y.nunique()} ค่า) ระบบจึงต้อง \"ทำนายค่า\" แทนการแยกกลุ่ม"
+        )
+
+    # สถานะข้อมูลขาดหาย
+    miss_pct = n_miss / df.size * 100 if df.size > 0 else 0
+    if miss_pct > 5:
+        explanations.append(
+            f"⚠ ข้อมูลขาดหายค่อนข้างเยอะ ({miss_pct:.1f}%) "
+            "ควรจัดการก่อนสร้างโมเดล ไม่งั้นผลอาจคลาดเคลื่อน"
+        )
+    elif n_miss == 0:
+        explanations.append("✓ ไม่มีข้อมูลขาดหาย — พร้อมใช้งานได้เลย")
+    else:
+        explanations.append(
+            f"ข้อมูลขาดหายเล็กน้อย ({miss_pct:.1f}%) "
+            "ระบบจะจัดการให้ในขั้นตอนทำความสะอาด"
+        )
+
+    append({"step": "Upload", "items": items, "explanations": explanations})
 
 
-# ── Cleaning accumulator ──────────────────────────────────────────────────────
+# ── Cleaning ──────────────────────────────────────────────────────────────────
 
 def track_cleaning(action_type: str, col: str, detail: str):
-    """
-    สะสม cleaning action ก่อน Confirm & Save
-    action_type: "missing" | "outlier" | "drop_col" | "drop_dup"
-    """
     actions = st.session_state.setdefault(_ACTIONS_KEY, [])
-    # replace ถ้ามี entry เดิมสำหรับ col เดิม + type เดิม
     actions = [a for a in actions if not (a["col"] == col and a["type"] == action_type)]
     actions.append({"type": action_type, "col": col, "detail": detail})
     st.session_state[_ACTIONS_KEY] = actions
-
 
 def track_cleaning_bulk(action_type: str, cols: list, detail: str):
     for col in cols:
@@ -67,7 +98,6 @@ def track_cleaning_bulk(action_type: str, cols: list, detail: str):
 
 
 def commit_cleaning(df_before, df_after):
-    """เรียกบน Confirm & Save — รวม accumulated actions เป็น 1 log entry"""
     actions   = st.session_state.get(_ACTIONS_KEY, [])
     row_delta = df_after.shape[0] - df_before.shape[0]
     col_delta = df_after.shape[1] - df_before.shape[1]
@@ -75,100 +105,276 @@ def commit_cleaning(df_before, df_after):
     miss_after  = int(df_after.isnull().sum().sum())
 
     items = [
-        f"Rows: {df_before.shape[0]:,} → {df_after.shape[0]:,}  ({row_delta:+,})",
-        f"Columns: {df_before.shape[1]} → {df_after.shape[1]}  ({col_delta:+,})",
-        f"Missing values: {miss_before:,} → {miss_after:,}",
+        f"จำนวนแถว: {df_before.shape[0]:,} → {df_after.shape[0]:,}  ({row_delta:+,})",
+        f"จำนวนคอลัมน์: {df_before.shape[1]} → {df_after.shape[1]}  ({col_delta:+,})",
+        f"ข้อมูลขาดหาย: {miss_before:,} → {miss_after:,}",
     ]
 
     label_map = {
-        "missing":  "Missing value strategy",
-        "outlier":  "Outlier strategy",
-        "drop_col": "Dropped columns",
-        "drop_dup": "Duplicate rows removed",
+        "missing":  "วิธีจัดการข้อมูลขาดหาย",
+        "outlier":  "วิธีจัดการค่าผิดปกติ",
+        "drop_col": "คอลัมน์ที่ลบออก",
+        "drop_dup": "แถวซ้ำที่ลบออก",
     }
     by_type: dict = {}
     for a in actions:
-        by_type.setdefault(a["type"], []).append(f"{a['col']} → {a['detail']}")
-
+        by_type.setdefault(a["type"], []).append(a)
     for t, entries in by_type.items():
         items.append(f"{label_map.get(t, t)} ({len(entries)}):")
-        items.extend(f"  • {e}" for e in entries)
+        items.extend(f"  • {e['col']} → {e['detail']}" for e in entries)
 
     if not actions:
-        items.append("(ไม่มีการเปลี่ยนแปลง — ใช้ข้อมูล original)")
+        items.append("(ไม่มีการเปลี่ยนแปลง — ใช้ข้อมูลเดิม)")
 
-    append({
-        "step":  "Data Cleaning",
-        "icon":  "",
-        "type":  "success",
-        "items": items,
-    })
+    explanations = []
+
+    for a in by_type.get("missing", []):
+        d = a["detail"].lower()
+        if "median" in d:
+            explanations.append(
+                f"ทำไมเติมค่ากลาง (Median) ให้ '{a['col']}'? → "
+                "เพราะค่ากลางไม่ถูกดึงไปตามค่าที่สูงหรือต่ำผิดปกติ "
+                "ต่างจากค่าเฉลี่ยที่จะเอียงไปหาค่าสุดโต่ง"
+            )
+        elif "mean" in d:
+            explanations.append(
+                f"ทำไมเติมค่าเฉลี่ย (Mean) ให้ '{a['col']}'? → "
+                "เพราะข้อมูลกระจายตัวสม่ำเสมอ ค่าเฉลี่ยจึงเป็นตัวแทนที่ดี"
+            )
+        elif "mode" in d:
+            explanations.append(
+                f"ทำไมเติมค่าที่พบบ่อยสุด (Mode) ให้ '{a['col']}'? → "
+                "เพราะเป็นข้อมูลข้อความ ใช้ค่าเฉลี่ยไม่ได้ "
+                "จึงเติมด้วยคำตอบที่เจอบ่อยที่สุดแทน"
+            )
+        elif "drop" in d:
+            explanations.append(
+                f"ทำไมลบแถวที่ข้อมูลขาดหายของ '{a['col']}'? → "
+                "เพราะมีจำนวนน้อย ลบออกแล้วไม่กระทบภาพรวม"
+            )
+
+    for a in by_type.get("outlier", []):
+        d = a["detail"].lower()
+        if "clip" in d:
+            explanations.append(
+                f"ทำไมตัดค่าผิดปกติของ '{a['col']}' ให้อยู่ในขอบเขต? → "
+                "เพราะค่าที่สูง/ต่ำเกินไปจะทำให้โมเดลสับสน "
+                "การตัดให้อยู่ในขอบเขตช่วยลดผลกระทบโดยไม่สูญเสียแถวข้อมูล"
+            )
+        elif "drop" in d or "remove" in d:
+            explanations.append(
+                f"ทำไมลบค่าผิดปกติของ '{a['col']}'? → "
+                "เพราะค่านั้นอาจเกิดจากความผิดพลาดในการบันทึก "
+                "ลบออกเพื่อไม่ให้โมเดลเรียนรู้จากข้อมูลที่ผิด"
+            )
+
+    if "drop_dup" in by_type:
+        explanations.append(
+            "ทำไมลบแถวที่ซ้ำกัน? → เพราะข้อมูลซ้ำทำให้โมเดลให้ความสำคัญ "
+            "กับข้อมูลนั้นมากเกินจริง อาจทำให้ผลไม่แม่นยำ"
+        )
+
+    if by_type.get("drop_col"):
+        cols_str = ", ".join(a["col"] for a in by_type["drop_col"])
+        explanations.append(
+            f"ทำไมลบคอลัมน์ ({cols_str})? → เพราะคอลัมน์เหล่านี้ "
+            "ไม่มีข้อมูลที่เป็นประโยชน์ เก็บไว้จะเป็นสัญญาณรบกวนให้โมเดล"
+        )
+
+    if not actions:
+        explanations.append(
+            "ไม่ต้องทำความสะอาด เพราะข้อมูลอยู่ในสภาพดีอยู่แล้ว"
+        )
+    else:
+        explanations.append(
+            "หลักการ: ต้องทำความสะอาดข้อมูลก่อนสร้างโมเดลเสมอ "
+            "เพราะข้อมูลที่สะอาดจะช่วยให้โมเดลเรียนรู้ได้แม่นยำขึ้น"
+        )
+
+    append({"step": "Data Cleaning", "items": items, "explanations": explanations})
     st.session_state[_ACTIONS_KEY] = []
 
 
 # ── Transformation ────────────────────────────────────────────────────────────
 
+_SCALING_REASONS = {
+    "standard_scaler": (
+        "ปรับให้ข้อมูลมีค่าเฉลี่ยเป็น 0 และกระจายตัวเท่ากัน "
+        "เหมาะกับข้อมูลที่กระจายแบบระฆังคว่ำ"
+    ),
+    "minmax_scaler": (
+        "ย่อค่าทุกตัวให้อยู่ในช่วง 0 ถึง 1 "
+        "เหมาะเมื่อข้อมูลไม่มีค่าผิดปกติรุนแรง"
+    ),
+    "robust_scaler": (
+        "ใช้ค่ากลางและค่าพิสัยกลาง ทนทานต่อค่าผิดปกติ "
+        "ดีกว่าวิธีมาตรฐานเมื่อข้อมูลมีค่าสุดโต่ง"
+    ),
+    "log_transform": (
+        "แปลงข้อมูลด้วย Log เพื่อลดความเบ้ของข้อมูลที่กระจุกตัวด้านใดด้านหนึ่ง"
+    ),
+    "no_scaling": (
+        "ไม่ปรับขนาด เพราะโมเดลแบบต้นไม้ (เช่น Random Forest, XGBoost) "
+        "ตัดสินใจจากการเปรียบเทียบค่า ไม่ได้สนใจขนาดของตัวเลข"
+    ),
+}
+
+_ENCODING_REASONS = {
+    "onehot": "มีค่าไม่กี่แบบ จึงสร้างคอลัมน์ใหม่แทนแต่ละค่า เพื่อไม่ให้โมเดลเข้าใจว่ามีลำดับ",
+    "label":  "มีค่าหลายแบบเกินไป จึงแปลงเป็นตัวเลข 0, 1, 2, ... แทน",
+    "ordinal": "ข้อมูลมีลำดับชัดเจน (เช่น ต่ำ < กลาง < สูง) จึงแปลงเป็นตัวเลขตามลำดับ",
+    "drop":   "ไม่เหมาะจะนำมาสร้างโมเดล เช่น รหัสหรือข้อความอิสระ",
+    "skip":   "เป็นตัวเลขอยู่แล้ว ไม่ต้องแปลง",
+}
+
+
 def log_transformation(summary: dict, enc_decisions: dict, scaling_method: str, drop_cols: list):
-    """
-    summary: dict จาก apply_all (original_cols, dropped_cols, final_cols, scaling_method)
-    enc_decisions: dict {col: method}  ← output จาก _render_encoding()
-    """
     items = [
-        f"Original columns: {summary.get('original_cols', '?')}",
-        f"Dropped columns: {summary.get('dropped_cols', 0)}",
-        f"After encoding: {summary.get('final_cols', '?')} columns",
-        f"Scaling method: {scaling_method}",
+        f"คอลัมน์เริ่มต้น: {summary.get('original_cols', '?')}",
+        f"คอลัมน์ที่ลบ: {summary.get('dropped_cols', 0)}",
+        f"หลังแปลงข้อมูล: {summary.get('final_cols', '?')} คอลัมน์",
+        f"วิธีปรับขนาด: {scaling_method}",
     ]
     if drop_cols:
-        items.append(f"Feature dropped ({len(drop_cols)}): {', '.join(drop_cols)}")
+        items.append(f"คอลัมน์ที่ตัดออก ({len(drop_cols)}): {', '.join(drop_cols)}")
 
     enc_by_method: dict = {}
     for col, method in (enc_decisions.items() if isinstance(enc_decisions, dict) else []):
         enc_by_method.setdefault(method, []).append(col)
     for method, cols in enc_by_method.items():
-        items.append(f"Encoding — {method}: {', '.join(cols)}")
+        items.append(f"การแปลงข้อความ — {method}: {', '.join(cols)}")
 
-    append({
-        "step":  "Data Transformation",
-        "icon":  "",
-        "type":  "success",
-        "items": items,
-    })
+    explanations = []
+
+    # ทำไมต้องปรับขนาด
+    reason = _SCALING_REASONS.get(scaling_method, f"ใช้ {scaling_method}")
+    explanations.append(f"ทำไมปรับขนาดด้วย {scaling_method}? → {reason}")
+
+    if scaling_method != "no_scaling":
+        explanations.append(
+            "ทำไมต้องปรับขนาดข้อมูล? → เพราะถ้าคอลัมน์หนึ่งมีค่าเป็นหลักล้าน "
+            "แต่อีกคอลัมน์มีค่าแค่ 0-100 โมเดลจะให้ความสำคัญกับตัวเลขใหญ่มากเกินไป "
+            "ปรับขนาดช่วยให้ทุกคอลัมน์มีน้ำหนักเท่าเทียมกัน"
+        )
+
+    # ทำไมต้องแปลงข้อความ
+    for method, cols in enc_by_method.items():
+        reason = _ENCODING_REASONS.get(method, f"ใช้ {method}")
+        cols_str = ", ".join(cols[:3])
+        if len(cols) > 3:
+            cols_str += f" อีก {len(cols)-3} ตัว"
+        explanations.append(f"ทำไมแปลง {cols_str} ด้วย {method}? → {reason}")
+
+    if enc_by_method:
+        explanations.append(
+            "ทำไมต้องแปลงข้อความเป็นตัวเลข? → เพราะโมเดลคำนวณได้เฉพาะตัวเลขเท่านั้น "
+            "ข้อความเช่น \"แดง\" หรือ \"น้ำเงิน\" ต้องถูกแปลงก่อน"
+        )
+
+    if drop_cols:
+        explanations.append(
+            f"ทำไมตัดออก {len(drop_cols)} คอลัมน์? → "
+            "เพราะเป็นข้อมูลที่ไม่ช่วยในการทำนาย เช่น รหัสที่ไม่ซ้ำกัน "
+            "หรือข้อมูลที่ขาดหายเยอะเกินไป เก็บไว้จะรบกวนการเรียนรู้ของโมเดล"
+        )
+
+    append({"step": "Data Transformation", "items": items, "explanations": explanations})
 
 
 # ── Model Process ─────────────────────────────────────────────────────────────
 
 def log_model_process(result: dict, metrics: dict):
-    """result: output จาก run_competition, metrics: output จาก get_metrics"""
-    task_type  = result["task_type"]
-    best_label = result["best_label"]
+    task_type   = result["task_type"]
+    best_label  = result["best_label"]
     competition = result["competition"]
 
-    # leaderboard sorted
     ranked = sorted(
         [(k, v) for k, v in competition.items() if v["cv_score"] is not None],
         key=lambda x: x[1]["cv_score"], reverse=True,
     )
 
     items = [
-        f"Task type: {task_type.upper()}",
-        f"Models trained: {len(competition)}",
-        f"Best model: {best_label}",
+        f"ประเภทงาน: {task_type.upper()}",
+        f"จำนวนโมเดลที่ทดสอบ: {len(competition)}",
+        f"โมเดลที่ดีที่สุด: {best_label}",
     ]
 
     if ranked:
-        items.append("Leaderboard (CV Score):")
+        items.append("อันดับ (คะแนน CV):")
         for i, (_, v) in enumerate(ranked[:5]):
-            medal = ["1.", "2.", "3.", "4.", "5."][i]
-            items.append(f"  {medal} {v['label']}: {v['cv_score']:.4f} ±{v['cv_std']:.4f}")
+            items.append(f"  {i+1}. {v['label']}: {v['cv_score']:.4f} ±{v['cv_std']:.4f}")
 
-    items.append("Test set metrics:")
+    items.append("ผลทดสอบจริง:")
     for name, val in metrics.items():
         items.append(f"  • {name}: {val}")
 
-    append({
-        "step":  "ML Process",
-        "icon":  "",
-        "type":  "success",
-        "items": items,
-    })
+    explanations = []
+
+    # ทำไมเลือกโมเดลนี้
+    if len(ranked) >= 2:
+        best_score = ranked[0][1]["cv_score"]
+        second = ranked[1][1]
+        diff = best_score - second["cv_score"]
+        explanations.append(
+            f"ทำไมเลือก {best_label}? → เพราะได้คะแนนสูงที่สุด ({best_score:.4f}) "
+            f"ชนะอันดับสอง ({second['label']}) อยู่ {diff:.4f} คะแนน"
+        )
+        if diff < 0.01:
+            explanations.append(
+                "⚠ คะแนนห่างกันน้อยมาก — อาจเลือกโมเดลที่อธิบายได้ง่ายกว่าแทน "
+                "เช่น Decision Tree ที่เห็นเหตุผลชัดเจน"
+            )
+
+    # ทำไมใช้ Cross-Validation
+    explanations.append(
+        "ทำไมใช้ Cross-Validation ตัดสิน? → ระบบแบ่งข้อมูลเป็น 5 ชุด "
+        "วนสลับกันทดสอบทุกชุด แล้วเอาคะแนนมาเฉลี่ย "
+        "ให้ผลที่เชื่อถือได้มากกว่าทดสอบแค่ครั้งเดียว"
+    )
+
+    # ทำไมแบ่ง 80/20
+    explanations.append(
+        "ทำไมแบ่งข้อมูล 80/20? → ใช้ 80% สอนโมเดล เก็บ 20% ไว้ทดสอบ "
+        "เหมือนให้นักเรียนทำข้อสอบที่ไม่เคยเห็น "
+        "ถ้าทำได้ดี แสดงว่าเข้าใจจริง ไม่ใช่แค่ท่องจำ"
+    )
+
+    # แปลผลคะแนน
+    if task_type == "classification":
+        acc = metrics.get("Accuracy")
+        f1  = metrics.get("F1(Mac)")
+        if isinstance(acc, (int, float)) and isinstance(f1, (int, float)):
+            if acc > 0.9:
+                explanations.append(f"ผลทดสอบ: Accuracy = {acc:.4f} — ดีมาก! ทำนายถูกมากกว่า 90%")
+            elif acc > 0.7:
+                explanations.append(f"ผลทดสอบ: Accuracy = {acc:.4f} — อยู่ในเกณฑ์ดี ยังพัฒนาต่อได้")
+            else:
+                explanations.append(
+                    f"ผลทดสอบ: Accuracy = {acc:.4f} — ยังไม่ค่อยดี "
+                    "อาจต้องปรับข้อมูลหรือเพิ่มข้อมูลเพิ่มเติม"
+                )
+            if abs(acc - f1) > 0.1:
+                explanations.append(
+                    f"⚠ Accuracy ({acc:.4f}) กับ F1 Macro ({f1:.4f}) ต่างกันมาก "
+                    "แสดงว่าบางกลุ่มมีข้อมูลน้อยกว่ากลุ่มอื่นมาก "
+                    "ควรดู F1 Macro เป็นหลัก เพราะให้น้ำหนักทุกกลุ่มเท่ากัน"
+                )
+    else:
+        r2 = metrics.get("R² Score")
+        if isinstance(r2, (int, float)):
+            if r2 > 0.9:
+                explanations.append(f"ผลทดสอบ: R² = {r2:.4f} — ดีมาก! โมเดลอธิบายข้อมูลได้มากกว่า 90%")
+            elif r2 > 0.5:
+                explanations.append(f"ผลทดสอบ: R² = {r2:.4f} — พอใช้ได้ ยังปรับปรุงต่อได้")
+            else:
+                explanations.append(f"ผลทดสอบ: R² = {r2:.4f} — ยังอธิบายข้อมูลได้ไม่ดีนัก อาจต้องเพิ่มข้อมูล")
+
+    failed = [(k, v) for k, v in competition.items() if v["cv_score"] is None]
+    if failed:
+        names = ", ".join(v["label"] for _, v in failed)
+        explanations.append(
+            f"ℹ มี {len(failed)} โมเดลที่ฝึกไม่สำเร็จ ({names}) "
+            "อาจไม่เข้ากับข้อมูลชุดนี้ ระบบข้ามไปอัตโนมัติ"
+        )
+
+    append({"step": "ML Process", "items": items, "explanations": explanations})
