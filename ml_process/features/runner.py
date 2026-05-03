@@ -115,7 +115,7 @@ def run_competition(X_train, X_test, y_train, y_test,
                 warnings.filterwarnings("ignore", category=FutureWarning,
                                         message=".*n_jobs.*no effect")
                 if grid:
-                    search = RandomizedSearchCV(m, grid, n_iter=min(15, _grid_size(grid)),
+                    search = RandomizedSearchCV(m, grid, n_iter=min(25, _grid_size(grid)),
                                                 cv=cv, scoring=scorer, random_state=42,
                                                 n_jobs=-1, refit=True, error_score="raise")
                     search.fit(X_tr, y_tr)
