@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import skew
+from data_prepare.features.statistics import get_outlier_bounds
 
 
 # ── Encoding Analysis ─────────────────────────────────────────
@@ -118,12 +119,13 @@ def analyze_scaling(df: pd.DataFrame, target_col: str) -> dict:
         if len(series) == 0:
             continue
 
-        col_skew = 0.0 if series.std() < 1e-10 else float(skew(series))
-
-        # ตรวจ outlier ด้วย IQR
-        q1, q3 = series.quantile(0.25), series.quantile(0.75)
-        iqr    = q3 - q1
-        n_out  = int(((series < q1 - 1.5*iqr) | (series > q3 + 1.5*iqr)).sum())
+        bounds = get_outlier_bounds(series)
+        col_skew = bounds["skewness"]
+        
+        if bounds["method"] == "N/A":
+            n_out = 0
+        else:
+            n_out = int(((series < bounds["lower"]) | (series > bounds["upper"])).sum())
         out_pct = n_out / len(series) * 100
 
         col_stats.append({
