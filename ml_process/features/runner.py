@@ -1,7 +1,12 @@
 """ml_process/runner.py — model registry + competition"""
+import os
 import warnings
 import numpy as np
 import pandas as pd
+
+# กำหนดจำนวน CPU Cores ที่ใช้ (ไม่ให้ดึงไปหมดจนเครื่องค้าง)
+# เช่น i7-12700H (20 threads) จะใช้แค่ 6 threads เพื่อให้เครื่องยังเล่นเน็ตหรือทำงานอื่นได้ลื่นๆ
+_N_JOBS = min(6, max(1, os.cpu_count() // 2)) if os.cpu_count() else 2
 from sklearn.linear_model import LogisticRegression, LinearRegression, SGDClassifier
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.ensemble import (
@@ -12,6 +17,7 @@ from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import RandomizedSearchCV, cross_val_score, KFold
 from sklearn.preprocessing import LabelEncoder
+from sklearn.utils.class_weight import compute_sample_weight
 from ml_process.features.config import MODELS_CLF, MODELS_REG, PARAM_GRIDS, SLOW_MODELS, MAX_ROWS_SLOW
 
 try:
@@ -35,18 +41,18 @@ except ImportError:
 
 def get_model_map() -> dict:
     m = {
-        "logistic_regression":         lambda: LogisticRegression(max_iter=5000, solver="saga", class_weight="balanced"),
+        "logistic_regression":         lambda: LogisticRegression(max_iter=5000, solver="lbfgs", class_weight="balanced"),
         "decision_tree":               lambda: DecisionTreeClassifier(max_depth=8, random_state=42, class_weight="balanced"),
-        "random_forest":               lambda: RandomForestClassifier(n_estimators=50, n_jobs=-1, random_state=42, class_weight="balanced"),
+        "random_forest":               lambda: RandomForestClassifier(n_estimators=50, n_jobs=_N_JOBS, random_state=42, class_weight="balanced"),
         "gradient_boosting":           lambda: HistGradientBoostingClassifier(max_iter=50, max_depth=4, random_state=42),
         "svm":                         lambda: SGDClassifier(loss="hinge", max_iter=500, random_state=42, class_weight="balanced"),
-        "knn":                         lambda: KNeighborsClassifier(n_neighbors=5, n_jobs=-1),
+        "knn":                         lambda: KNeighborsClassifier(n_neighbors=5, n_jobs=_N_JOBS),
         "naive_bayes":                 lambda: GaussianNB(),
         "linear_regression":           lambda: LinearRegression(),
         "decision_tree_regressor":     lambda: DecisionTreeRegressor(max_depth=8, random_state=42),
-        "random_forest_regressor":     lambda: RandomForestRegressor(n_estimators=50, n_jobs=-1, random_state=42),
+        "random_forest_regressor":     lambda: RandomForestRegressor(n_estimators=50, n_jobs=_N_JOBS, random_state=42),
         "gradient_boosting_regressor": lambda: HistGradientBoostingRegressor(max_iter=50, max_depth=4, random_state=42),
-        "knn_regressor":               lambda: KNeighborsRegressor(n_neighbors=5, n_jobs=-1),
+        "knn_regressor":               lambda: KNeighborsRegressor(n_neighbors=5, n_jobs=_N_JOBS),
     }
     if _HAS_XGB:
         m["xgboost"]           = lambda: XGBClassifier(n_estimators=50, max_depth=4, learning_rate=0.1, eval_metric="logloss", random_state=42, verbosity=0)
@@ -137,7 +143,7 @@ def run_competition(X_train, X_test, y_train, y_test,
                 if grid:
                     search = RandomizedSearchCV(m, grid, n_iter=min(25, _grid_size(grid)),
                                                 cv=cv, scoring=scorer, random_state=42,
-                                                n_jobs=-1, refit=False, error_score="raise")
+                                                n_jobs=_N_JOBS, refit=False, error_score="raise")
                     search.fit(X_tr, y_tr)
                     best_params = search.best_params_
                     cv_mean = float(search.best_score_)
@@ -146,11 +152,15 @@ def run_competition(X_train, X_test, y_train, y_test,
                     # ตั้งค่า best parameter ให้โมเดล
                     m.set_params(**best_params)
                 else:
-                    scores  = cross_val_score(m, X_tr, y_tr, cv=cv, scoring=scorer, n_jobs=-1)
+                    scores  = cross_val_score(m, X_tr, y_tr, cv=cv, scoring=scorer, n_jobs=_N_JOBS)
                     cv_mean, cv_std = float(scores.mean()), float(scores.std())
                     
                 # Retrain โมเดลด้วยพารามิเตอร์ที่ดีที่สุดบนชุดข้อมูล X_train เต็มเสมอ (ไม่ใช้ตัวที่สุ่มมาทำ Grid Search)
-                m.fit(X_train, y_train)
+                # HistGradientBoosting ไม่มี class_weight → ใช้ sample_weight แทน
+                fit_kw = {}
+                if task_type == "classification" and key in ("gradient_boosting",):
+                    fit_kw["sample_weight"] = compute_sample_weight("balanced", y_train)
+                m.fit(X_train, y_train, **fit_kw)
 
             competition[key] = {"label": label, "cv_score": round(cv_mean, 4),
                                  "cv_std": round(cv_std, 4), "best_params": best_params, "error": None}
