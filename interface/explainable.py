@@ -468,7 +468,7 @@ def render_explainable():
             html_report,
             file_name=f"ml_report_{safe_name}_{ts}.html",
             mime="text/html",
-            use_container_width=True,
+            width="stretch",
         )
     with col_zip:
         st.download_button(
@@ -476,7 +476,7 @@ def render_explainable():
             buf.getvalue(),
             file_name=f"ml_results_{safe_name}_{ts}.zip",
             mime="application/zip",
-            use_container_width=True,
+            width="stretch",
         )
     with col_finish:
         @st.dialog("จบ Pipeline?")
