@@ -155,6 +155,23 @@ def preprocess(df: pd.DataFrame, target_col: str,
     X = df.drop(columns=[target_col]).copy()
     y = df[target_col].copy()
 
+    # ถ้า y เป็น object dtype แต่เก็บตัวเลขจริงๆ (เช่น int ที่ถูก sanitize เป็น object)
+    # ให้ convert กลับเป็น numeric — ป้องกัน "Unknown label type: unknown"
+    if y.dtype == object:
+        converted = pd.to_numeric(y, errors="coerce")
+        if converted.notna().all():
+            y = converted
+
+    # Validate ก่อน train: classification ต้องมีอย่างน้อย 2 class
+    n_unique = y.nunique()
+    if task_type == "classification" and n_unique < 2:
+        vals = y.dropna().unique().tolist()
+        raise ValueError(
+            f"Target column '{target_col}' มีค่าเพียง {n_unique} class ({vals}) "
+            f"— ต้องการอย่างน้อย 2 class สำหรับ classification "
+            f"กรุณาตรวจสอบ dataset หรือเลือก target column ใหม่"
+        )
+
     # sample ก่อน split เพื่อลดขนาดข้อมูล
     X, y = _sample(X, y, MAX_ROWS_TRAIN)
 
