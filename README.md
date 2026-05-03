@@ -10,15 +10,26 @@
 
 **1. รองรับไฟล์หลายรูปแบบ**
 - รับไฟล์ CSV, Excel (.xlsx / .xls), และ JSON ขนาดสูงสุด 200 MB
-- CSV: ลอง encoding อัตโนมัติ 5 แบบตามลำดับ (`utf-8` → `utf-8-sig` → `cp874` → `cp1252` → `latin1`) เพื่อรองรับภาษาไทยและไฟล์จากหลาย locale โดยที่ผู้ใช้ไม่ต้องรู้ว่าไฟล์ใช้ encoding อะไร
-- Excel: อ่านด้วย `pandas.read_excel()` โดยตรง
+- CSV: ลอง encoding อัตโนมัติ 5 แบบตามลำดับ (`utf-8` → `utf-8-sig` → `cp874` → `cp1252` → `latin1`) เพื่อรองรับภาษาไทยและไฟล์จากหลาย locale; ใช้ `sep=None, engine='python'` เพื่อ sniff delimiter อัตโนมัติ รองรับทั้ง `,` `;` `\t` และ delimiter อื่นๆ โดยไม่ต้องระบุเอง
+- Excel: ใช้ `pd.ExcelFile` ตรวจจำนวน sheet ก่อนโหลด — ถ้ามีหลาย sheet จะอ่าน sheet แรกและแจ้ง user ผ่าน warning banner พร้อมรายชื่อ sheet ทั้งหมด
 - JSON: รองรับ 3 รูปแบบโครงสร้าง:
   - **Array of objects**: `[{...}, {...}]`
   - **Single object**: `{...}` (wrap เป็น list อัตโนมัติ)
   - **JSONL**: 1 object ต่อบรรทัด `{...}\n{...}`
   - **Nested objects**: flatten ด้วย `json_normalize` สูงสุด 5 ระดับ (เช่น `address.city.zipcode`)
   - **Array columns**: join เป็น string ด้วย `, ` อัตโนมัติ
+  - **Nested array of dicts** (`[{...}, {...}]` ภายใน column): ตรวจสอบ **ทุก row** เพื่อป้องกัน silent miss — drop อัตโนมัติ (default) หรือ user เลือก keep as string ได้เองใน JSON Config tab
   - แจ้งเตือนรายชื่อ columns ที่ถูกแปลงโดยแยกประเภท Array/Object
+
+**JSON Config tab (เฉพาะไฟล์ JSON)**
+- ระบบวิเคราะห์ข้อมูลจริงและแนะนำ action ที่เหมาะสมที่สุดต่อ column (แสดงด้วย ⭐) พร้อมเหตุผล
+- แสดง live preview ผลลัพธ์ของแต่ละ action จาก sample data จริง
+- Options ต่อประเภท:
+  - **Array** (`["a", "b"]`): Join เป็น string ⭐ / นับจำนวน (Count) / ค่าแรก (First only) / Drop
+  - **Object** (`{...}` ลึกเกิน 5 ระดับ): Flatten เพิ่มเติม ⭐ / แปลงเป็น string / นับ keys / Drop
+  - **⚠ Nested Array** (`[{...}]`): นับจำนวน items ⭐ / ดึง field เฉพาะ (ตรวจ fields ให้อัตโนมัติ) / แปลงเป็น string / Drop
+- ปุ่ม **Re-apply** — process ข้อมูลใหม่ตาม action ที่เลือก โดยไม่ต้อง upload ไฟล์ซ้ำ
+- Data Preview และ Target Column อัปเดตอัตโนมัติหลัง Re-apply พร้อมสรุป actions ที่ถูก apply
 
 **2. แสดง Data Preview**
 - แสดงจำนวน Rows / Columns
