@@ -1,4 +1,5 @@
 """ml_process/runner.py — model registry + competition"""
+import warnings
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression, LinearRegression, SGDClassifier
@@ -33,7 +34,7 @@ except ImportError:
 
 def get_model_map() -> dict:
     m = {
-        "logistic_regression":         lambda: LogisticRegression(max_iter=5000, solver="saga", n_jobs=-1),
+        "logistic_regression":         lambda: LogisticRegression(max_iter=5000, solver="saga"),
         "decision_tree":               lambda: DecisionTreeClassifier(max_depth=8, random_state=42),
         "random_forest":               lambda: RandomForestClassifier(n_estimators=50, n_jobs=-1, random_state=42),
         "gradient_boosting":           lambda: HistGradientBoostingClassifier(max_iter=50, max_depth=4, random_state=42),
@@ -108,18 +109,23 @@ def run_competition(X_train, X_test, y_train, y_test,
             m    = model_map[key]()
             grid = PARAM_GRIDS.get(key, {})
             best_params = {}
-            if grid:
-                search = RandomizedSearchCV(m, grid, n_iter=min(15, _grid_size(grid)),
-                                            cv=cv, scoring=scorer, random_state=42,
-                                            n_jobs=-1, refit=True, error_score="raise")
-                search.fit(X_tr, y_tr)
-                m, best_params = search.best_estimator_, search.best_params_
-                cv_mean = float(search.best_score_)
-                cv_std = float(search.cv_results_["std_test_score"][search.best_index_])
-            else:
-                scores  = cross_val_score(m, X_tr, y_tr, cv=cv, scoring=scorer, n_jobs=-1)
-                cv_mean, cv_std = float(scores.mean()), float(scores.std())
-                m.fit(X_tr, y_tr)
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=UserWarning,
+                                        message="The least populated class")
+                warnings.filterwarnings("ignore", category=FutureWarning,
+                                        message=".*n_jobs.*no effect")
+                if grid:
+                    search = RandomizedSearchCV(m, grid, n_iter=min(15, _grid_size(grid)),
+                                                cv=cv, scoring=scorer, random_state=42,
+                                                n_jobs=-1, refit=True, error_score="raise")
+                    search.fit(X_tr, y_tr)
+                    m, best_params = search.best_estimator_, search.best_params_
+                    cv_mean = float(search.best_score_)
+                    cv_std = float(search.cv_results_["std_test_score"][search.best_index_])
+                else:
+                    scores  = cross_val_score(m, X_tr, y_tr, cv=cv, scoring=scorer, n_jobs=-1)
+                    cv_mean, cv_std = float(scores.mean()), float(scores.std())
+                    m.fit(X_tr, y_tr)
 
             competition[key] = {"label": label, "cv_score": round(cv_mean, 4),
                                  "cv_std": round(cv_std, 4), "best_params": best_params, "error": None}
