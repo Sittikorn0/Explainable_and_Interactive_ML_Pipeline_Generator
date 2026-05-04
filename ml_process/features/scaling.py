@@ -91,12 +91,30 @@ padding:10px 14px;margin:6px 0;font-size:0.81rem;color:#c9d1d9;line-height:1.7">
             rows.append({"Method": label, "ใช้เมื่อ": SCALING_WHEN[k]})
         st.table(pd.DataFrame(rows))
 
+    options = sc_analysis["options"]
+    rec_val = sc_analysis["recommended"]
+    
+    # Callback เมื่อมีการเปลี่ยนค่าใน UI
+    def on_scaling_change():
+        st.session_state["trans_confirmed"] = False
+        # ลบผลลัพธ์เก่าออกเพื่อให้ต้องกด Apply ใหม่
+        st.session_state.pop("trans_summary", None)
+        st.session_state.pop("transformed_df", None)
+
+    # หา index เริ่มต้น: ถ้ามีใน session ให้ใช้ค่าเดิม ถ้าไม่มีใช้ค่าแนะนำ
+    default_idx = 0
+    if "scaling_method" in st.session_state and st.session_state["scaling_method"] in options:
+        default_idx = options.index(st.session_state["scaling_method"])
+    else:
+        default_idx = options.index(rec_val)
+
     chosen = st.radio(
         "เลือก Scaling Method",
-        options=sc_analysis["options"],
+        options=options,
         format_func=lambda x: SCALING_LABELS.get(x, x),
-        index=sc_analysis["options"].index(sc_analysis["recommended"]),
+        index=default_idx,
         key="scaling_method",
+        on_change=on_scaling_change,
         label_visibility="collapsed",
     )
     return chosen

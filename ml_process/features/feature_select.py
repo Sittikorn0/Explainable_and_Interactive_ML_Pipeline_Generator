@@ -74,6 +74,11 @@ def _render_feature_selection(df: pd.DataFrame, target_col: str,
 
     to_drop = []
 
+    def on_fs_change():
+        st.session_state["trans_confirmed"] = False
+        st.session_state.pop("trans_summary", None)
+        st.session_state.pop("transformed_df", None)
+
     # High Correlation
     if drop_high_corr:
         st.markdown(
@@ -107,6 +112,7 @@ def _render_feature_selection(df: pd.DataFrame, target_col: str,
                 f"ตัด `{col_b}` ออก",
                 value=True,
                 key=f"drop_corr_{pair_idx}_{col_a}_{col_b}",
+                on_change=on_fs_change,
             ):
                 to_drop.append(col_b)
 
@@ -132,6 +138,7 @@ def _render_feature_selection(df: pd.DataFrame, target_col: str,
                 f"ตัด `{item['col']}` ออก",
                 value=True,
                 key=f"drop_var_{item['col']}",
+                on_change=on_fs_change,
             ):
                 to_drop.append(item["col"])
 

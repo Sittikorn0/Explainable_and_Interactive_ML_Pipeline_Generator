@@ -29,6 +29,11 @@ def _render_encoding(df: pd.DataFrame, target_col: str,
 | **Drop** | ID, Free-text | ลด noise | สูญเสีย feature |
 """)
 
+    def on_encoding_change():
+        st.session_state["trans_confirmed"] = False
+        st.session_state.pop("trans_summary", None)
+        st.session_state.pop("transformed_df", None)
+
     decisions = {}
     for info in enc_analysis:
         col         = info["col"]
@@ -76,10 +81,11 @@ padding:10px 14px;margin:6px 0;font-size:0.81rem;color:#d29922">
             format_func=lambda x: ENCODING_LABELS.get(x, x),
             index=info["options"].index(recommended),
             key=f"enc_{col}",
+            on_change=on_encoding_change,
             horizontal=True,
             label_visibility="collapsed",
         )
         decisions[col] = chosen
         st.markdown("---")
 
-    return decisions
+    return decisions
