@@ -4,6 +4,32 @@ from scipy.stats import skew
 from data_prepare.features.statistics import get_outlier_bounds
 
 
+def detect_task(df: pd.DataFrame, target_col: str) -> str:
+    """
+    ตรวจสอบว่าเป็น classification หรือ regression
+
+    เกณฑ์:
+    - string/category → classification เสมอ
+    - numeric unique ≤ 15 → classification (discrete class)
+    - numeric unique > 100 → regression เสมอ (continuous)
+    - numeric 16-100 unique → ดู ratio:
+        ratio ≥ 5% → regression
+        ratio < 5% → classification
+    """
+    y = df[target_col]
+    if not pd.api.types.is_numeric_dtype(y):
+        return "classification"
+    n_unique = y.nunique()
+    if n_unique <= 15:
+        return "classification"
+    if n_unique > 100:
+        return "regression"
+    
+    # 16-100 unique: ดู ratio
+    ratio = n_unique / len(y)
+    return "regression" if ratio >= 0.05 else "classification"
+
+
 # ── Encoding Analysis ─────────────────────────────────────────
 
 def analyze_encoding(df: pd.DataFrame, target_col: str) -> list[dict]:

@@ -1,37 +1,9 @@
-"""ml_process/preprocess.py — preprocessing + split (ป้องกัน Data Leakage)"""
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler, RobustScaler
 from sklearn.model_selection import train_test_split
 from ml_process.features.config import MAX_ROWS_TRAIN
-
-
-def detect_task(df: pd.DataFrame, target_col: str) -> str:
-    """
-    ตรวจสอบว่าเป็น classification หรือ regression
-
-    เกณฑ์:
-    - string/category → classification เสมอ
-    - numeric unique ≤ 15 → classification (discrete class)
-    - numeric unique > 100 → regression เสมอ (continuous)
-    - numeric 16-100 unique → ดู ratio:
-        ratio ≥ 1% → regression (เช่น 30 unique / 250 rows = 12%)
-        ratio < 1% → classification (เช่น 30 unique / 30,000 rows = 0.1%)
-    """
-    y = df[target_col]
-    if not pd.api.types.is_numeric_dtype(y):
-        return "classification"
-    n_unique = y.nunique()
-    if n_unique <= 15:
-        return "classification"
-    if n_unique > 100:
-        return "regression"
-    # 16-100 unique: ดู ratio
-    # ใช้ threshold 0.05 (5%) เพื่อให้ consistent กับทุกขนาด dataset
-    # ratio สูง = แต่ละค่าปรากฏน้อยครั้ง = น่าจะเป็น continuous → regression
-    # ratio ต่ำ = แต่ละค่าปรากฏหลายครั้ง = น่าจะเป็น discrete class → classification
-    ratio = n_unique / len(y)
-    return "regression" if ratio >= 0.05 else "classification"
+from ml_process.features.data_analyzer import detect_task
 
 
 def _sample(X, y, max_rows):
@@ -168,12 +140,7 @@ def preprocess(df: pd.DataFrame, target_col: str,
     X = df.drop(columns=[target_col]).copy()
     y = df[target_col].copy()
 
-    # ถ้า y เป็น object dtype แต่เก็บตัวเลขจริงๆ (เช่น int ที่ถูก sanitize เป็น object)
-    # ให้ convert กลับเป็น numeric — ป้องกัน "Unknown label type: unknown"
-    if y.dtype == object:
-        converted = pd.to_numeric(y, errors="coerce")
-        if converted.notna().all():
-            y = converted
+    # (Target Sanitization ถูกย้ายไปที่ Data Transformation แล้ว)
 
     # Validate ก่อน train: classification ต้องมีอย่างน้อย 2 class
     n_unique = y.nunique()

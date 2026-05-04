@@ -11,6 +11,7 @@ Apply transformations ตาม decisions ที่ user เลือก
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
+from ml_process.features.data_analyzer import detect_task
 
 
 def apply_encoding(df: pd.DataFrame, decisions: dict, target_col: str) -> pd.DataFrame:
@@ -56,12 +57,10 @@ def apply_all(df: pd.DataFrame,
     """
     Apply transformations ตามลำดับ:
       1. Feature Selection
-      2. Encoding
+      2. Target Sanitization
+      3. Encoding Features
+      4. Target Encoding (Classification)
       ❌ Scaling — ไม่ทำที่นี่ เพื่อป้องกัน Data Leakage
-         scaling_method ถูกบันทึกไว้ใน summary แล้วส่งให้ preprocess.py
-         ทำหลัง train/test split แทน
-
-    Returns: (transformed_df, summary)
     """
     result = df.copy()
 
@@ -76,18 +75,35 @@ def apply_all(df: pd.DataFrame,
             "— ต้องเหลือ feature อย่างน้อย 1 column (นอกจาก target)"
         )
 
-    # 2. Encoding
+    # 2. Target Sanitization (แก้ชนิดข้อมูลถ้าเป็นตัวเลขที่เก็บเป็น String)
+    if result[target_col].dtype == object:
+        converted = pd.to_numeric(result[target_col], errors="coerce")
+        if converted.notna().all():
+            result[target_col] = converted
+
+    # 3. Task Detection (ใช้กลางสำหรับระบุประเภทงาน)
+    task_type = detect_task(result, target_col)
+
+    # 4. Encoding features
     result = apply_encoding(result, encoding_decisions, target_col)
 
-    # ❌ ไม่ scale ที่นี่ — preprocess.py จะทำให้หลัง split
+    # 5. Target Encoding (เฉพาะ Classification ถ้ายังเป็น categorical)
+    if task_type == "classification" and (
+        result[target_col].dtype == object or result[target_col].dtype.name == "category"
+    ):
+        le = LabelEncoder()
+        result[target_col] = le.fit_transform(result[target_col].astype(str))
 
+    # ❌ ไม่ scale ที่นี่ — preprocess.py จะทำให้หลัง split
+    
     summary = {
         "original_rows":  df.shape[0],
         "original_cols":  df.shape[1],
         "dropped_cols":   len(drop_cols),
         "encoded_cols":   len(encoding_decisions),
         "final_cols":     result.shape[1],
-        "scaling_method": scaling_method,  # เก็บ method ไว้ให้ preprocess.py ใช้
+        "scaling_method": scaling_method,
+        "task_type":      task_type,
     }
 
     return result, summary
