@@ -23,6 +23,12 @@ def clear():
     st.session_state[_ACTIONS_KEY] = []
 
 
+def remove_steps_from(step_names: list[str]):
+    """ลบ trace entries ของ step ที่ระบุ (ใช้ตอน rollback)"""
+    log = st.session_state.get(_LOG_KEY, [])
+    st.session_state[_LOG_KEY] = [e for e in log if e.get("step") not in step_names]
+
+
 # ── Upload ────────────────────────────────────────────────────────────────────
 
 def log_upload(df, file_name: str, target_col: str, task_hint: str,

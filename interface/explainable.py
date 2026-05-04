@@ -450,7 +450,7 @@ def render_explainable():
     if result is None:
         st.warning("ไม่พบผล ML — กรุณา Run Model ก่อน")
         if st.button("กลับ ML Process"):
-            navigate("model_process")
+            navigate("ml_process")
         return
 
     df            = st.session_state.get("main_df")
@@ -511,20 +511,111 @@ def render_explainable():
     X_test = st.session_state["_xai_X_test"]
     y_test = st.session_state["_xai_y_test"]
 
-    tab_fi, tab_guide, tab_trace = st.tabs([
-        "Feature Importance", "Model Guide", "Pipeline Trace",
-    ])
-    with tab_fi:
+    from explainable.features.pipeline_state import has_comparison, get_comparison, clear_comparison, STEP_LABELS
+
+    def _render_comparison():
+        comparison = get_comparison()
+        if not comparison:
+            st.info("ยังไม่มีข้อมูลการเปรียบเทียบ (ข้อมูลจะปรากฏขึ้นหากคุณกดย้อนกลับไปแก้ไขขั้นตอนก่อนหน้าแล้วทำใหม่จนเสร็จ)")
+            return
+
+        _section_header(
+            "Pipeline Comparison (Split View)",
+            "เปรียบเทียบความแตกต่างแบบฝั่งซ้าย (เดิม) และฝั่งขวา (ใหม่)",
+        )
+
+        def flatten_keys(d, prefix=""):
+            items = {}
+            for k, v in d.items():
+                if isinstance(v, dict):
+                    items.update(flatten_keys(v, prefix=f"{k}_"))
+                else:
+                    items[prefix + k] = v
+            return items
+
+        for step_key in ["upload", "cleaning", "transformation", "ml_process"]:
+            if step_key not in comparison:
+                continue
+                
+            data = comparison[step_key]
+            prev = data.get("prev", {})
+            curr = data.get("curr", {})
+            
+            flat_prev = flatten_keys(prev)
+            flat_curr = flatten_keys(curr)
+            all_keys = sorted(list(set(flat_prev.keys()) | set(flat_curr.keys())))
+
+            # GitHub Header
+            st.markdown(f"""
+            <div style="background:#161B22; padding:8px 16px; border:1px solid #30363D; border-radius:6px 6px 0 0; margin-top:24px; border-bottom:1px solid #30363D;">
+                <span style="color:#8B949E; font-family:monospace; font-size:0.85rem;">
+                    pipeline / <span style="color:#C9D1D9; font-weight:600;">{step_key}.cfg</span>
+                    <span style="margin-left:8px; background:#21262D; padding:2px 8px; border-radius:10px; font-size:0.75rem; color:#7D8590;">
+                        {STEP_LABELS.get(step_key, step_key)}
+                    </span>
+                </span>
+            </div>
+            <div style="border:1px solid #30363D; border-top:none; border-radius:0 0 6px 6px; overflow:hidden; background:#0D1117;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; border-bottom:1px solid #30363D;">
+                    <div style="padding:4px 12px; color:#8B949E; font-size:0.7rem; border-right:1px solid #30363D; background:#161B22; font-weight:600;">ORIGINAL CONFIG</div>
+                    <div style="padding:4px 12px; color:#8B949E; font-size:0.7rem; background:#161B22; font-weight:600;">CURRENT CONFIG</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            diff_rows = []
+            for k in all_keys:
+                v_prev = flat_prev.get(k, "—")
+                v_curr = flat_curr.get(k, "—")
+                is_changed = str(v_prev) != str(v_curr)
+                
+                left_bg  = "background:rgba(248, 81, 73, 0.12);" if is_changed else "background:transparent;"
+                right_bg = "background:rgba(63, 185, 80, 0.15);" if is_changed else "background:transparent;"
+                
+                left_color  = "#F85149" if is_changed else "#8B949E"
+                right_color = "#3FB950" if is_changed else "#C9D1D9"
+                
+                diff_rows.append(f"""
+                <div style="display:grid; grid-template-columns: 1fr 1fr; font-family:monospace; font-size:0.82rem; border-bottom:1px solid #21262D;">
+                    <div style="{left_bg} color:{left_color}; padding:6px 12px; border-right:1px solid #30363D; word-break:break-all;">
+                        <span style="opacity:0.5; margin-right:8px;">{"-" if is_changed else " "}</span>{k}: {v_prev}
+                    </div>
+                    <div style="{right_bg} color:{right_color}; padding:6px 12px; word-break:break-all;">
+                        <span style="opacity:0.5; margin-right:8px;">{"+" if is_changed else " "}</span>{k}: {v_curr}
+                    </div>
+                </div>
+                """)
+            
+            st.markdown("".join(diff_rows), unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("ล้างประวัติการเปรียบเทียบ", use_container_width=True):
+            clear_comparison()
+            st.rerun()
+
+    tabs = ["Feature Importance", "Model Guide", "Pipeline Trace"]
+    if has_comparison():
+        tabs.append("Diff Views")
+
+    tabs_obj = st.tabs(tabs)
+    
+    with tabs_obj[0]:
         st.markdown("<br>", unsafe_allow_html=True)
         _render_importance(model, X_test, y_test, task_type)
 
-    with tab_guide:
+    with tabs_obj[1]:
         st.markdown("<br>", unsafe_allow_html=True)
         _render_guide(best_label, task_type, metrics)
 
-    with tab_trace:
+    with tabs_obj[2]:
         st.markdown("<br>", unsafe_allow_html=True)
         _render_trace()
+        
+    if has_comparison():
+        with tabs_obj[3]:
+            st.markdown("<br>", unsafe_allow_html=True)
+            _render_comparison()
+
 
     st.divider()
 
@@ -549,7 +640,7 @@ def render_explainable():
     col_back, _sp, col_html, col_zip, col_finish = st.columns([0.8, 3.5, 1.2, 1.2, 0.8])
     with col_back:
         if st.button("Back", type="secondary", width="stretch"):
-            navigate("model_process")
+            navigate("ml_process")
     with col_html:
         st.download_button(
             "HTML Report",
