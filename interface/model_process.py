@@ -1,7 +1,8 @@
 import traceback
 import streamlit as st
 
-from ml_process.features.preprocessing  import preprocess, detect_task
+from ml_process.features.preprocessing  import preprocess
+from ml_process.features.data_analyzer  import detect_task
 from ml_process.features.runner      import run_competition, get_available_models
 from ml_process.features.evaluation  import get_metrics, show_metrics, show_leaderboard, show_confusion_matrix, show_pred_vs_actual
 from ml_process.features.export      import build_leaderboard_df, build_predictions_df
@@ -102,6 +103,8 @@ def render_ml_process():
             st.session_state["ml_metrics"] = metrics
             from explainable.features.trace_log import log_model_process
             log_model_process(result, metrics)
+            from explainable.features.pipeline_state import commit_step
+            commit_step("ml_process", metrics)
             from data_prepare.features.loading_data import save_ml_cache
             save_ml_cache(
                 result, metrics,

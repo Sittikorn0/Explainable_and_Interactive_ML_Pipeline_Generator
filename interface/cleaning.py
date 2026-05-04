@@ -149,6 +149,8 @@ def render_cleaning():
                 st.session_state["main_df"] = st.session_state["working_df"].copy()
                 st.session_state["cleaning_confirmed"] = True
                 commit_cleaning(df, st.session_state["working_df"])
+                from explainable.features.pipeline_state import commit_step
+                commit_step("cleaning", st.session_state["cleaning_summary_snapshot"])
                 st.success("บันทึกข้อมูลที่ Cleaned แล้ว")
                 st.rerun()
         with cf2:

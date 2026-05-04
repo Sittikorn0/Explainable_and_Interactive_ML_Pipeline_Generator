@@ -175,13 +175,21 @@ def render_upload():
             try:
                 from app import navigate
                 from explainable.features.trace_log import clear, log_upload
-                from ml_process.features.preprocessing import detect_task
+                from ml_process.features.data_analyzer import detect_task
                 save_target_col(st.session_state["target_col"])
                 _target = st.session_state["target_col"]
                 _task   = detect_task(df, _target)
                 _reasons = get_column_reasons(df, _target)
                 clear()
                 log_upload(df, uploaded_file.name, _target, _task, target_reasons=_reasons)
+                from explainable.features.pipeline_state import commit_step
+                commit_step("upload", {
+                    "filename": uploaded_file.name,
+                    "rows": df.shape[0],
+                    "cols": df.shape[1],
+                    "target": _target,
+                    "task": _task
+                })
                 navigate("cleaning")
             except Exception as e:
                 st.error(f"ไม่สามารถไปขั้นตอนต่อไปได้ — {e}")
