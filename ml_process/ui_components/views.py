@@ -4,7 +4,7 @@ import plotly.express as px
 import numpy as np
 import pandas as pd
 
-from ml_process.features.config import MODEL_WHY
+from ml_process.logic.config import MODEL_WHY
 
 
 # ── Target Info ───────────────────────────────────────────────────────────────
@@ -242,7 +242,7 @@ def render_viz(df: pd.DataFrame):
 
 def render_nav(result):
     st.divider()
-    col1, _, col2 = st.columns([0.8, 8, 0.8])
+    col1, _, col2 = st.columns([1.2, 7.6, 1.2])
     with col1:
         if st.button("Back", type="secondary", width="stretch"):
             from app import navigate

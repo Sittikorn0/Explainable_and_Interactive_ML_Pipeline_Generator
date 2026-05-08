@@ -131,8 +131,8 @@ def compute_fi(df: pd.DataFrame, target_col: str,
     คำนวณ Feature Importance สำหรับ best model
     คืน (fi_df, error_msg) — fi_df=None ถ้า model ไม่รองรับหรือเกิด error
     """
-    from ml_process.features.preprocessing import preprocess
-    from ml_process.features.runner import get_model_map
+    from ml_process.logic.preprocessing import preprocess
+    from ml_process.logic.runner import get_model_map
 
     try:
         scaling_method = trans_summary.get("scaling_method", "no_scaling")

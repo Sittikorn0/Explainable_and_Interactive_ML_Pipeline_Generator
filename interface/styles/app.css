@@ -117,3 +117,11 @@ div.stDownloadButton > button:active {
     background: #5b21b6;
     box-shadow: none;
 }
+
+/* ── Prevent Metric Value Truncation ──────────────── */
+[data-testid="stMetricValue"] > div {
+    text-overflow: unset !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.2 !important;
+}

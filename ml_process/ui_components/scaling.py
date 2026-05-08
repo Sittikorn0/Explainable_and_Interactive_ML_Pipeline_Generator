@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from interface.ui_helpers import _rec_box
+from interface.ui_helpers import recommendation_box
 
 # Label
 ENCODING_LABELS = {
@@ -26,20 +26,20 @@ SCALING_WHEN = {
     "no_scaling":      "เมื่อใช้ tree-based model ล้วนๆ",
 }
 
-def _render_scaling(df: pd.DataFrame, target_col: str,
-                    sc_analysis: dict) -> str:
-    st.subheader("2. Scaling — ปรับ Scale ของ Numeric Features")
+def render_scaling(dataframe: pd.DataFrame, target_column: str,
+                    scaling_analysis: dict) -> str:
+    st.subheader("Scaling — ปรับ Scale ของ Numeric Features")
 
-    col_stats = sc_analysis["column_stats"]
-    if not col_stats:
+    column_statistics = scaling_analysis["column_stats"]
+    if not column_statistics:
         st.success("ไม่มี numeric columns ที่ต้องทำ scaling")
         return "no_scaling"
 
     # แสดง stats ของ numeric columns
     with st.expander("ดู Statistics ของ Numeric Columns"):
-        stats_df = pd.DataFrame(col_stats)
+        statistics_df = pd.DataFrame(column_statistics)
         st.dataframe(
-            stats_df,
+            statistics_df,
             hide_index=True,
             width="stretch",
             column_config={
@@ -54,30 +54,30 @@ def _render_scaling(df: pd.DataFrame, target_col: str,
         )
 
     # Visualization: distribution ของ column แรก
-    num_cols = [s["col"] for s in col_stats]
-    if num_cols:
-        sel_col = st.selectbox("ดู distribution ของคอลัมน์:", num_cols, key="sc_viz_col")
-        fig = px.histogram(df, x=sel_col, nbins=30, marginal="box",
+    numeric_columns = [stats["col"] for stats in column_statistics]
+    if numeric_columns:
+        selected_column = st.selectbox("ดู distribution ของคอลัมน์:", numeric_columns, key="sc_viz_col")
+        figure = px.histogram(dataframe, x=selected_column, nbins=30, marginal="box",
                            color_discrete_sequence=["#1a6fa5"])
-        fig.update_layout(template="plotly_dark", height=300, showlegend=False,
+        figure.update_layout(template="plotly_dark", height=300, showlegend=False,
                           margin=dict(t=20, b=20))
-        st.plotly_chart(fig, width="stretch")
+        st.plotly_chart(figure, width="stretch")
 
     # Recommendation
-    _rec_box(
-        SCALING_LABELS.get(sc_analysis["recommended"], sc_analysis["recommended"]),
-        sc_analysis["reason"],
+    recommendation_box(
+        SCALING_LABELS.get(scaling_analysis["recommended"], scaling_analysis["recommended"]),
+        scaling_analysis["reason"],
     )
 
     # แสดง info พิเศษสำหรับ log transform
-    if sc_analysis["recommended"] == "log_transform":
-        heavy_cols = sc_analysis.get("heavy_skew_cols", [])
+    if scaling_analysis["recommended"] == "log_transform":
+        heavy_skew_columns = scaling_analysis.get("heavy_skew_cols", [])
         st.markdown(f"""
 <div style="background:#161b22;border:1px solid #30363d;border-radius:6px;
 padding:10px 14px;margin:6px 0;font-size:0.81rem;color:#c9d1d9;line-height:1.7">
   <b style="color:#58a6ff">วิธีการทำงานของ Log Transform:</b><br>
   ใช้ <code>log1p(x) = log(x + 1)</code> กับทุก column ที่มีค่า ≥ 0<br>
-  ({', '.join(f'<code>{c}</code>' for c in heavy_cols[:3])}{'...' if len(heavy_cols)>3 else ''})<br>
+  ({', '.join(f'<code>{col}</code>' for col in heavy_skew_columns[:3])}{'...' if len(heavy_skew_columns)>3 else ''})<br>
   จากนั้นตามด้วย Standard Scaler เพื่อ normalize<br><br>
   <span style="background:#d2992233;color:#d29922;padding:2px 8px;border-radius:4px;font-size:0.78rem;font-weight:700;vertical-align:middle">NOTE</span> <b style="color:#d29922">หมายเหตุ:</b> ใช้ได้เฉพาะ column ที่มีค่า ≥ 0 เท่านั้น
   column ที่มีค่าติดลบจะไม่ถูก log transform
@@ -86,13 +86,13 @@ padding:10px 14px;margin:6px 0;font-size:0.81rem;color:#c9d1d9;line-height:1.7">
 
     # เลือก method
     with st.expander("เปรียบเทียบ Scaling Methods", expanded=False):
-        rows = []
-        for k, label in SCALING_LABELS.items():
-            rows.append({"Method": label, "ใช้เมื่อ": SCALING_WHEN[k]})
-        st.table(pd.DataFrame(rows))
+        method_rows = []
+        for key, label in SCALING_LABELS.items():
+            method_rows.append({"Method": label, "ใช้เมื่อ": SCALING_WHEN[key]})
+        st.table(pd.DataFrame(method_rows))
 
-    options = sc_analysis["options"]
-    rec_val = sc_analysis["recommended"]
+    available_options = scaling_analysis["options"]
+    recommended_value = scaling_analysis["recommended"]
     
     # Callback เมื่อมีการเปลี่ยนค่าใน UI
     def on_scaling_change():
@@ -102,19 +102,19 @@ padding:10px 14px;margin:6px 0;font-size:0.81rem;color:#c9d1d9;line-height:1.7">
         st.session_state.pop("transformed_df", None)
 
     # หา index เริ่มต้น: ถ้ามีใน session ให้ใช้ค่าเดิม ถ้าไม่มีใช้ค่าแนะนำ
-    default_idx = 0
-    if "scaling_method" in st.session_state and st.session_state["scaling_method"] in options:
-        default_idx = options.index(st.session_state["scaling_method"])
+    default_index = 0
+    if "scaling_method" in st.session_state and st.session_state["scaling_method"] in available_options:
+        default_index = available_options.index(st.session_state["scaling_method"])
     else:
-        default_idx = options.index(rec_val)
+        default_index = available_options.index(recommended_value)
 
-    chosen = st.radio(
+    chosen_scaling = st.radio(
         "เลือก Scaling Method",
-        options=options,
-        format_func=lambda x: SCALING_LABELS.get(x, x),
-        index=default_idx,
+        options=available_options,
+        format_func=lambda method: SCALING_LABELS.get(method, method),
+        index=default_index,
         key="scaling_method",
         on_change=on_scaling_change,
         label_visibility="collapsed",
     )
-    return chosen
+    return chosen_scaling

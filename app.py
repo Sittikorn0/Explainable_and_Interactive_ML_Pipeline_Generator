@@ -1,7 +1,7 @@
 import streamlit as st
-from data_prepare.features.loading_data import load_from_local, load_target_col, delete_local
-from data_prepare.features.target_col import suggest_target
-from explainable.features.pipeline_state import get_step_status, rollback_to, STEP_ORDER, STEP_LABELS
+from data_prepare.loading_data import load_from_local, load_target_col, delete_local
+from data_prepare.logic.target_col import suggest_target
+from explainable.state_manager.pipeline_state import get_step_status, rollback_to, STEP_ORDER, STEP_LABELS
 
 from interface.upload import render_upload
 from interface.cleaning import render_cleaning
@@ -17,7 +17,7 @@ trans_page = st.Page(render_transformation, title="Data Transformation", url_pat
 ml_page = st.Page(render_ml_process, title="ML Process & Leaderboard", url_path="model_process")
 explain_page = st.Page(render_explainable, title="Explainable & Insights", url_path="explainable")
 
-pages = {
+pages_mapping = {
     "upload": upload_page,
     "cleaning": cleaning_page,
     "eda": eda_page,
@@ -26,13 +26,11 @@ pages = {
     "explainable": explain_page
 }
 
-
-SANS = "'DM Sans','Sarabun',sans-serif"
+SANS_FONT = "'DM Sans','Sarabun',sans-serif"
 
 def load_css(file_name):
-    with open(file_name) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
+    with open(file_name) as file_obj:
+        st.markdown(f"<style>{file_obj.read()}</style>", unsafe_allow_html=True)
 
 load_css("interface/styles/app.css")
 
@@ -40,10 +38,10 @@ load_css("interface/styles/app.css")
 def page_header(title: str, subtitle: str = "") -> None:
     st.markdown(
         f'<div style="margin-bottom:1.75rem;">'
-        f'<h2 style="font-family:{SANS};font-size:1.45rem;font-weight:700;'
+        f'<h2 style="font-family:{SANS_FONT};font-size:1.45rem;font-weight:700;'
         f'color:#F1F5F9;margin:0 0 5px;">{title}</h2>'
         + (
-            f'<p style="font-family:{SANS};font-size:1rem;color:#94A3B8;margin:0;">{subtitle}</p>'
+            f'<p style="font-family:{SANS_FONT};font-size:1rem;color:#94A3B8;margin:0;">{subtitle}</p>'
             if subtitle
             else ""
         )
@@ -52,35 +50,35 @@ def page_header(title: str, subtitle: str = "") -> None:
     )
 
 
-def navigate(step: str):
+def navigate(step_name: str):
     """เปลี่ยนหน้าโดยใช้ st.switch_page ร่วมกับ session_state"""
-    st.session_state["_step"] = step
+    st.session_state["_step"] = step_name
     st.rerun()
 
 
-def _reset_session():
-    """ล้าง session state + cache ทั้งหมด กลับไปหน้า upload"""
+def reset_session_state():
+    """ล้าง session state และ cache ทั้งหมด กลับไปหน้า upload"""
     delete_local()
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
+    for session_key in list(st.session_state.keys()):
+        del st.session_state[session_key]
     navigate("upload")
 
 
 @st.dialog("ยืนยันการย้อนกลับ?")
-def confirm_rollback(target_step: str):
-    st.warning(f"หากคุณย้อนกลับไปที่ขั้นตอน **{STEP_LABELS[target_step]}** ข้อมูลและการตัดสินใจในขั้นตอนหลังจากนี้จะถูกล้างออกทั้งหมด")
+def confirm_rollback(target_step_name: str):
+    st.warning(f"หากคุณย้อนกลับไปที่ขั้นตอน **{STEP_LABELS[target_step_name]}** ข้อมูลและการตัดสินใจในขั้นตอนหลังจากนี้จะถูกล้างออกทั้งหมด")
     st.markdown("คุณต้องการดำเนินการต่อหรือไม่?")
-    c1, c2 = st.columns(2)
-    with c1:
+    column_1, column_2 = st.columns(2)
+    with column_1:
         if st.button("ยืนยันการย้อนกลับ", type="primary", width="stretch"):
-            rollback_to(target_step)
-            navigate(target_step)
-    with c2:
+            rollback_to(target_step_name)
+            navigate(target_step_name)
+    with column_2:
         if st.button("ยกเลิก", width="stretch"):
             st.rerun()
 
 
-_STEP_ICONS = {
+STEP_ICONS_MAPPING = {
     "upload": "📂",
     "cleaning": "🧹",
     "eda": "📊",
@@ -89,10 +87,9 @@ _STEP_ICONS = {
     "explainable": "💡"
 }
 
-def render_step_indicator(current_pg):
-    status = get_step_status()
+def render_step_indicator(current_page):
+    step_status = get_step_status()
     
-    # CSS สำหรับ Segmented Stepper ที่มีความ Premium และเจาะจงเฉพาะปุ่ม
     st.markdown("""
     <style>
     .stepper-wrapper {
@@ -162,7 +159,6 @@ def render_step_indicator(current_pg):
         opacity: 0.4;
     }
     
-    /* เจาะจงเฉพาะปุ่มที่มี key ขึ้นต้นด้วย step_btn_ เท่านั้น */
     div[class*="st-key-step_btn_"] button {
         background: transparent !important;
         border: none !important;
@@ -187,84 +183,72 @@ def render_step_indicator(current_pg):
         transition: all 0.3s ease !important;
     }
 
-    /* ตกแต่งเฉพาะปุ่มปัจจุบัน */
     .current + div + div[class*="st-key-step_btn_"] button div[data-testid="stMarkdownContainer"] p,
     div[class*="st-key-step_btn_"] button:hover div[data-testid="stMarkdownContainer"] p {
         color: #63B3ED !important;
     }
     
-    /* เส้นขีดใต้ชื่อขั้นตอนปัจจุบัน - ใช้ Selector ที่เข้าถึงง่ายขึ้น */
     div[class*="st-key-step_btn_"]:has(button[disabled=""]) button::after {
-        /* ป้องกันไม่ให้ขึ้นในปุ่ม locked */
     }
     </style>
     """, unsafe_allow_html=True)
     
-    cols = st.columns(len(STEP_ORDER))
+    columns = st.columns(len(STEP_ORDER))
     
-    for i, step_key in enumerate(STEP_ORDER):
-        with cols[i]:
-            st_val = status[step_key]
-            label = STEP_LABELS[step_key]
-            icon = _STEP_ICONS.get(step_key, "•")
-            is_active_pg = (pages[step_key] == current_pg)
-            node_status = st_val if st_val != "current" else "current"
+    for index, step_key in enumerate(STEP_ORDER):
+        with columns[index]:
+            status_value = step_status[step_key]
+            step_label = STEP_LABELS[step_key]
+            step_icon = STEP_ICONS_MAPPING.get(step_key, "•")
+            is_active_page = (pages_mapping[step_key] == current_page)
+            node_status_class = status_value if status_value != "current" else "current"
             
-            line_html = ""
-            if i > 0: line_html += '<div class="line-segment line-left"></div>'
-            if i < len(STEP_ORDER) - 1: line_html += '<div class="line-segment line-right"></div>'
+            line_html_content = ""
+            if index > 0: 
+                line_html_content += '<div class="line-segment line-left"></div>'
+            if index < len(STEP_ORDER) - 1: 
+                line_html_content += '<div class="line-segment line-right"></div>'
             
             st.markdown(f"""
-            <div class="node-container {node_status}">
-                {line_html}
-                <div class="step-node">{icon}</div>
+            <div class="node-container {node_status_class}">
+                {line_html_content}
+                <div class="step-node">{step_icon}</div>
             </div>
             """, unsafe_allow_html=True)
             
-            btn_key = f"step_btn_{step_key}"
-            txt_color = "#718096"
-            if st_val == "done": txt_color = "#68D391"
-            elif st_val == "current": txt_color = "#63B3ED"
+            button_key = f"step_btn_{step_key}"
+            text_color = "#718096"
+            if status_value == "done": 
+                text_color = "#68D391"
+            elif status_value == "current": 
+                text_color = "#63B3ED"
             
-            # CSS เฉพาะปุ่มแบบรายตัว (เพื่อความแน่นอน)
             st.markdown(f"""
             <style>
-            div.st-key-{btn_key} button {{
+            div.st-key-{button_key} button {{
                 background: transparent !important;
                 border: none !important;
                 box-shadow: none !important;
                 padding: 0 !important;
             }}
-            div.st-key-{btn_key} button div[data-testid="stMarkdownContainer"] p {{
-                color: {txt_color} !important;
+            div.st-key-{button_key} button div[data-testid="stMarkdownContainer"] p {{
+                color: {text_color} !important;
                 font-size: 0.78rem !important;
-                font-weight: {"700" if st_val == "current" else "500"} !important;
+                font-weight: {"700" if status_value == "current" else "500"} !important;
                 text-transform: uppercase !important;
                 letter-spacing: 0.03em !important;
             }}
-            div.st-key-{btn_key} button:hover div[data-testid="stMarkdownContainer"] p {{
+            div.st-key-{button_key} button:hover div[data-testid="stMarkdownContainer"] p {{
                 color: #FFF !important;
             }}
             </style>
             """, unsafe_allow_html=True)
             
-            if st.button(label, key=btn_key, disabled=(st_val == "locked")):
-                if st_val == "done" and not is_active_pg:
+            if st.button(step_label, key=button_key, disabled=(status_value == "locked")):
+                if status_value == "done" and not is_active_page:
                     confirm_rollback(step_key)
-                elif st_val == "current" and not is_active_pg:
+                elif status_value == "current" and not is_active_page:
                     navigate(step_key)
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def main():
@@ -275,7 +259,6 @@ def main():
         initial_sidebar_state="collapsed",
     )
 
-    # Override Streamlit internal metric font (ต้อง inject หลัง set_page_config)
     st.markdown("""
 <style>
 [data-testid="stMetricValue"] * {
@@ -292,88 +275,79 @@ def main():
 </style>
 """, unsafe_allow_html=True)
 
-    # Recovery Cache
     if st.session_state.get("main_df") is None:
-        recovered_df, recover_name = load_from_local()
-        if recovered_df is not None:
-            st.session_state["main_df"] = recovered_df
-            st.session_state["last_uploaded_file"] = recover_name
+        recovered_dataframe, recovered_filename = load_from_local()
+        if recovered_dataframe is not None:
+            st.session_state["main_df"] = recovered_dataframe
+            st.session_state["last_uploaded_file"] = recovered_filename
 
-    # Restore ML results หลัง refresh
     if st.session_state.get("ml_result") is None:
-        from data_prepare.features.loading_data import load_ml_cache
-        ml_result, ml_metrics, trans_summary, ml_target = load_ml_cache()
-        if ml_result is not None:
-            st.session_state["ml_result"]          = ml_result
-            st.session_state["ml_metrics"]         = ml_metrics
-            st.session_state["trans_summary"]      = trans_summary
-            st.session_state["ml_task_type"]       = ml_result.get("task_type")
-            if ml_target:
-                st.session_state["_trans_target_saved"] = ml_target
+        from data_prepare.loading_data import load_ml_cache
+        machine_learning_result, machine_learning_metrics, transformation_summary, machine_learning_target = load_ml_cache()
+        if machine_learning_result is not None:
+            st.session_state["ml_result"]          = machine_learning_result
+            st.session_state["ml_metrics"]         = machine_learning_metrics
+            st.session_state["trans_summary"]      = transformation_summary
+            st.session_state["ml_task_type"]       = machine_learning_result.get("task_type")
+            if machine_learning_target:
+                st.session_state["_trans_target_saved"] = machine_learning_target
 
-    # Restore target_col ถ้าหายไปหลัง refresh (session_state ว่าง)
     if "target_col" not in st.session_state and st.session_state.get("main_df") is not None:
-        saved = load_target_col()
-        main_cols = list(st.session_state["main_df"].columns)
-        if saved and saved in main_cols:
-            st.session_state["target_col"] = saved
+        saved_target_col = load_target_col()
+        main_columns = list(st.session_state["main_df"].columns)
+        if saved_target_col and saved_target_col in main_columns:
+            st.session_state["target_col"] = saved_target_col
         else:
-            suggested, _ = suggest_target(st.session_state["main_df"])
-            st.session_state["target_col"] = suggested
+            suggested_target_col, _ = suggest_target(st.session_state["main_df"])
+            st.session_state["target_col"] = suggested_target_col
 
-    # Navigation
     if st.session_state.get("main_df") is None:
-        nav_pages = [upload_page]
+        navigation_pages = [upload_page]
     else:
-        nav_pages = [upload_page, cleaning_page, eda_page, trans_page, ml_page, explain_page]
+        navigation_pages = [upload_page, cleaning_page, eda_page, trans_page, ml_page, explain_page]
 
-    pg = st.navigation(nav_pages, position="hidden")
+    current_page_instance = st.navigation(navigation_pages, position="hidden")
 
     if "_step" in st.session_state:
-        target_page = pages.get(st.session_state["_step"])
+        target_navigation_page = pages_mapping.get(st.session_state["_step"])
         del st.session_state["_step"]
-        if target_page and target_page in nav_pages:
-            st.switch_page(target_page)
+        if target_navigation_page and target_navigation_page in navigation_pages:
+            st.switch_page(target_navigation_page)
 
-    # Header section
-    title_col, btn_col = st.columns([9, 1])
+    title_column, button_column = st.columns([8.5, 1.5])
 
-    with title_col:
+    with title_column:
         st.title("Explainable & Interactive ML Pipeline Generator")
         st.caption("Data Science 1312414 | Education Only")
     
-    if pg != upload_page:
-        with btn_col:
+    if current_page_instance != upload_page:
+        with button_column:
             st.markdown("<div style='height:2.8rem'></div>", unsafe_allow_html=True)
-            file_name = st.session_state.get("last_uploaded_file", "")
+            current_filename = st.session_state.get("last_uploaded_file", "")
 
             @st.dialog("เริ่มต้นใหม่?")
             def confirm_reset_dialog():
                 st.markdown(
-                    f"ข้อมูล **{file_name}** และการแก้ไขทั้งหมดจะถูกลบ\n\n"
+                    f"ข้อมูล **{current_filename}** และการแก้ไขทั้งหมดจะถูกลบ\n\n"
                     "คุณต้องการกลับไปอัปโหลด Dataset ใหม่หรือไม่?"
                 )
-                c1, c2 = st.columns(2)
-                with c1:
+                dialog_col1, dialog_col2 = st.columns(2)
+                with dialog_col1:
                     if st.button("ยืนยัน", type="primary", width="stretch"):
-                        _reset_session()
-                with c2:
+                        reset_session_state()
+                with dialog_col2:
                     if st.button("ยกเลิก", width="stretch"):
                         st.rerun()
 
-            reset_wrap = st.container(key="reset_btn_wrap")
-            with reset_wrap:
+            reset_button_wrap = st.container(key="reset_btn_wrap")
+            with reset_button_wrap:
                 if st.button("New Dataset", width="stretch", key="btn_new_dataset"):
                     confirm_reset_dialog()
 
-    # Render Step Indicator
-    render_step_indicator(pg)
+    render_step_indicator(current_page_instance)
 
     st.divider()
 
-
-
-    # CSS เฉพาะปุ่ม New Dataset
     st.markdown(
         """
         <style>
@@ -386,6 +360,7 @@ def main():
             font-weight: 500 !important;
             padding: 0.45rem 1rem !important;
             transition: all 0.2s ease !important;
+            white-space: nowrap !important;
         }
         div.st-key-reset_btn_wrap button:hover {
             background: rgba(248, 113, 113, 0.12) !important;
@@ -397,13 +372,8 @@ def main():
         unsafe_allow_html=True,
     )
 
-
-
-
-
-    # ── Render Page ───────────────────────────────────
-    pg.run()
+    current_page_instance.run()
 
 
 if __name__ == "__main__":
-    main()
+    main()

@@ -65,13 +65,13 @@ MODEL_WHY = {
         "fit เส้นตรงผ่านข้อมูล เร็วและ interpretable เหมาะเมื่อ target มี linear relationship",
 }
 
-# ── หลักการออกแบบ PARAM_GRIDS ────────────────────────────────
+# หลักการออกแบบ PARAM_GRIDS
 # 1. ทุก grid มี ≤ 12 combinations → n_iter=10 ครอบคลุมได้ดี
 # 2. ค่า default ที่ดีอยู่กลาง grid เสมอ (ไม่ใช่ขอบ)
 # 3. ใช้ log scale สำหรับ C, alpha, learning_rate
 # 4. liblinear ถูกตัดออก เพราะไม่รองรับ multiclass (n_classes ≥ 3)
 PARAM_GRIDS = {
-    # ── Classification ────────────────────────────────────────
+    # Classification
 
     # C: log scale 0.01→100, lbfgs รองรับ multiclass + L2 (default)
     # ตัด saga ออก: saga ต้องการ max_iter สูงมากและมักเกิด ConvergenceWarning
@@ -138,7 +138,7 @@ PARAM_GRIDS = {
         "learning_rate":[0.05, 0.1, 0.2],
     },
 
-    # ── Regression ────────────────────────────────────────────
+    # Regression
 
     # Linear Regression: closed-form solution ไม่มี hyperparameter
     "linear_regression": {},

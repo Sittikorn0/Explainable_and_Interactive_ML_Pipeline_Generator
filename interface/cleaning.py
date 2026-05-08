@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
 import os
-from data_prepare.features.data_distribute import data_distribution
-from data_prepare.features.loading_data import save_cleaned_data
-from explainable.features.trace_log import commit_cleaning
+from data_prepare.logic.data_distribute import data_distribution
+from data_prepare.loading_data import save_cleaned_data
+from explainable.state_manager.trace_log import commit_cleaning
 from interface.cleaning_components.ui_cleaning_components import (
     render_profile_tab,
     render_drop_columns,
@@ -11,12 +11,10 @@ from interface.cleaning_components.ui_cleaning_components import (
     render_missing_values,
     render_outliers,
     render_summary,
-    _fmt_pct,
+    format_percentage,
 )
 
 def render_cleaning():
-    # If app layout requires st.navigation (new streamlit) or custom routing
-    # we might not need navigate() but using the existing one:
     from app import navigate, page_header
 
     page_header(
@@ -28,134 +26,131 @@ def render_cleaning():
         navigate("upload")
         return
 
-    df = st.session_state["main_df"]
+    dataframe = st.session_state["main_df"]
     file_name = st.session_state.get("last_uploaded_file", "Unknown File")
 
     st.info(f"**Current Dataset:** {file_name}")
     is_confirmed = st.session_state.get("cleaning_confirmed", False)
     with st.expander("Cleaned Data" if is_confirmed else "Raw Data"):
-        st.dataframe(df, width="stretch")
+        st.dataframe(dataframe, width="stretch")
 
-    # ── working_df init ───────────────────────────────────────
-    current_shape = df.shape
+    # working_df initialization
+    current_shape = dataframe.shape
     if (
         "working_df" not in st.session_state
         or st.session_state.get("working_df_source_shape") != current_shape
     ):
-        st.session_state["working_df"] = df.copy()
+        st.session_state["working_df"] = dataframe.copy()
         st.session_state["working_df_source_shape"] = current_shape
-        st.session_state["original_dup_count"] = int(df.duplicated().sum())
+        st.session_state["original_dup_count"] = int(dataframe.duplicated().sum())
         st.session_state.pop("original_outlier_count", None)
         st.session_state.pop("_treated_outlier_cols", None)
 
-    # ไม่ต้องสร้าง original_df ซ้ำซ้อนเพราะมี df (main_df) อยู่แล้ว ซึ่งประหยัด RAM ไป 1 ชุดเต็มๆ
+    working_dataframe = st.session_state["working_df"]
 
-    working_df = st.session_state["working_df"]
-
-    # ── Dataset Overview ──────────────────────────────────────
+    # Dataset Overview
     st.subheader("Dataset Overview")
 
     if "original_outlier_bounds" not in st.session_state:
-        from data_prepare.features.statistics import get_outlier_bounds
-        bounds_dict = {}
-        for col in df.select_dtypes(include=["number"]).columns:
-            series = df[col].dropna()
+        from data_prepare.logic.statistics import get_outlier_bounds
+        bounds_dictionary = {}
+        for column in dataframe.select_dtypes(include=["number"]).columns:
+            series = dataframe[column].dropna()
             if len(series) > 0:
-                bounds_dict[col] = get_outlier_bounds(series)
-        st.session_state["original_outlier_bounds"] = bounds_dict
+                bounds_dictionary[column] = get_outlier_bounds(series)
+        st.session_state["original_outlier_bounds"] = bounds_dictionary
 
-    fixed_bounds = st.session_state["original_outlier_bounds"]
+    fixed_outlier_bounds = st.session_state["original_outlier_bounds"]
 
-    _dist_key = ("_dist_cache", working_df.shape, int(pd.util.hash_pandas_object(working_df).sum()))
-    if st.session_state.get("_dist_key") != _dist_key:
+    distribution_cache_key = ("_dist_cache", working_dataframe.shape, int(pd.util.hash_pandas_object(working_dataframe).sum()))
+    if st.session_state.get("_dist_key") != distribution_cache_key:
         with st.spinner("Calculating Data..."):
-            total_outl, outls_details = data_distribution(working_df, fixed_bounds=fixed_bounds)
-        st.session_state["_dist_key"] = _dist_key
-        st.session_state["_dist_result"] = (total_outl, outls_details)
+            total_outlier, outlier_details = data_distribution(working_dataframe, fixed_bounds=fixed_outlier_bounds)
+        st.session_state["_dist_key"] = distribution_cache_key
+        st.session_state["_dist_result"] = (total_outlier, outlier_details)
     else:
-        total_outl, outls_details = st.session_state["_dist_result"]
+        total_outlier, outlier_details = st.session_state["_dist_result"]
 
     if "original_outlier_count" not in st.session_state:
-        st.session_state["original_outlier_count"] = total_outl
+        st.session_state["original_outlier_count"] = total_outlier
 
-    total_cells = working_df.size
-    null_counts = working_df.isnull().sum()
-    total_missing = int(null_counts.sum())
-    missing_pct = (total_missing / total_cells * 100) if total_cells > 0 else 0
-    duplicate_count = int(working_df.duplicated().sum())
-    dup_pct = (duplicate_count / working_df.shape[0] * 100) if working_df.shape[0] > 0 else 0
-    outlier_pct = (total_outl / total_cells * 100) if total_cells > 0 else 0
+    total_cells_count = working_dataframe.size
+    null_counts_series = working_dataframe.isnull().sum()
+    total_missing_values = int(null_counts_series.sum())
+    missing_percentage = (total_missing_values / total_cells_count * 100) if total_cells_count > 0 else 0
+    duplicate_rows_count = int(working_dataframe.duplicated().sum())
+    duplicate_percentage = (duplicate_rows_count / working_dataframe.shape[0] * 100) if working_dataframe.shape[0] > 0 else 0
+    outlier_percentage = (total_outlier / total_cells_count * 100) if total_cells_count > 0 else 0
 
-    m1, m2, m3, m4, m5 = st.columns(5)
-    m1.metric("Rows", f"{working_df.shape[0]:,}")
-    m2.metric("Columns", working_df.shape[1])
-    m3.metric("Missing Values", _fmt_pct(total_missing, missing_pct))
-    m4.metric("Duplicate Rows", _fmt_pct(duplicate_count, dup_pct))
-    m5.metric("Outliers", _fmt_pct(total_outl, outlier_pct))
+    from interface.ui_helpers import render_metrics_row
+    metrics_data = [
+        ("Rows", f"{working_dataframe.shape[0]:,}"),
+        ("Columns", str(working_dataframe.shape[1])),
+        ("Missing Values", format_percentage(total_missing_values, missing_percentage)),
+        ("Duplicate Rows", format_percentage(duplicate_rows_count, duplicate_percentage)),
+        ("Outliers", format_percentage(total_outlier, outlier_percentage)),
+    ]
+    render_metrics_row(metrics_data)
 
-    tab1, tab2 = st.tabs(["Profile", "Cleaning"], width="stretch")
+    tab_profile, tab_cleaning = st.tabs(["Profile", "Cleaning"])
 
-    # ── Tab 1: Profile ────────────────────────────────────────
-    with tab1:
-        render_profile_tab(working_df, outls_details)
+    # Tab: Profile
+    with tab_profile:
+        render_profile_tab(working_dataframe, outlier_details)
 
-    # ── Tab 2: Cleaning ───────────────────────────────────────
-    with tab2:
-        working_df = st.session_state["working_df"]
-        target_col = st.session_state.get("target_col")
+    # Tab: Cleaning
+    with tab_cleaning:
+        working_dataframe = st.session_state["working_df"]
+        target_column = st.session_state.get("target_col")
 
-        # ── Drop Columns ──
-        render_drop_columns(working_df, target_col)
+        render_drop_columns(working_dataframe, target_column)
         st.divider()
 
-        # ── Duplicates ──
-        render_duplicates(working_df, duplicate_count)
+        render_duplicates(working_dataframe, duplicate_rows_count)
         st.divider()
 
-        # ── Missing Values ──
-        missing_cols = {col: int(count) for col, count in null_counts.items() if count > 0}
-        render_missing_values(working_df, missing_cols, null_counts)
+        missing_columns_dict = {col: int(count) for col, count in null_counts_series.items() if count > 0}
+        render_missing_values(working_dataframe, missing_columns_dict, null_counts_series)
         st.divider()
 
-        # ── Outliers ──
-        outlier_cols = {
-            item["Column"]: item for item in outls_details 
-            if item["Outliers"] > 0 and pd.api.types.is_numeric_dtype(working_df.get(item["Column"], pd.Series()))
+        outlier_columns_dict = {
+            item["Column"]: item for item in outlier_details 
+            if item["Outliers"] > 0 and pd.api.types.is_numeric_dtype(working_dataframe.get(item["Column"], pd.Series()))
         }
-        render_outliers(working_df, outlier_cols, outls_details)
+        render_outliers(working_dataframe, outlier_columns_dict, outlier_details)
         st.divider()
 
-        # ── Summary ──
-        dup_before = st.session_state.get("original_dup_count", int(df.duplicated().sum()))
-        outl_before = st.session_state["original_outlier_count"]
-        render_summary(working_df, df, dup_before, outl_before, total_missing, duplicate_count, total_outl)
+        duplicate_before = st.session_state.get("original_dup_count", int(dataframe.duplicated().sum()))
+        outlier_before = st.session_state["original_outlier_count"]
+        render_summary(working_dataframe, dataframe, duplicate_before, outlier_before, total_missing_values, duplicate_rows_count, total_outlier)
 
-        # ── Confirm / Reset ───────────────────────────────────
-        _, cf1, cf2, _ = st.columns([2, 1.5, 1.5, 2])
-        with cf1:
+        # Confirm / Reset
+        _, confirm_col1, confirm_col2, _ = st.columns([2, 1.5, 1.5, 2])
+        with confirm_col1:
             if st.button("Confirm & Save", type="primary", width="stretch"):
                 original_filename = st.session_state.get("last_uploaded_file", "dataset.csv")
                 st.session_state["cleaning_summary_snapshot"] = {
                     "before": {
-                        "rows": df.shape[0], "cols": df.shape[1],
-                        "missing": int(df.isnull().sum().sum()), "dups": dup_before, "outliers": outl_before,
+                        "rows": dataframe.shape[0], "cols": dataframe.shape[1],
+                        "missing": int(dataframe.isnull().sum().sum()), "dups": duplicate_before, "outliers": outlier_before,
                     },
                     "after": {
-                        "rows": working_df.shape[0], "cols": working_df.shape[1],
-                        "missing": total_missing, "dups": duplicate_count, "outliers": total_outl,
+                        "rows": working_dataframe.shape[0], "cols": working_dataframe.shape[1],
+                        "missing": total_missing_values, "dups": duplicate_rows_count, "outliers": total_outlier,
                     },
                 }
                 save_cleaned_data(st.session_state["working_df"], original_filename)
                 st.session_state["main_df"] = st.session_state["working_df"].copy()
                 st.session_state["cleaning_confirmed"] = True
-                commit_cleaning(df, st.session_state["working_df"])
-                from explainable.features.pipeline_state import commit_step
+                commit_cleaning(dataframe, st.session_state["working_df"])
+                
+                from explainable.state_manager.pipeline_state import commit_step
                 commit_step("cleaning", st.session_state["cleaning_summary_snapshot"])
                 st.success("บันทึกข้อมูลที่ Cleaned แล้ว")
                 st.rerun()
-        with cf2:
+        with confirm_col2:
             if st.button("Reset", type="secondary", width="stretch"):
-                st.session_state["working_df"] = df.copy()
+                st.session_state["working_df"] = dataframe.copy()
                 st.session_state["cleaning_confirmed"] = False
                 st.session_state.pop("_treated_outlier_cols", None)
                 st.session_state.pop("cleaning_summary_snapshot", None)
@@ -163,37 +158,38 @@ def render_cleaning():
                 st.info("Reset กลับ original data แล้ว")
                 st.rerun()
 
-        # ── Download (หลัง Confirm เท่านั้น) ──────────────────
+        # Download
         if st.session_state.get("cleaning_confirmed"):
             csv_path = st.session_state.get("cleaned_csv_path")
             if csv_path and os.path.exists(csv_path):
-                with open(csv_path, "rb") as f:
+                with open(csv_path, "rb") as file_obj:
                     st.download_button(
                         label=f"Download {st.session_state['last_uploaded_file']}",
-                        data=f,
+                        data=file_obj,
                         file_name=st.session_state["last_uploaded_file"],
                         mime="text/csv",
                         width="stretch",
                     )
 
-    # ── Navigation ────────────────────────────────────────────
+    # Navigation
     st.divider()
-    confirmed = st.session_state.get("cleaning_confirmed", False)
-    if not confirmed:
+    is_confirmed = st.session_state.get("cleaning_confirmed", False)
+    if not is_confirmed:
         st.info("กรุณากด **Confirm & Save** ก่อนไปขั้นตอนถัดไป")
-    col1, _, col2 = st.columns([0.8, 8, 0.8])
-    with col1:
+        
+    back_col, _, next_col = st.columns([1.2, 7.6, 1.2])
+    with back_col:
         if st.button("Back", type="secondary", width="stretch"):
             st.session_state.pop("working_df", None)
             st.session_state.pop("working_df_source_shape", None)
             st.session_state.pop("cleaning_confirmed", None)
             st.session_state.pop("_treated_outlier_cols", None)
             navigate("upload")
-    with col2:
+    with next_col:
         if st.button(
             "Next Step",
             type="primary",
             width="stretch",
-            disabled=not confirmed,
+            disabled=not is_confirmed,
         ):
             navigate("eda")

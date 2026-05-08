@@ -43,8 +43,25 @@ _DOWNSTREAM_KEYS = {
 
 def _get_pipeline() -> dict:
     if _PIPELINE_KEY not in st.session_state:
+        snapshots = {}
+        # Auto-reconstruct snapshots for step indicator if session was reloaded
+        if st.session_state.get("ml_result") is not None:
+            snapshots["upload"] = {"summary": {}, "timestamp": ""}
+            snapshots["cleaning"] = {"summary": {}, "timestamp": ""}
+            snapshots["transformation"] = {"summary": {}, "timestamp": ""}
+            snapshots["ml_process"] = {"summary": {}, "timestamp": ""}
+        elif st.session_state.get("transformed_df") is not None or st.session_state.get("trans_confirmed"):
+            snapshots["upload"] = {"summary": {}, "timestamp": ""}
+            snapshots["cleaning"] = {"summary": {}, "timestamp": ""}
+            snapshots["transformation"] = {"summary": {}, "timestamp": ""}
+        elif st.session_state.get("working_df") is not None or st.session_state.get("cleaning_confirmed"):
+            snapshots["upload"] = {"summary": {}, "timestamp": ""}
+            snapshots["cleaning"] = {"summary": {}, "timestamp": ""}
+        elif st.session_state.get("main_df") is not None:
+            snapshots["upload"] = {"summary": {}, "timestamp": ""}
+
         st.session_state[_PIPELINE_KEY] = {
-            "snapshots": {},
+            "snapshots": snapshots,
             "prev_snapshots": None,
             "rollback_from": None,
         }
@@ -87,7 +104,7 @@ def rollback_to(step: str):
 
     # ถ้าถอยไปถึง Upload/Cleaning ให้โหลด data ใหม่จาก local เพื่อความชัวร์ (ป้องกัน state ค้าง)
     if step in ["upload", "cleaning"]:
-        from data_prepare.features.loading_data import load_from_local
+        from data_prepare.loading_data import load_from_local
         filename = st.session_state.get("last_uploaded_file")
         if filename:
             df = load_from_local(filename)
@@ -95,7 +112,7 @@ def rollback_to(step: str):
                 st.session_state["main_df"] = df
 
     # ลบ trace_log entries ของ downstream
-    from explainable.features.trace_log import remove_steps_from
+    from explainable.state_manager.trace_log import remove_steps_from
     step_names_map = {
         "cleaning": "Data Cleaning",
         "transformation": "Data Transformation",

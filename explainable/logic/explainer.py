@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 from sklearn.inspection import permutation_importance, partial_dependence
 
-from ml_process.features.preprocessing import preprocess
-from ml_process.features.runner import get_model_map
+from ml_process.logic.preprocessing import preprocess
+from ml_process.logic.runner import get_model_map
 
 _N_JOBS = min(4, os.cpu_count() or 1)
 
