@@ -12,7 +12,14 @@ _ACTIONS_KEY = "_cleaning_actions"
 # ── Core ──────────────────────────────────────────────────────────────────────
 
 def append(entry: dict):
-    st.session_state.setdefault(_LOG_KEY, []).append(entry)
+    log = st.session_state.setdefault(_LOG_KEY, [])
+    # ค้นหาว่ามี step นี้อยู่แล้วหรือไม่ ถ้ามีให้แทนที่ (Update) ถ้าไม่มีให้เพิ่มใหม่ (Append)
+    # เพื่อป้องกันความซ้ำซ้อนในกรณีที่ผู้ใช้กด "Apply" ซ้ำในด่านเดิม
+    existing_idx = next((i for i, e in enumerate(log) if e.get("step") == entry.get("step")), None)
+    if existing_idx is not None:
+        log[existing_idx] = entry
+    else:
+        log.append(entry)
 
 def get_log() -> list[dict]:
     return st.session_state.get(_LOG_KEY, [])
