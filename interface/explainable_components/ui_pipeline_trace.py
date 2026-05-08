@@ -11,174 +11,71 @@ STEP_COLORS_INFO = {
     "Data Transformation": "#d29922",
     "ML Process":          "#bc8cff",
 }
-STEP_ICONS_INFO = {
-    "Upload":              "📂",
-    "Data Cleaning":       "🧹",
-    "Data Transformation": "⚙️",
-    "ML Process":          "🏆",
-}
 PIPELINE_STEP_ORDER = ["Upload", "Data Cleaning", "Data Transformation", "ML Process"]
 
 def render_trace():
     render_section_header(
         "บันทึกการตัดสินใจตลอด Pipeline",
-        "ทุกขั้นตอนตั้งแต่ Upload ถึง ML Process — พร้อมเหตุผลว่า \"ทำไม\" ระบบจึงตัดสินใจแบบนั้น",
+        "เจาะลึกทุกร่องรอยการประมวลผล — ตั้งแต่ข้อมูลดิบจนถึงโมเดลที่แม่นยำที่สุด",
     )
 
     pipeline_log = get_log()
     if not pipeline_log:
-        st.info("ยังไม่มีข้อมูล — ต้องเริ่ม pipeline ตั้งแต่ขั้นตอน Upload ใหม่")
+        st.info("ยังไม่มีข้อมูล — ระบบจะเริ่มบันทึกเมื่อคุณดำเนินการผ่านแต่ละขั้นตอน")
         return
 
-    # Step progress bar
-    completed_steps = {entry.get("step") for entry in pipeline_log}
-    completed_count = sum(1 for step in PIPELINE_STEP_ORDER if step in completed_steps)
+    # CSS for Timeline
+    st.markdown("""<style>
+.trace-container { position: relative; padding-left: 45px; margin-top: 20px; }
+.trace-line { position: absolute; left: 20px; top: 0; bottom: 0; width: 2px; background: linear-gradient(180deg, #58a6ff 0%, #30363d 100%); z-index: 0; }
+.step-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; margin-bottom: 30px; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+.step-dot { position: absolute; left: -35px; top: 20px; width: 24px; height: 24px; background: #0d1117; border: 3px solid #58a6ff; border-radius: 50%; z-index: 1; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #58a6ff; font-weight: 700; }
+.stat-badge { background: rgba(139, 148, 158, 0.1); border: 1px solid rgba(139, 148, 158, 0.2); border-radius: 6px; padding: 6px 12px; margin-right: 8px; margin-bottom: 8px; display: inline-block; }
+.insight-bubble { background: rgba(88, 166, 255, 0.05); border-left: 3px solid #58a6ff; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 10px 0; }
+</style>""", unsafe_allow_html=True)
 
-    # progress bar
-    progress_percentage = int(completed_count / len(PIPELINE_STEP_ORDER) * 100)
-    st.markdown(
-        f'<div style="background:{BORDER_COLOR};border-radius:6px;height:6px;margin-bottom:8px">'
-        f'<div style="background:linear-gradient(90deg,#58a6ff,#bc8cff);width:{progress_percentage}%;'
-        f'height:6px;border-radius:6px;transition:width 0.3s"></div></div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown('<div class="trace-container"><div class="trace-line"></div>', unsafe_allow_html=True)
 
-    progress_columns = st.columns(len(PIPELINE_STEP_ORDER))
-    for col, step in zip(progress_columns, PIPELINE_STEP_ORDER):
-        color   = STEP_COLORS_INFO[step]
-        icon    = STEP_ICONS_INFO[step]
-        is_done    = step in completed_steps
-        opacity_level = "1" if is_done else "0.28"
-        check_mark   = "✓" if is_done else ""
-        with col:
-            st.markdown(
-                f'<div style="text-align:center;opacity:{opacity_level};padding:4px 0">'
-                f'<div style="font-size:1.4rem;margin-bottom:4px">{icon}</div>'
-                f'<div style="color:{color};font-size:0.85rem;font-weight:600;'
-                f'letter-spacing:0.03em">{step}</div>'
-                f'<div style="color:{color};font-size:0.7rem;margin-top:2px">{check_mark}</div>'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # Timeline cards
     for index, entry in enumerate(pipeline_log):
-        step_name  = entry.get("step", "")
+        step_name = entry.get("step", "")
         log_items = entry.get("items", [])
-        explanations_list = entry.get("explanations", [])
-        color_hex = STEP_COLORS_INFO.get(step_name, "#8b949e")
-        icon_emoji  = STEP_ICONS_INFO.get(step_name, "📋")
+        explanations = entry.get("explanations", [])
+        color = STEP_COLORS_INFO.get(step_name, "#8b949e")
 
-        header_items_list = [item for item in log_items if not item.startswith("  ")]
-        detail_items_list = [item for item in log_items if item.startswith("  ")]
+        # แยกส่วน Metrics ออกจากข้อมูลอื่นใน log_items
+        metrics_html = '<div style="display: flex; flex-wrap: wrap; margin-bottom: 12px;">'
+        other_items_html = ""
+        
+        for item in log_items:
+            if ":" in item and "→" in item: # น่าจะเป็น Metric เช่น "Rows: 100 -> 80"
+                label, val = item.split(":", 1)
+                metrics_html += f'<div class="stat-badge"><div style="font-size: 0.75rem; color: #8b949e; text-transform: uppercase;">{label.strip()}</div><div style="font-size: 1rem; color: #e6edf3; font-weight: 600;">{val.strip()}</div></div>'
+            elif not item.startswith("  "): # Header item
+                other_items_html += f'<div style="font-weight: 600; color: #c9d1d9; margin: 8px 0 4px;">{item}</div>'
+            else: # Detail item
+                other_items_html += f'<div style="font-size: 0.85rem; color: #8b949e; padding-left: 12px; border-left: 1px solid #30363d; margin: 2px 0;">{item.strip()}</div>'
+        
+        metrics_html += "</div>"
 
-        # WHAT happened rows
-        rows_html_content = ""
-        for item in header_items_list:
-            if item.endswith(":"):
-                rows_html_content += (
-                    f'<div style="color:{color_hex};font-size:0.85rem;font-weight:700;'
-                    f'letter-spacing:0.04em;text-transform:uppercase;padding:10px 0 4px">{item}</div>'
-                )
-            else:
-                rows_html_content += (
-                    f'<div style="color:{TEXT_COLOR};font-size:0.95rem;padding:4px 0;'
-                    f'border-bottom:1px solid rgba(48,54,61,0.4)">{item}</div>'
-                )
-
-        # Detail items (expandable)
-        details_html_content = "".join(
-            f'<div style="color:{TEXT_DIM_COLOR};font-size:0.88rem;padding:3px 0">'
-            f'<code style="color:{TEXT_COLOR};background:rgba(255,255,255,0.04);'
-            f'border-radius:4px;padding:1px 6px">{item.strip()}</code></div>'
-            for item in detail_items_list
-        )
-
-        detail_section_html = ""
-        if detail_items_list:
-            detail_section_html = (
-                f'<details style="margin-top:10px">'
-                f'<summary style="cursor:pointer;color:{TEXT_DIM_COLOR};font-size:0.88rem;'
-                f'font-weight:600;user-select:none">'
-                f'ดูรายละเอียด ({len(detail_items_list)} รายการ)</summary>'
-                f'<div style="padding:8px 0 0 4px">{details_html_content}</div>'
-                f'</details>'
-            )
-
-        # WHY explanations
-        why_section_html = ""
-        if explanations_list:
-            why_items_html_content = ""
-            for explanation in explanations_list:
-                # Warning items
-                if explanation.startswith("⚠"):
-                    why_items_html_content += (
-                        f'<div style="color:#d29922;font-size:0.9rem;padding:6px 10px;'
-                        f'background:rgba(210,153,34,0.08);border-radius:6px;'
-                        f'margin:4px 0;line-height:1.6">{explanation}</div>'
-                    )
-                # Success items
-                elif explanation.startswith("✓"):
-                    why_items_html_content += (
-                        f'<div style="color:#3fb950;font-size:0.9rem;padding:6px 10px;'
-                        f'background:rgba(63,185,80,0.08);border-radius:6px;'
-                        f'margin:4px 0;line-height:1.6">{explanation}</div>'
-                    )
-                # Info items
-                elif explanation.startswith("ℹ"):
-                    why_items_html_content += (
-                        f'<div style="color:#8b949e;font-size:0.9rem;padding:6px 10px;'
-                        f'background:rgba(139,148,158,0.08);border-radius:6px;'
-                        f'margin:4px 0;line-height:1.6">{explanation}</div>'
-                    )
-                # Question headers (ทำไม...?)
-                elif explanation.startswith("ทำไม"):
-                    why_items_html_content += (
-                        f'<div style="color:{TEXT_COLOR};font-size:0.92rem;padding:6px 10px;'
-                        f'background:rgba(88,166,255,0.06);border-left:2px solid {color_hex};'
-                        f'border-radius:0 6px 6px 0;'
-                        f'margin:4px 0;line-height:1.7">{explanation}</div>'
-                    )
-                # Sub-items (  → ...)
-                elif explanation.startswith("  →"):
-                    why_items_html_content += (
-                        f'<div style="color:{TEXT_DIM_COLOR};font-size:0.88rem;'
-                        f'padding:2px 10px 2px 20px;line-height:1.5">{explanation}</div>'
-                    )
-                # General explanations
+        # ปรับปรุงส่วน Insights (Explanations)
+        insights_html = ""
+        if explanations:
+            items_content = ""
+            for exp in explanations:
+                # ทำความสะอาดข้อความ "ทำไม..." ออกเพื่อลดความซ้ำซ้อน
+                display_text = exp.replace("ทำไม", "").replace("?", "").strip()
+                if exp.startswith("ทำไม"):
+                    items_content += f'<div style="font-weight: 700; color: #58a6ff; font-size: 0.95rem; margin-bottom: 4px;">{display_text}</div>'
+                elif exp.startswith("  →"):
+                    items_content += f'<div style="color: #c9d1d9; font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px;">{exp.strip().replace("→", "—")}</div>'
+                elif "✓" in exp or "⚠" in exp or "ℹ" in exp:
+                    items_content += f'<div style="font-size: 0.88rem; color: #8b949e; margin: 4px 0;">{exp}</div>'
                 else:
-                    why_items_html_content += (
-                        f'<div style="color:{TEXT_COLOR};font-size:0.9rem;padding:5px 10px;'
-                        f'margin:3px 0;line-height:1.6">{explanation}</div>'
-                    )
+                    items_content += f'<div style="font-size: 0.9rem; color: #e6edf3; margin: 4px 0;">{exp}</div>'
 
-            why_section_html = (
-                f'<div style="margin-top:14px;padding-top:14px;'
-                f'border-top:1px dashed rgba(48,54,61,0.6)">'
-                f'<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">'
-                f'<span style="font-size:1rem">💡</span>'
-                f'<span style="color:{color_hex};font-weight:700;font-size:0.88rem;'
-                f'letter-spacing:0.05em;text-transform:uppercase">ทำไม?</span></div>'
-                f'{why_items_html_content}'
-                f'</div>'
-            )
+            insights_html = f'<div style="margin-top: 20px; border-top: 1px solid #30363d; padding-top: 16px;"><div style="font-size: 0.8rem; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Data Insights & Rationale</div><div class="insight-bubble">{items_content}</div></div>'
 
-        # Assemble card
-        st.markdown(
-            f'<div style="background:{BACKGROUND_COLOR};border:1px solid {BORDER_COLOR};'
-            f'border-left:3px solid {color_hex};border-radius:0 {BORDER_RADIUS} {BORDER_RADIUS} 0;'
-            f'padding:{PADDING_STYLE};{MARGIN_GAP}">'
-            # Header with icon + step name
-            f'<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'
-            f'<span style="font-size:1.3rem">{icon_emoji}</span>'
-            f'<span style="color:{color_hex};font-weight:700;font-size:0.95rem;'
-            f'letter-spacing:0.04em;text-transform:uppercase">{step_name}</span></div>'
-            # WHAT
-            f'{rows_html_content}{detail_section_html}'
-            # WHY
-            f'{why_section_html}'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
+        # เรนเดอร์ Card
+        st.markdown(f'<div class="step-card"><div class="step-dot" style="border-color: {color}; color: {color}">{index + 1}</div><div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;"><span style="font-size: 1.1rem; font-weight: 700; color: {color}; text-transform: uppercase; letter-spacing: 1px;">{step_name}</span></div>{metrics_html}{other_items_html}{insights_html}</div>', unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
