@@ -83,6 +83,17 @@ def _clear_downstream(step_idx: int, include_self: bool = False):
                 for key in _DOWNSTREAM_KEYS[s]:
                     st.session_state.pop(key, None)
             
+            # 3. ลบ Trace Log ของด่านนั้นๆ
+            from explainable.state_manager.trace_log import remove_steps_from
+            step_names_map = {
+                "upload": "Upload",
+                "cleaning": "Data Cleaning",
+                "transformation": "Data Transformation",
+                "ml_process": "ML Process",
+            }
+            if s in step_names_map:
+                remove_steps_from([step_names_map[s]])
+            
             # 3. ลบ Physical Cache (เช่น ML Results)
             if s == "ml_process":
                 from data_prepare.loading_data import delete_ml_cache
@@ -93,6 +104,13 @@ def commit_step(step: str, summary: dict):
     pipeline = _get_pipeline()
     step_idx = STEP_ORDER.index(step)
     
+    # ก่อนจะล้างด่านถัดไป ให้เก็บของเดิมไว้ใน prev_snapshots ก่อน (เพื่อรองรับ Diff View)
+    # เฉพาะกรณีที่มีด่านถัดไปทำเสร็จอยู่แล้วเท่านั้น
+    has_downstream_done = any(STEP_ORDER.index(s) > step_idx and s in pipeline["snapshots"] for s in COMMIT_STEPS)
+    if has_downstream_done:
+        pipeline["prev_snapshots"] = copy.deepcopy(pipeline["snapshots"])
+        pipeline["rollback_from"] = step
+
     pipeline["snapshots"][step] = {
         "summary": summary,
         "timestamp": datetime.now().isoformat(),
@@ -127,19 +145,8 @@ def rollback_to(step: str):
             if df is not None:
                 st.session_state["main_df"] = df
 
-    # ลบ trace_log entries ของ downstream
-    from explainable.state_manager.trace_log import remove_steps_from
-    step_names_map = {
-        "cleaning": "Data Cleaning",
-        "transformation": "Data Transformation",
-        "ml_process": "ML Process",
-    }
-    steps_to_remove = []
-    for s in COMMIT_STEPS:
-        if STEP_ORDER.index(s) >= step_idx and s in step_names_map:
-            steps_to_remove.append(step_names_map[s])
-    if steps_to_remove:
-        remove_steps_from(steps_to_remove)
+    # ล้างข้อมูลของด่านนี้และด่านถัดไปทั้งหมด
+    _clear_downstream(step_idx, include_self=True)
 
 
 def get_step_status() -> dict[str, str]:
@@ -156,25 +163,25 @@ def get_step_status() -> dict[str, str]:
         if s == "upload":
             status[s] = "done" if has_data else "current"
         elif s == "eda":
-            # EDA จะถือว่า 'done' ถ้ามีการทำด่านที่อยู่ถัดจากมันไปแล้ว (เช่น Transformation หรือ ML Process)
-            # แต่ถ้ายังไม่ถึง ให้เป็น 'current' เมื่อ Cleaning เสร็จ
+            # EDA จะถือว่า 'done' ถ้ามีการทำด่านที่อยู่ถัดจากมันไปแล้ว
             if any(step in snapshots for step in ["transformation", "ml_process"]):
                 status[s] = "done"
-            elif "cleaning" in snapshots:
-                status[s] = "current"
             else:
-                status[s] = "locked"
+                # EDA พร้อมเสมอถ้ามีข้อมูล (ไม่ต้องรอ Cleaning)
+                status[s] = "current" if has_data else "locked"
         elif s == "explainable":
             # สำหรับด่านสุดท้าย ให้เป็น 'current' พร้อมใช้งานเมื่อ ML Process เสร็จ
             status[s] = "current" if "ml_process" in snapshots else "locked"
         elif s in snapshots:
             status[s] = "done"
         else:
-            # หา step แรกที่ยังไม่ได้ทำ
+            # หา step ก่อนหน้าในลำดับความสำคัญ (Dependency)
             prev_s = COMMIT_STEPS[COMMIT_STEPS.index(s) - 1] if s in COMMIT_STEPS and COMMIT_STEPS.index(s) > 0 else "upload"
+            
             if prev_s == "upload":
                 status[s] = "current" if has_data else "locked"
-            elif prev_s in snapshots:
+            elif prev_s in snapshots or status.get(prev_s) == "current":
+                # ถ้าด่านก่อนหน้าทำเสร็จแล้ว หรือด่านก่อนหน้าพร้อมทำ ด่านนี้ก็ควรจะ 'พร้อมทำ (current)' เช่นกัน
                 status[s] = "current"
             else:
                 status[s] = "locked"
