@@ -32,6 +32,7 @@ dependencies = [
     "matplotlib==3.10.8",
     "narwhals==2.18.0",
     "numpy==2.4.3",
+    "openpyxl>=3.1.5",
     "packaging==26.0",
     "pandas==2.3.3",
     "patsy==1.0.2",
