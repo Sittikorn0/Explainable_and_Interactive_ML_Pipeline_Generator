@@ -68,13 +68,38 @@ def _get_pipeline() -> dict:
     return st.session_state[_PIPELINE_KEY]
 
 
-def commit_step(step: str, summary: dict):
-    """บันทึก summary snapshot ของ step ที่เพิ่ง confirm (ไม่เก็บ DataFrame)"""
+def _clear_downstream(step_idx: int, include_self: bool = False):
+    """ล้างข้อมูล Snapshots และ Session State ของด่านถัดๆ ไป (Downstream)"""
     pipeline = _get_pipeline()
+    
+    for s in COMMIT_STEPS:
+        idx = STEP_ORDER.index(s)
+        if (include_self and idx >= step_idx) or (not include_self and idx > step_idx):
+            # 1. ลบ Snapshot
+            pipeline["snapshots"].pop(s, None)
+            
+            # 2. ลบ Session State Keys
+            if s in _DOWNSTREAM_KEYS:
+                for key in _DOWNSTREAM_KEYS[s]:
+                    st.session_state.pop(key, None)
+            
+            # 3. ลบ Physical Cache (เช่น ML Results)
+            if s == "ml_process":
+                from data_prepare.loading_data import delete_ml_cache
+                delete_ml_cache()
+
+def commit_step(step: str, summary: dict):
+    """บันทึก summary snapshot และล้างด่าน downstream (เนื่องจากข้อมูลเปลี่ยน)"""
+    pipeline = _get_pipeline()
+    step_idx = STEP_ORDER.index(step)
+    
     pipeline["snapshots"][step] = {
         "summary": summary,
         "timestamp": datetime.now().isoformat(),
     }
+    
+    # ล้างด่านถัดๆ ไป (Downstream)
+    _clear_downstream(step_idx, include_self=False)
 
 
 def rollback_to(step: str):
@@ -86,21 +111,12 @@ def rollback_to(step: str):
     pipeline["prev_snapshots"] = copy.deepcopy(pipeline["snapshots"])
     pipeline["rollback_from"] = step
 
-    # ลบ snapshots ของ step นี้และ downstream
-    for s in COMMIT_STEPS:
-        if STEP_ORDER.index(s) >= step_idx:
-            pipeline["snapshots"].pop(s, None)
+    # ล้างข้อมูลของด่านนี้และด่านถัดไปทั้งหมด
+    _clear_downstream(step_idx, include_self=True)
 
-    # ลบ session_state keys ของ downstream
-    for s in COMMIT_STEPS:
-        if STEP_ORDER.index(s) >= step_idx and s in _DOWNSTREAM_KEYS:
-            # Special: คืนค่า main_df จาก backup ถ้ากำลังถอยกลับไปที่จุดเริ่มของ transformation
-            # (ป้องกันการแก้ไขข้อมูลซ้อนทับบนข้อมูลที่ถูก transform ไปแล้ว)
-            if s == "transformation" and "_main_df_backup" in st.session_state:
-                st.session_state["main_df"] = st.session_state["_main_df_backup"]
-                
-            for key in _DOWNSTREAM_KEYS[s]:
-                st.session_state.pop(key, None)
+    # Special: คืนค่า main_df จาก backup ถ้ากำลังถอยกลับไปที่จุดเริ่มของ transformation
+    if step == "transformation" and "_main_df_backup" in st.session_state:
+        st.session_state["main_df"] = st.session_state["_main_df_backup"]
 
     # ถ้าถอยไปถึง Upload/Cleaning ให้โหลด data ใหม่จาก local เพื่อความชัวร์ (ป้องกัน state ค้าง)
     if step in ["upload", "cleaning"]:
@@ -140,10 +156,17 @@ def get_step_status() -> dict[str, str]:
         if s == "upload":
             status[s] = "done" if has_data else "current"
         elif s == "eda":
-            # EDA เป็น read-only ถือว่า accessible ถ้า cleaning done
-            status[s] = "done" if "cleaning" in snapshots else "locked"
+            # EDA จะถือว่า 'done' ถ้ามีการทำด่านที่อยู่ถัดจากมันไปแล้ว (เช่น Transformation หรือ ML Process)
+            # แต่ถ้ายังไม่ถึง ให้เป็น 'current' เมื่อ Cleaning เสร็จ
+            if any(step in snapshots for step in ["transformation", "ml_process"]):
+                status[s] = "done"
+            elif "cleaning" in snapshots:
+                status[s] = "current"
+            else:
+                status[s] = "locked"
         elif s == "explainable":
-            status[s] = "done" if "ml_process" in snapshots else "locked"
+            # สำหรับด่านสุดท้าย ให้เป็น 'current' พร้อมใช้งานเมื่อ ML Process เสร็จ
+            status[s] = "current" if "ml_process" in snapshots else "locked"
         elif s in snapshots:
             status[s] = "done"
         else:

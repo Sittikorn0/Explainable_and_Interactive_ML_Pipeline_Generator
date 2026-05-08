@@ -78,15 +78,6 @@ def confirm_rollback(target_step_name: str):
             st.rerun()
 
 
-STEP_ICONS_MAPPING = {
-    "upload": "📂",
-    "cleaning": "🧹",
-    "eda": "📊",
-    "transformation": "⚙️",
-    "ml_process": "🏆",
-    "explainable": "💡"
-}
-
 def render_step_indicator(current_page):
     step_status = get_step_status()
     
@@ -126,6 +117,7 @@ def render_step_indicator(current_page):
     }
     .line-left { left: -25%; width: 75%; }
     .line-right { right: -25%; width: 75%; }
+    .line-active { background: #48BB78 !important; }
     
     .step-node {
         width: 36px;
@@ -183,9 +175,8 @@ def render_step_indicator(current_page):
         transition: all 0.3s ease !important;
     }
 
-    .current + div + div[class*="st-key-step_btn_"] button div[data-testid="stMarkdownContainer"] p,
     div[class*="st-key-step_btn_"] button:hover div[data-testid="stMarkdownContainer"] p {
-        color: #63B3ED !important;
+        color: #FFF !important;
     }
     
     div[class*="st-key-step_btn_"]:has(button[disabled=""]) button::after {
@@ -195,33 +186,69 @@ def render_step_indicator(current_page):
     
     columns = st.columns(len(STEP_ORDER))
     
+    # หา index ของด่านปัจจุบันที่เปิดอยู่
+    active_step_index = 0
+    for i, s_key in enumerate(STEP_ORDER):
+        if pages_mapping[s_key] == current_page:
+            active_step_index = i
+            break
+
     for index, step_key in enumerate(STEP_ORDER):
         with columns[index]:
             status_value = step_status[step_key]
             step_label = STEP_LABELS[step_key]
-            step_icon = STEP_ICONS_MAPPING.get(step_key, "•")
-            is_active_page = (pages_mapping[step_key] == current_page)
-            node_status_class = status_value if status_value != "current" else "current"
+            step_number = index + 1
+            is_active_page = (index == active_step_index)
+            
+            # Logic ใหม่ที่ยืดหยุ่นกว่าเดิม:
+            # 1. ถ้าเป็นหน้าปัจจุบัน -> สีฟ้า (current)
+            # 2. ถ้าเป็นด่านที่ผ่านมาแล้ว (index < active) และสถานะไม่เป็น locked -> สีเขียว (done)
+            # 3. ถ้าเป็นด่านในอนาคต (index > active) แต่ทำเสร็จไปแล้ว -> สีเขียว (done)
+            # 4. นอกนั้นให้เป็นสีเทา (locked)
+            if is_active_page:
+                node_status_class = "current"
+            elif index < active_step_index:
+                # ด่านที่ผ่านมาแล้ว ถ้าไม่ติดล็อค ให้ถือว่า Done ในเชิง UI (เพื่อให้เห็นเส้นทางสีเขียว)
+                node_status_class = "done" if status_value != "locked" else "locked"
+            elif status_value == "done":
+                node_status_class = "done"
+            else:
+                node_status_class = "locked"
             
             line_html_content = ""
+            # Logic เส้นเชื่อม (Connector Lines):
+            # เส้นทางซ้ายของด่าน i จะเป็นสีเขียวถ้า "ด่าน i" ถูกพิชิตแล้ว (Done) หรือเป็นด่านปัจจุบัน (Active)
+            # แต่เราต้องดูสถานะจริงๆ จาก node_status_class ที่เราคำนวณมาแล้วด้วย
+            left_line_active = (node_status_class == "done" or node_status_class == "current")
+            
+            # เส้นทางขวาของด่าน i จะเป็นสีเขียวถ้า "ด่านถัดไป (i+1)" เป็น Done หรือ Current
+            right_line_active = False
+            if index < len(STEP_ORDER) - 1:
+                next_step_key = STEP_ORDER[index + 1]
+                # เช็คด่านถัดไป: ถ้าด่านถัดไปมีดัชนี <= active_step_index หรือสถานะเป็น done
+                if (index + 1 <= active_step_index) or (step_status[next_step_key] == "done"):
+                    right_line_active = True
+
             if index > 0: 
-                line_html_content += '<div class="line-segment line-left"></div>'
+                line_html_content += f'<div class="line-segment line-left {"line-active" if left_line_active else ""}"></div>'
             if index < len(STEP_ORDER) - 1: 
-                line_html_content += '<div class="line-segment line-right"></div>'
+                line_html_content += f'<div class="line-segment line-right {"line-active" if right_line_active else ""}"></div>'
             
             st.markdown(f"""
             <div class="node-container {node_status_class}">
                 {line_html_content}
-                <div class="step-node">{step_icon}</div>
+                <div class="step-node">{step_number}</div>
             </div>
             """, unsafe_allow_html=True)
             
             button_key = f"step_btn_{step_key}"
-            text_color = "#718096"
-            if status_value == "done": 
-                text_color = "#68D391"
-            elif status_value == "current": 
-                text_color = "#63B3ED"
+            text_color = "#718096" # Locked / Pipeline Current (Gray)
+            
+            if is_active_page:
+                text_color = "#63B3ED" # Active Page (Blue)
+            elif status_value == "done": 
+                text_color = "#68D391" # Done (Green)
+            # ลบเงื่อนไข status_value == "current" ออกเพื่อให้ตัวหนังสือไม่เป็นสีฟ้าซ้อนกัน
             
             st.markdown(f"""
             <style>
@@ -234,7 +261,7 @@ def render_step_indicator(current_page):
             div.st-key-{button_key} button div[data-testid="stMarkdownContainer"] p {{
                 color: {text_color} !important;
                 font-size: 0.78rem !important;
-                font-weight: {"700" if status_value == "current" else "500"} !important;
+                font-weight: {"700" if is_active_page or status_value == "current" else "500"} !important;
                 text-transform: uppercase !important;
                 letter-spacing: 0.03em !important;
             }}
@@ -245,9 +272,9 @@ def render_step_indicator(current_page):
             """, unsafe_allow_html=True)
             
             if st.button(step_label, key=button_key, disabled=(status_value == "locked")):
-                if status_value == "done" and not is_active_page:
-                    confirm_rollback(step_key)
-                elif status_value == "current" and not is_active_page:
+                # ปรับเป็น Preview Mode: อนุญาตให้กดกลับไปดูด่านที่ทำเสร็จแล้ว (done) 
+                # หรือกดไปด่านที่พร้อมทำ (current) ได้ทันทีโดยไม่ต้องผ่าน Dialog
+                if not is_active_page:
                     navigate(step_key)
 
 
