@@ -12,11 +12,14 @@ def render_summary_view(dataframe: pd.DataFrame, transformed_dataframe: pd.DataF
     st.markdown("---")
     st.subheader("สรุปผล Data Transformation")
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Original Columns",     summary_dict["original_cols"])
-    col2.metric("Dropped",              f'-{summary_dict["dropped_cols"]}')
-    col3.metric("After Encoding",       summary_dict["final_cols"])
-    col4.metric("Scaling",              SCALING_LABELS.get(summary_dict["scaling_method"], "—"))
+    from interface.ui_helpers import render_metrics_row
+    metrics_data = [
+        ("Original Columns", str(summary_dict["original_cols"])),
+        ("Dropped", f"-{summary_dict['dropped_cols']}"),
+        ("After Encoding", str(summary_dict["final_cols"])),
+        ("Scaling Method", SCALING_LABELS.get(summary_dict["scaling_method"], "—")),
+    ]
+    render_metrics_row(metrics_data)
 
     with st.expander("ดู Transformed Data (5 rows แรก)"):
         st.caption(f"หมายเหตุ: ตัวเลขใน Preview นี้ยังไม่ถูก Scale ({SCALING_LABELS.get(summary_dict['scaling_method'], summary_dict['scaling_method'])}) โดยระบบจะนำไปคำนวณจริงในขั้นตอน ML Process เพื่อความแม่นยำสูงสุด")
