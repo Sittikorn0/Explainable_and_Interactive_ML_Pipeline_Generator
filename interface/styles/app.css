@@ -1,127 +1,140 @@
-/* ── Layout ─────────────────────────────────────── */
+/* ── Standard Modern Midnight Lab ────────────────── */
+:root {
+  --bg-primary: #1a1b26;
+  --surface-primary: #24283b;
+  --border-subtle: #414868;
+  --text-primary: #e2e8f0;
+  --text-muted: #94a3b8;
+  --accent-blue: #7aa2f7;
+  --accent-insight: #9ece6a;
+}
+
+/* ── Standard Layout (Flexible) ──────────────────── */
 .block-container {
-    padding-top: 3rem;
-    margin-top: -2rem;
+  padding-top: 2rem !important;
+  padding-bottom: 5rem !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
 }
 
-/* ── Global base font ────────────────────────────── */
-html, body, [class*="css"] {
-    font-size: 18px; /* เพิ่มจาก 17px เพื่อให้อ่านง่ายบนจอ */
+/* ── Typography (Responsive) ──────────────────── */
+html,
+body,
+[class*="css"] {
+  font-family: "Inter", system-ui, -apple-system, sans-serif !important;
+  font-size: 16px !important;
+  color: var(--text-primary) !important;
 }
 
-/* ── Body text ───────────────────────────────────── */
-[data-testid="stMarkdownContainer"] p {
-    font-size: 1.05rem;
-    line-height: 1.75;
-    color: #E2E8F0; /* ปรับให้อมเทานิดๆ เพื่อลดอาการปวดตา (Soft White) */
+h1, h2, h3 {
+  letter-spacing: -0.01em !important;
+  color: var(--accent-blue) !important;
 }
 
-/* ── Caption ─────────────────────────────────────── */
-[data-testid="stCaptionContainer"],
-[data-testid="stCaptionContainer"] p {
-    font-size: 1.05rem;
-    opacity: 0.85; /* เพิ่มความสว่าง ไม่ให้จมกับพื้นหลัง */
-    line-height: 1.6;
-    color: #94A3B8; /* เปลี่ยนเป็นสีเงินฟ้า อ่อนๆ */
+h1 {
+  font-size: 2.2rem !important;
+  font-weight: 800 !important;
+  margin-bottom: 1.5rem !important;
 }
 
-/* ── All Buttons Sizing Uniformity ─────────────────── */
-div.stButton > button, div.stDownloadButton > button {
-    padding: 0.45rem 1.25rem !important;
-    font-size: 0.85rem !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.03em !important;
-    border-radius: 8px !important;
-    min-height: 2.8rem !important; /* บังคับให้สูงเท่ากันเป๊ะ */
-}
-
-/* ── Primary Button ──────────────────────────────── */
-div.stButton > button[kind="primary"] {
-    background-color: #FFFFFF !important;
-    border: 1px solid #DEDEDE !important;
-}
-div.stButton > button[kind="primary"] * {
-    color: #000000 !important;
-}
-div.stButton > button[kind="primary"]:hover {
-    background-color: #F0F2F6 !important;
-    border: 1px solid #000000 !important;
-}
-div.stButton > button[kind="primary"]:active {
-    background-color: #FFFFFF !important;
-}
-
-/* ── Metric cards ────────────────────────────────── */
-[data-testid="stMetric"] {
-    background: #1E293B; /* ทำให้ Card เด่นขึ้นจากพื้นดำ */
-    border: 1px solid #334155; /* ขอบชัดขึ้น */
-    border-radius: 10px;
-    padding: 16px 20px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5); /* เพิ่มมิติ */
-}
-
-/* ── Expander ────────────────────────────────────── */
-[data-testid="stExpander"] {
-    border: 1px solid #334155;
-    background: #111827;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
-}
-[data-testid="stExpander"] summary {
-    font-weight: 600;
-    color: #E2E8F0;
-}
-
-/* ── Tabs ────────────────────────────────────────── */
-.stTabs [data-baseweb="tab-panel"] {
-    padding-top: 1rem;
-}
-.stTabs [data-baseweb="tab-panel"] [data-testid="stMarkdownContainer"] p {
-    font-size: 1rem;
-}
-.stTabs [data-baseweb="tab-panel"] [data-testid="stCaptionContainer"] p {
-    font-size: 0.9rem;
-}
-
-/* ── Subheader ───────────────────────────────────── */
-[data-testid="stHeadingWithActionElements"] h3 {
-    font-size: 1.15rem !important;
-    font-weight: 700;
-}
-
-/* ── Divider ─────────────────────────────────────── */
-[data-testid="stHorizontalRule"] {
-    margin-top: 0.75rem;
-    margin-bottom: 0.75rem;
-}
-
-/* ── Dataframe ───────────────────────────────────── */
-[data-testid="stDataFrame"] th {
-    font-weight: 600;
-}
-
-/* ── Download Button ─────────────────────────────── */
+/* ── Standard Buttons (Excluding Sidebar) ────────── */
+div.stButton > button:not([data-testid="stSidebar"] button),
 div.stDownloadButton > button {
-    background: #6d28d9;
-    border: 1px solid #7c3aed;
-    color: #ffffff;
-    transition: background 0.18s, border-color 0.18s, box-shadow 0.18s;
-}
-div.stDownloadButton > button:hover {
-    background: #7c3aed;
-    border-color: #a78bfa;
-    box-shadow: 0 0 0 3px #7c3aed33;
-    cursor: pointer;
-}
-div.stDownloadButton > button:active {
-    background: #5b21b6;
-    box-shadow: none;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  padding: 0.5rem 1rem !important;
+  border: 1px solid var(--border-subtle) !important;
+  background-color: var(--surface-primary) !important;
+  color: var(--text-primary) !important;
+  transition: all 0.2s ease !important;
 }
 
-/* ── Prevent Metric Value Truncation ──────────────── */
-[data-testid="stMetricValue"] > div {
-    text-overflow: unset !important;
-    white-space: normal !important;
-    word-break: break-word !important;
-    line-height: 1.2 !important;
+/* ── Sidebar Navigation (True Minimal) ─────────── */
+[data-testid="stSidebar"] div.stButton > button {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px 0px !important;
+  margin: 0 !important;
+  min-height: unset !important;
+  width: 100% !important;
+  justify-content: flex-start !important;
+}
+
+[data-testid="stSidebar"] div.stButton > button p {
+  font-size: 0.95rem !important;
+  white-space: nowrap !important;
+}
+
+div.stButton > button[kind="primary"] {
+  background-color: #ffffff !important;
+  color: #1a1b26 !important;
+  border: none !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  letter-spacing: 0.05em !important;
+  padding: 0.6rem 1.5rem !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.2s ease !important;
+}
+
+div.stButton > button[kind="primary"]:hover {
+  background-color: #ffffff !important;
+  color: #1a1b26 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ── Standard Surface (Metrics) ──────────────────── */
+[data-testid="stMetric"] {
+  background: var(--surface-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 8px !important;
+  padding: 1rem !important;
+}
+
+/* ── Standard Tabs ───────────────────────────────── */
+.stTabs [data-baseweb="tab-list"] {
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 1rem !important;
+}
+
+.stTabs [data-baseweb="tab"] {
+  height: 3rem !important;
+  transition: all 0.2s ease !important;
+  padding: 0 0.5rem !important;
+}
+
+/* บังคับขนาด Font ที่ตัวหนังสือจริงๆ */
+.stTabs [data-baseweb="tab"] * {
+  font-weight: 700 !important;
+  font-size: 1.15rem !important;
+  white-space: nowrap !important;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+  color: #ffffff !important;
+}
+
+.stTabs [aria-selected="true"] {
+  color: var(--accent-blue) !important;
+}
+
+/* Tab indicator (the line below) */
+.stTabs [data-baseweb="tab-highlight"] {
+  background-color: var(--accent-blue) !important;
+  height: 3px !important;
+  border-radius: 3px 3px 0 0 !important;
+}
+
+/* ── Standard Expander ───────────────────────────── */
+[data-testid="stExpander"] {
+  background: var(--surface-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 8px !important;
+}
+
+/* ── Sidebar ─────────────────────────────────────── */
+[data-testid="stSidebar"] {
+  background-color: #16161e !important;
 }

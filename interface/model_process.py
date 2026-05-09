@@ -49,7 +49,7 @@ def render_ml_process():
     render_target_info(target_column, task_preview, dataframe[target_column].nunique())
 
     # 2. Data Splitting
-    st.subheader("2. Data Splitting (80 / 20)")
+    st.subheader("Data Splitting (80 / 20)")
     total_rows = len(dataframe)
     split_col1, split_col2, split_col3 = st.columns(3)
     split_col1.metric("Total Rows",      f"{total_rows:,}")
@@ -57,7 +57,7 @@ def render_ml_process():
     split_col3.metric("Test Set (20%)",  f"{total_rows - int(total_rows * 0.8):,}")
 
     # 3. Model Competition
-    st.subheader("3. Model Competition + Auto Hyperparameter Tuning")
+    st.subheader("Model Competition + Auto Hyperparameter Tuning")
     render_competition_desc()
 
     available_models = get_available_models(task_preview)
@@ -114,6 +114,8 @@ def render_ml_process():
                 competition_result, evaluation_metrics,
                 st.session_state.get("trans_summary", {}),
                 target_column,
+                scaling_used=st.session_state.get("_ml_scaling_used"),
+                leakage_warnings=st.session_state.get("_ml_leakage_warnings")
             )
             st.rerun()
         except Exception as error:
@@ -199,8 +201,15 @@ def render_ml_process():
 
     with tab_evaluation:
         st.caption(f"ผลลัพธ์จาก **{best_model_label}** บน Test set ที่ยังไม่เคยเห็น")
-        if task_type == "classification" and all(value >= 0.9999 for value in evaluation_metrics.values()):
-            # คำนวณ feature importance จาก best model เพื่อหาตัวการ
+        # 1.0 Guard - Perfect Metrics Warning
+        is_suspiciously_perfect = False
+        if task_type == "classification":
+            is_suspiciously_perfect = all(v >= 0.9999 for v in evaluation_metrics.values() if isinstance(v, (int, float)))
+        else:
+            r2 = evaluation_metrics.get("R² Score", 0)
+            is_suspiciously_perfect = r2 >= 0.9999
+
+        if is_suspiciously_perfect:
             feature_importance_rows = ""
             try:
                 transformation_summary = st.session_state.get("trans_summary", {})
@@ -209,35 +218,32 @@ def render_ml_process():
                     top_features = feature_importance_df[feature_importance_df["Importance"] > 0].head(5)
                     for _, row in top_features.iterrows():
                         importance_percent = row["Importance"] * 100
-                        bar_width = int(importance_percent / 5)
                         feature_importance_rows += (
                             f'<div style="display:flex;align-items:center;gap:10px;padding:4px 0">'
                             f'<code style="color:#e6edf3;min-width:160px;font-size:0.85rem">{row["Feature"]}</code>'
                             f'<div style="flex:1;background:#21262d;border-radius:4px;height:8px">'
-                            f'<div style="width:{min(bar_width*5,100)}%;background:#f85149;height:8px;border-radius:4px"></div></div>'
+                            f'<div style="width:{min(importance_percent,100)}%;background:#f85149;height:8px;border-radius:4px"></div></div>'
                             f'<span style="color:#f85149;font-size:0.85rem;min-width:45px">{importance_percent:.1f}%</span>'
                             f'</div>'
                         )
             except Exception:
                 pass
 
-            feature_importance_section = (
-                f'<div style="margin-top:12px">'
-                f'<div style="color:#8b949e;font-size:0.875rem;margin-bottom:8px">'
-                f'Feature ที่ model ใช้ตัดสินใจ (feature importance):</div>'
-                f'{feature_importance_rows}</div>'
-            ) if feature_importance_rows else ""
-
             st.markdown(
-                f'<div style="background:#1a0f0f;border:1px solid #f85149;border-radius:10px;'
-                f'padding:16px 20px;margin:8px 0">'
-                f'<div style="color:#f85149;font-weight:700;font-size:1rem;margin-bottom:8px">'
-                f'ค่า Metrics ทั้งหมด = 1.0 — สงสัยว่ามี Data Leakage</div>'
-                f'<div style="color:#c9d1d9;font-size:0.9rem;line-height:1.7">'
-                f'Feature ที่มี importance สูงสุดคือตัวการที่น่าสงสัยที่สุด<br>'
-                f'ย้อนกลับไป <b>Transformation → Data Leakage Check</b> แล้ว drop feature นั้นออก'
+                f'<div style="background: rgba(248, 81, 73, 0.05); border-left: 4px solid #f85149; border-radius: 4px;'
+                f'padding: 20px 24px; margin: 12px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1)">'
+                f'<div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px;">'
+                f'<span style="color: #f85149; font-family: monospace; font-weight: 900; font-size: 1.2rem;">[!]</span>'
+                f'<strong style="color: #f85149; font-size: 1.05rem; letter-spacing: 0.02em; text-transform: uppercase;">Anomaly Detected: Perfect Score (1.000)</strong>'
                 f'</div>'
-                f'{feature_importance_section}'
+                f'<div style="color: #8b949e; font-size: 0.92rem; line-height: 1.7; margin-bottom: 16px">'
+                f'โมเดลได้คะแนนสูงสุดซึ่งมักเกิดจาก <b>Data Leakage</b> (ความผิดปกติของข้อมูลที่มีเฉลยปนอยู่) '
+                f'หรือความผิดพลาดในการเลือกฟีเจอร์ที่ไม่เป็นกลางต่อผลลัพธ์'
+                f'</div>'
+                f'{"<div style=\"color:#565f89; font-size:0.8rem; text-transform:uppercase; font-weight:600; margin-bottom:8px; letter-spacing:0.05em\">Suspicious Features:</div>" if feature_importance_rows else ""}'
+                f'{feature_importance_rows}'
+                f'<div style="color: #565f89; font-size: 0.85rem; margin-top: 20px; border-top: 1px solid rgba(148, 163, 184, 0.1); padding-top: 16px">'
+                f'<b>Resolution:</b> กลับไปหน้า <b>Transformation</b> และพิจารณาตัด (Drop) ฟีเจอร์ที่มีอิทธิพลสูงผิดปกติออก</div>'
                 f'</div>',
                 unsafe_allow_html=True,
             )

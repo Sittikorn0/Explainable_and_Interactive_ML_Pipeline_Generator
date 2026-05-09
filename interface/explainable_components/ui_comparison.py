@@ -78,6 +78,6 @@ def render_comparison():
         st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("ล้างประวัติการเปรียบเทียบ", use_container_width=True):
+    if st.button("ล้างประวัติการเปรียบเทียบ", width="stretch"):
         clear_comparison()
         st.rerun()

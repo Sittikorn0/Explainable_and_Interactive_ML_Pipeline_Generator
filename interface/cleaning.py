@@ -51,14 +51,23 @@ def render_cleaning():
     # Dataset Overview
     st.subheader("Dataset Overview")
 
+    from data_prepare.loading_data import save_outlier_bounds, load_outlier_bounds
+    
     if "original_outlier_bounds" not in st.session_state:
-        from data_prepare.logic.statistics import get_outlier_bounds
-        bounds_dictionary = {}
-        for column in dataframe.select_dtypes(include=["number"]).columns:
-            series = dataframe[column].dropna()
-            if len(series) > 0:
-                bounds_dictionary[column] = get_outlier_bounds(series)
-        st.session_state["original_outlier_bounds"] = bounds_dictionary
+        # 1. Try to load from disk first (survive refresh)
+        saved_bounds = load_outlier_bounds()
+        if saved_bounds:
+            st.session_state["original_outlier_bounds"] = saved_bounds
+        else:
+            # 2. Calculate and Save if not found
+            from data_prepare.logic.statistics import get_outlier_bounds
+            bounds_dictionary = {}
+            for column in dataframe.select_dtypes(include=["number"]).columns:
+                series = dataframe[column].dropna()
+                if len(series) > 0:
+                    bounds_dictionary[column] = get_outlier_bounds(series)
+            st.session_state["original_outlier_bounds"] = bounds_dictionary
+            save_outlier_bounds(bounds_dictionary)
 
     fixed_outlier_bounds = st.session_state["original_outlier_bounds"]
 

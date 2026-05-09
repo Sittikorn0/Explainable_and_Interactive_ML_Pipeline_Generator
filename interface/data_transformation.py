@@ -10,20 +10,51 @@ from ml_process.ui_components.feature_select    import render_feature_selection,
 def render_summary_view(dataframe: pd.DataFrame, transformed_dataframe: pd.DataFrame,
                     summary_dict: dict, target_column: str):
     st.markdown("---")
-    st.subheader("สรุปผล Data Transformation")
+    st.markdown('<div class="section-header">SUMMARY REPORT</div>', unsafe_allow_html=True)
 
-    from interface.ui_helpers import render_metrics_row
-    metrics_data = [
-        ("Original Columns", str(summary_dict["original_cols"])),
-        ("Dropped", f"-{summary_dict['dropped_cols']}"),
-        ("After Encoding", str(summary_dict["final_cols"])),
-        ("Scaling Method", SCALING_LABELS.get(summary_dict["scaling_method"], "—")),
-    ]
-    render_metrics_row(metrics_data)
+    method_label = SCALING_LABELS.get(summary_dict["scaling_method"], summary_dict["scaling_method"]).upper()
+    
+    st.markdown(f"""
+<div class="premium-card premium-card-blue" style="padding: 24px !important;">
+    <div style="display: flex; justify-content: space-between; text-align: center; gap: 20px;">
+        <div style="flex: 1;">
+            <div class="technical-label" style="justify-content: center; margin-bottom: 6px; font-size: 0.8rem;">ORIGINAL</div>
+            <div class="technical-value" style="font-size: 1.4rem;">{summary_dict["original_cols"]}</div>
+        </div>
+        <div style="flex: 1; border-left: 1px solid rgba(148, 163, 184, 0.1);">
+            <div class="technical-label" style="justify-content: center; margin-bottom: 6px; font-size: 0.8rem; color: #F59E0B;">PURGED</div>
+            <div class="technical-value" style="font-size: 1.4rem; color: #F59E0B;">{summary_dict.get('dropped_cols', 0)}</div>
+        </div>
+        <div style="flex: 1; border-left: 1px solid rgba(148, 163, 184, 0.1);">
+            <div class="technical-label" style="justify-content: center; margin-bottom: 6px; font-size: 0.8rem; color: #BB9AF7;">FINAL</div>
+            <div class="technical-value" style="font-size: 1.4rem; color: #BB9AF7;">{summary_dict["final_cols"]}</div>
+        </div>
+        <div style="flex: 2; border-left: 1px solid rgba(148, 163, 184, 0.1);">
+            <div class="technical-label" style="justify-content: center; margin-bottom: 6px; font-size: 0.8rem;">SCALING STRATEGY</div>
+            <div class="technical-value" style="font-size: 1.1rem; letter-spacing: 0.05em; color: #7AA2F7;">{method_label}</div>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-    with st.expander("ดู Transformed Data (5 rows แรก)"):
-        st.caption(f"หมายเหตุ: ตัวเลขใน Preview นี้ยังไม่ถูก Scale ({SCALING_LABELS.get(summary_dict['scaling_method'], summary_dict['scaling_method'])}) โดยระบบจะนำไปคำนวณจริงในขั้นตอน ML Process เพื่อความแม่นยำสูงสุด")
+    with st.expander("TRANSFORMED DATA PREVIEW"):
+        st.markdown(f"""
+<div style="font-family: monospace; font-size: 0.85rem; color: #94A3B8; margin-bottom: 12px;">
+    [INFO] Scaling ({method_label}) will be applied during ML Process for maximum precision.
+</div>
+""", unsafe_allow_html=True)
         st.dataframe(transformed_dataframe.head(5), width="stretch")
+
+    # Success message minimal style
+    st.markdown(f"""
+<div style="background: rgba(16, 185, 129, 0.05); border-left: 3px solid #10B981; padding: 16px 20px; border-radius: 4px; margin-top: 20px;">
+    <div style="color: #10B981; font-family: monospace; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.1em; margin-bottom: 4px;">[STATUS: READY]</div>
+    <div style="color: #6EE7B7; font-size: 0.95rem;">
+        Transform completed. System will use <b>{summary_dict["scaling_method"]}</b> in the next step.
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
 
 def render_transformation():
     from app import page_header
@@ -47,16 +78,26 @@ def render_transformation():
         f"|  {dataframe.shape[0]:,} rows × {dataframe.shape[1]} columns"
     )
 
+    # [Safety Check] If the summary in state doesn't match the current file or state, clear it
+    if st.session_state.get("trans_confirmed"):
+        summary = st.session_state.get("trans_summary", {})
+        if summary.get("original_cols") != dataframe.shape[1]:
+             st.session_state.pop("trans_confirmed", None)
+             st.session_state.pop("trans_summary", None)
+             st.session_state.pop("transformed_df", None)
+             st.rerun()
+
     # Target Column
     columns_list = dataframe.columns.tolist()
     saved_target = st.session_state.get("target_col", columns_list[-1])
     target_column   = saved_target if saved_target in columns_list else columns_list[-1]
-    st.markdown("**Target Column** (จะไม่ถูก transform)")
+    
     st.markdown(f"""
-<div style="background:#0d1117;border:1px solid #30363d;border-left:5px solid #58a6ff;
-border-radius:6px;padding:10px 14px;font-family:monospace;font-size:1.2rem;
-color:#58a6ff;font-weight:600">
-{target_column}
+<div class="premium-card premium-card-blue">
+    <div class="technical-label" style="color: #7AA2F7; letter-spacing: 0.15em;">TARGET COLUMN</div>
+    <div class="technical-value" style="color: #7AA2F7; font-size: 1.4rem;">
+        {target_column}
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -64,7 +105,7 @@ color:#58a6ff;font-weight:600">
 
     # วิเคราะห์ข้อมูล (cache ตาม df shape + target)
     dataframe_fingerprint = hash((dataframe.shape, tuple(dataframe.columns), str(dataframe.iloc[0].values.tolist()) if len(dataframe) else ""))
-    cache_key = f"trans_analysis_{dataframe_fingerprint}_{target_column}"
+    cache_key = f"trans_analysis_v4_{dataframe_fingerprint}_{target_column}"
     if st.session_state.get("_trans_cache_key") != cache_key:
         with st.spinner("วิเคราะห์ข้อมูล..."):
             analysis_result = analyze_all(dataframe, target_column)
@@ -75,14 +116,15 @@ color:#58a6ff;font-weight:600">
 
     encoding_analysis = analysis_result["encoding"]
     scaling_analysis  = analysis_result["scaling"]
-    feature_selection_analysis  = analysis_result["feature_selection"]
+    leakage_analysis  = analysis_result.get("leakage", [])
+    feature_selection_analysis = analysis_result["feature_selection"]
 
     # Render sections
     encoding_decisions  = render_encoding(dataframe, target_column, encoding_analysis)
     st.markdown("---")
     chosen_scaling_method = render_scaling(dataframe, target_column, scaling_analysis)
     st.markdown("---")
-    leakage_drops_list  = render_leakage_check(dataframe, target_column)
+    leakage_drops_list  = render_leakage_check(leakage_analysis)
     st.markdown("---")
     
     # เรียงลำดับเพื่อให้การเปรียบเทียบใน Choice Tracker เสถียร (ป้องกันลำดับสลับไปมาใน set)
@@ -108,6 +150,11 @@ color:#58a6ff;font-weight:600">
                 st.session_state["trans_summary"]       = transformation_summary
                 st.session_state["trans_confirmed"]     = True
                 
+                # [Persistence] Save data and metadata immediately
+                from data_prepare.loading_data import save_to_local, save_trans_metadata
+                save_to_local(transformed_dataframe, file_name)
+                save_trans_metadata(transformation_summary, target_column)
+                
                 # ลบผล ML เก่าออกเพื่อให้ต้องเริ่มใหม่
                 for key_to_remove in ["ml_result", "ml_metrics", "_fi_data", "ml_task_type"]:
                     st.session_state.pop(key_to_remove, None)
@@ -131,9 +178,6 @@ color:#58a6ff;font-weight:600">
         transformed_dataframe = st.session_state["transformed_df"]
         transformation_summary        = st.session_state["trans_summary"]
         render_summary_view(dataframe, transformed_dataframe, transformation_summary, target_column)
-        
-        method_name_label = SCALING_LABELS.get(transformation_summary["scaling_method"], transformation_summary["scaling_method"])
-        st.success(f"✅ Transform สำเร็จ! ระบบจะใช้ **{method_name_label}** ในขั้นตอนถัดไป — กด Next Step เพื่อไป ML Process")
 
     # Navigation
     st.markdown("---")

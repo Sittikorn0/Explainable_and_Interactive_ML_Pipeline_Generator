@@ -5,30 +5,28 @@ import streamlit as st
 
 CACHE_DIR = "temp_cache"
 CACHE_TTL = 3 * 3600  # 3 ชม.
-MAX_SESSIONS = 5       # จำนวน session สูงสุดที่เก็บไว้พร้อมกัน
+MAX_SESSIONS = 20      # จำนวน session สูงสุดที่เก็บไว้พร้อมกัน
 
 def get_session_id() -> str:
-    if "user_uuid" not in st.session_state:
-        url_uid = st.query_params.get("uid")
+    import uuid
+    # Priority 1: Already in session state
+    if "user_uuid" in st.session_state:
+        return st.session_state["user_uuid"]
+        
+    # Priority 2: Try to recover from URL (using .uid property for stability)
+    try:
+        url_uid = st.query_params.uid if "uid" in st.query_params else None
         if url_uid:
             st.session_state["user_uuid"] = url_uid
-        else:
-            # พยายามหา Session ID ล่าสุดจาก temp_cache (แก้ปัญหา Refresh แล้ว uid หายจาก URL)
-            ensure_cache_dir()
-            cache_files = list_cache_files()
-            if cache_files:
-                files_with_time = [(filename, os.path.getmtime(os.path.join(CACHE_DIR, filename))) for filename in cache_files]
-                latest_file = max(files_with_time, key=lambda file_info: file_info[1])[0]
-                latest_session_id = session_id_of(latest_file)
-                if latest_session_id:
-                    st.session_state["user_uuid"] = latest_session_id
-                    st.query_params["uid"] = latest_session_id
-                    return latest_session_id
-
-            new_session_id = str(uuid.uuid4())[:8]
-            st.session_state["user_uuid"] = new_session_id
-            st.query_params["uid"] = new_session_id
-    return st.session_state["user_uuid"]
+            return url_uid
+    except Exception:
+        pass
+        
+    # Priority 3: Truly new session
+    new_id = str(uuid.uuid4())[:8]
+    st.session_state["user_uuid"] = new_id
+    st.query_params["uid"] = new_id
+    return new_id
 
 def ensure_cache_dir() -> None:
     os.makedirs(CACHE_DIR, exist_ok=True)
@@ -112,3 +110,15 @@ def ml_cache_path() -> str:
 def ml_meta_path() -> str:
     ensure_cache_dir()
     return cache_path("ml_meta", "json")
+
+def outlier_bounds_path() -> str:
+    ensure_cache_dir()
+    return cache_path("outlier_bounds", "json")
+
+def trans_meta_path() -> str:
+    ensure_cache_dir()
+    return cache_path("trans_meta", "json")
+
+def trace_log_path() -> str:
+    ensure_cache_dir()
+    return cache_path("trace_log", "json")

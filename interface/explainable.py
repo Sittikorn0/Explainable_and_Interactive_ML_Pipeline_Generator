@@ -60,6 +60,26 @@ def render_explainable():
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    # 1.0 Guard - Leakage Warning Banner
+    is_perfect = all(val >= 0.9999 for val in evaluation_metrics.values() if isinstance(val, (int, float)))
+    if is_perfect:
+        st.markdown(
+            f"""
+            <div style="background: rgba(248, 81, 73, 0.05); border-left: 4px solid #f85149; border-radius: 4px; padding: 18px 24px; margin-bottom: 28px;">
+                <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px;">
+                    <span style="color: #f85149; font-family: monospace; font-weight: 900; font-size: 1.2rem;">!</span>
+                    <strong style="color: #f85149; font-size: 1.05rem; letter-spacing: 0.02em; text-transform: uppercase;">Technical Warning: Potential Data Leakage</strong>
+                </div>
+                <p style="color: #8b949e; margin: 0; font-size: 0.92rem; line-height: 1.6; font-weight: 400;">
+                    คะแนนโมเดลมีความแม่นยำระดับสมบูรณ์แบบ (1.000) ซึ่งเป็นสัญญาณของความผิดปกติในชุดข้อมูล 
+                    มักเกิดจากการปนเปื้อนของข้อมูลเฉลย (Target) เข้าสู่ฟีเจอร์ <br>
+                    <span style="opacity: 0.8;">แนะให้ตรวจสอบ <b>Feature Importance</b> เพื่อหาตัวแปรที่มีอิทธิพลสูงผิดปกติ</span>
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
     # Fit model (cached)
     dataset_file_id = st.session_state.get("last_uploaded_file", "")
     caching_key = f"_xai_cache_{best_model_key}_{hash(str(sorted(best_hyperparameters.items())))}_{dataset_file_id}"

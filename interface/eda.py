@@ -34,6 +34,13 @@ def render_eda():
 
     # Dataset Overview
     st.subheader("Dataset Overview")
+    
+    from data_prepare.loading_data import load_outlier_bounds
+    if "original_outlier_bounds" not in st.session_state:
+        saved_bounds = load_outlier_bounds()
+        if saved_bounds:
+            st.session_state["original_outlier_bounds"] = saved_bounds
+            
     fixed_outlier_bounds = st.session_state.get("original_outlier_bounds", None)
 
     bounds_signature = id(fixed_outlier_bounds) if fixed_outlier_bounds else 0

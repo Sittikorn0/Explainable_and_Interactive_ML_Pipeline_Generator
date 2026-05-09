@@ -6,13 +6,14 @@ from data_prepare.logic.statistics import get_outlier_bounds
 # Core Analyzer (Main Entry Point)
 def analyze_all(dataset: pd.DataFrame, target_column: str) -> dict:
     """
-    รัน Analysis ทั้งหมด (Encoding, Scaling, Feature Selection) แล้วคืนผลลัพธ์ครบชุด
-    เหมาะสำหรับเป็นฟังก์ชันหลักที่ให้ส่วน Interface เรียกใช้
+    รัน Analysis ทั้งหมด (Encoding, Scaling, Feature Selection, Leakage)
     """
+    from ml_process.logic.logic import analyze_leakage
     return {
         "encoding":          analyze_encoding(dataset, target_column),
         "scaling":           analyze_scaling(dataset, target_column),
         "feature_selection": analyze_feature_selection(dataset, target_column),
+        "leakage":           analyze_leakage(dataset, target_column),
     }
 
 # Task Detection

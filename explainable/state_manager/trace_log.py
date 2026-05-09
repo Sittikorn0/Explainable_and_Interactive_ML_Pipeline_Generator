@@ -5,35 +5,68 @@ Pipeline trace log — สะสมการตัดสินใจ + เหต
 import pandas as pd
 import streamlit as st
 
+import json
+import os
+from data_prepare.loading.session_manager import trace_log_path
+
 _LOG_KEY     = "_trace_log"
 _ACTIONS_KEY = "_cleaning_actions"
 
+def _persist_log():
+    """Helper to save the trace log and actions to disk."""
+    path = trace_log_path()
+    data = {
+        "log": st.session_state.get(_LOG_KEY, []),
+        "actions": st.session_state.get(_ACTIONS_KEY, [])
+    }
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+    except Exception as e:
+        print(f"Error persisting trace log: {e}")
+
+def restore_log():
+    """Helper to restore the trace log from disk."""
+    path = trace_log_path()
+    if not os.path.exists(path):
+        return
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            st.session_state[_LOG_KEY] = data.get("log", [])
+            st.session_state[_ACTIONS_KEY] = data.get("actions", [])
+    except Exception as e:
+        print(f"Error restoring trace log: {e}")
 
 # ── Core ──────────────────────────────────────────────────────────────────────
 
 def append(entry: dict):
     log = st.session_state.setdefault(_LOG_KEY, [])
     # ค้นหาว่ามี step นี้อยู่แล้วหรือไม่ ถ้ามีให้แทนที่ (Update) ถ้าไม่มีให้เพิ่มใหม่ (Append)
-    # เพื่อป้องกันความซ้ำซ้อนในกรณีที่ผู้ใช้กด "Apply" ซ้ำในด่านเดิม
     existing_idx = next((i for i, e in enumerate(log) if e.get("step") == entry.get("step")), None)
     if existing_idx is not None:
         log[existing_idx] = entry
     else:
         log.append(entry)
+    _persist_log()
 
 def get_log() -> list[dict]:
+    # If session is fresh but disk has log, restore it
+    if not st.session_state.get(_LOG_KEY) and os.path.exists(trace_log_path()):
+        restore_log()
     return st.session_state.get(_LOG_KEY, [])
 
 def clear():
     """เรียกเมื่อ upload ไฟล์ใหม่"""
     st.session_state[_LOG_KEY]     = []
     st.session_state[_ACTIONS_KEY] = []
-
+    _persist_log()
 
 def remove_steps_from(step_names: list[str]):
     """ลบ trace entries ของ step ที่ระบุ (ใช้ตอน rollback)"""
     log = st.session_state.get(_LOG_KEY, [])
     st.session_state[_LOG_KEY] = [e for e in log if e.get("step") not in step_names]
+    _persist_log()
 
 
 # ── Upload ────────────────────────────────────────────────────────────────────
@@ -104,10 +137,12 @@ def track_cleaning(action_type: str, col: str, detail: str):
     actions = [a for a in actions if not (a["col"] == col and a["type"] == action_type)]
     actions.append({"type": action_type, "col": col, "detail": detail})
     st.session_state[_ACTIONS_KEY] = actions
+    _persist_log()
 
 def track_cleaning_bulk(action_type: str, cols: list, detail: str):
     for col in cols:
         track_cleaning(action_type, col, detail)
+    _persist_log()
 
 
 def commit_cleaning(df_before, df_after):
