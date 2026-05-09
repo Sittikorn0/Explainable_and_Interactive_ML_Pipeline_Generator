@@ -28,9 +28,37 @@ def get_metrics(actual_values, predicted_values, task_type: str) -> dict:
     }
 
 def show_metrics(evaluation_metrics: dict):
-    columns = st.columns(len(evaluation_metrics))
-    for index, (metric_name, metric_value) in enumerate(evaluation_metrics.items()):
-        columns[index].metric(metric_name, metric_value)
+    from ml_process.ui_components.views import render_metric_cards
+    render_metric_cards(evaluation_metrics)
+
+def show_residual_plot(actual_values, predicted_values):
+    """Regression Only: Plot residuals to check for bias"""
+    actual = np.array(actual_values).flatten()
+    predicted = np.array(predicted_values).flatten()
+    residuals = actual - predicted
+    
+    fig = px.scatter(
+        x=predicted, y=residuals, opacity=0.6,
+        labels={'x': 'Predicted Values', 'y': 'Residuals (Actual - Predicted)'},
+        color_discrete_sequence=["#d29922"]
+    )
+    fig.add_hline(y=0, line_dash="dash", line_color="#f85149")
+    fig.update_layout(template="plotly_dark", height=400, margin=dict(t=20, b=20))
+    st.plotly_chart(fig, width="stretch")
+
+def show_error_dist(actual_values, predicted_values):
+    """Regression Only: Plot error distribution"""
+    actual = np.array(actual_values).flatten()
+    predicted = np.array(predicted_values).flatten()
+    errors = actual - predicted
+    
+    fig = px.histogram(
+        errors, nbins=50, 
+        labels={'value': 'Prediction Error'},
+        color_discrete_sequence=["#bc8cff"]
+    )
+    fig.update_layout(template="plotly_dark", height=400, margin=dict(t=20, b=20), showlegend=False)
+    st.plotly_chart(fig, width="stretch")
 
 def show_leaderboard(model_competition_results: dict):
     ranked_models = sorted(
@@ -43,7 +71,10 @@ def show_leaderboard(model_competition_results: dict):
     leaderboard_rows = []
     
     for index, (_, result) in enumerate(ranked_models):
-        parameters_text = " | ".join(f"{param_key}={param_value}" for param_key, param_value in result["best_params"].items()) if result["best_params"] else "—"
+        params = result["best_params"] or {}
+        # Prettify keys: learning_rate -> Learning Rate
+        param_list = [f"{k.replace('_', ' ').title()}: {v}" for k, v in params.items()]
+        parameters_text = ", ".join(param_list) if param_list else "—"
         leaderboard_rows.append({
             "Rank": medals[index] if index < 3 else str(index + 1),
             "Model": result["label"],
@@ -57,8 +88,28 @@ def show_leaderboard(model_competition_results: dict):
         hide_index=True,
         width="stretch",
         column_config={
-            "CV Score": st.column_config.NumberColumn(format="%.4f"),
-            "±Std":     st.column_config.NumberColumn(format="%.4f"),
+            "Rank": st.column_config.TextColumn(
+                "Rank",
+                help="อันดับของโมเดล (วัดจากค่าเฉลี่ยคะแนนประสิทธิภาพ)"
+            ),
+            "Model": st.column_config.TextColumn(
+                "Model",
+                help="ชื่อโมเดล Machine Learning"
+            ),
+            "CV Score": st.column_config.NumberColumn(
+                "Cross-Val Score",
+                help="คะแนนประสิทธิภาพเฉลี่ยจากการทำ Cross-Validation (ยิ่งสูงยิ่งดี)",
+                format="%.4f"
+            ),
+            "±Std": st.column_config.NumberColumn(
+                "Cross-Val Std",
+                help="ความผันผวนของคะแนน (ยิ่งต่ำยิ่งเสถียรและเชื่อถือได้)",
+                format="%.4f"
+            ),
+            "Best Params": st.column_config.TextColumn(
+                "Hyperparameters",
+                help="การตั้งค่าพารามิเตอร์ที่เหมาะสมที่สุดสำหรับโมเดลนี้"
+            ),
         },
     )
     
@@ -82,7 +133,24 @@ def show_confusion_matrix(actual_values, predicted_values):
         color_continuous_scale="Blues",
         labels=dict(x="Predicted", y="Actual", color="Count")
     )
-    figure.update_layout(template="plotly_dark", height=400, margin=dict(t=20, b=20))
+    
+    # ปรับแต่ง UI กราฟให้ดูพรีเมียมขึ้น
+    figure.update_layout(
+        template="plotly_dark",
+        height=450,
+        margin=dict(t=40, b=40, l=40, r=40),
+        font=dict(size=13),
+        xaxis_title=dict(font=dict(size=14, color="#8b949e")),
+        yaxis_title=dict(font=dict(size=14, color="#8b949e")),
+        coloraxis_showscale=True # นำแถบสีกลับมาตามต้องการ
+    )
+    
+    # ขยายตัวเลขในช่องตาราง
+    figure.update_traces(
+        textfont_size=16,
+        texttemplate="%{z}" # แสดงเฉพาะตัวเลขจำนวน
+    )
+    
     st.plotly_chart(figure, width="stretch")
 
 def show_pred_vs_actual(actual_values, predicted_values):

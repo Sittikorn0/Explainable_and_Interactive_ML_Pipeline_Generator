@@ -4,7 +4,10 @@ import streamlit as st
 from ml_process.logic.preprocessing  import preprocess
 from ml_process.logic.data_analyzer  import detect_task
 from ml_process.logic.runner      import run_competition, get_available_models
-from ml_process.logic.evaluation  import get_metrics, show_metrics, show_leaderboard, show_confusion_matrix, show_pred_vs_actual
+from ml_process.logic.evaluation  import (
+    get_metrics, show_metrics, show_leaderboard, show_confusion_matrix, 
+    show_pred_vs_actual, show_residual_plot, show_error_dist
+)
 from ml_process.exporting.export      import build_leaderboard_df, build_predictions_df
 from ml_process.logic.config      import MODEL_DESC
 from ml_process.logic.logic       import detect_leakage, analyze_leakage, compute_fi
@@ -26,7 +29,7 @@ def render_ml_process():
             navigate("upload")
         return
 
-    dataframe        = st.session_state["main_df"]
+    dataframe        = st.session_state.get("transformed_df", st.session_state.get("main_df"))
     file_name = st.session_state.get("last_uploaded_file", "Unknown File")
     st.info(f"**Current Dataset:** {file_name}  |  {dataframe.shape[0]:,} rows × {dataframe.shape[1]} columns")
 
@@ -183,9 +186,8 @@ def render_ml_process():
 
     st.success(f"Best Model: **{best_model_label}**")
 
-    tab_leaderboard, tab_evaluation, tab_feature_importance, tab_visualization = st.tabs([
-        "Leaderboard", "Evaluation", "Feature Importance",
-        "Data Visualization",
+    tab_leaderboard, tab_evaluation = st.tabs([
+        "Leaderboard", "Evaluation",
     ])
 
     with tab_leaderboard:
@@ -254,29 +256,35 @@ def render_ml_process():
             show_confusion_matrix(competition_result["y_test"], competition_result["y_pred"])
             render_cm_explain(competition_result["y_test"], competition_result["y_pred"])
         else:
-            show_pred_vs_actual(competition_result["y_test"].values, competition_result["y_pred"])
-            render_scatter_explain()
+            ev_col1, ev_col2 = st.columns(2)
+            with ev_col1:
+                st.markdown("**Actual vs Predicted**")
+                show_pred_vs_actual(competition_result["y_test"].values, competition_result["y_pred"])
+                render_scatter_explain()
+            with ev_col2:
+                st.markdown("**Residual Plot (ความคลาดเคลื่อน)**")
+                show_residual_plot(competition_result["y_test"].values, competition_result["y_pred"])
+                st.markdown("""
+                <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;
+                padding:12px 16px;margin:8px 0;font-size:0.81rem;color:#c9d1d9;line-height:1.8">
+                  <b style="color:#e6edf3">วิธีอ่าน Residual Plot</b><br>
+                  • ดูความกระจายของ <b style="color:#d29922">Error</b> เทียบกับค่าที่ทำนาย<br>
+                  • จุดควรกระจายรอบเส้น 0 แบบไม่มีรูปแบบ (Random)<br>
+                  • ถ้าจุดมีรูปแบบชัดเจน (เช่น เป็นรูปกรวย) แปลว่า model ยังมีจุดอ่อนบางพื้นที่
+                </div>""", unsafe_allow_html=True)
+            
+            st.divider()
+            st.markdown("**Error Distribution (การกระจายตัวของความผิดพลาด)**")
+            show_error_dist(competition_result["y_test"].values, competition_result["y_pred"])
+            st.markdown("""
+            <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;
+            padding:12px 16px;margin:8px 0;font-size:0.81rem;color:#c9d1d9;line-height:1.8">
+              • กราฟนี้แสดงว่า model มักทำนายผิดพลาดในช่วงไหนมากที่สุด<br>
+              • <b style="color:#bc8cff">รูประฆังคว่ำ (Normal)</b> ที่จุด 0 หมายถึง model มีความแม่นยำสูงสม่ำเสมอ
+            </div>""", unsafe_allow_html=True)
         predictions_csv = build_predictions_df(competition_result["y_test"], competition_result["y_pred"], task_type).to_csv(index=False).encode("utf-8-sig")
         st.markdown('<div style="margin-top:24px"></div>', unsafe_allow_html=True)
         st.download_button("Predictions CSV", predictions_csv, file_name=f"predictions_{best_model_label}.csv", mime="text/csv")
 
-    with tab_feature_importance:
-        transformation_summary = st.session_state.get("trans_summary", {})
-        feature_importance_data = st.session_state.get("_fi_data")
-        if feature_importance_data is None or feature_importance_data.get("model_key") != best_model_key:
-            with st.spinner(f"คำนวณ Feature Importance ของ {best_model_label}..."):
-                feature_importance_df, feature_importance_error = compute_fi(dataframe, target_column, best_model_key, best_hyperparameters, transformation_summary)
-                st.session_state["_fi_data"] = {
-                    "model_key": best_model_key, "fi_df": feature_importance_df, "error": feature_importance_error
-                }
-            feature_importance_data = st.session_state["_fi_data"]
-        render_fi(feature_importance_data.get("fi_df"), best_model_label, feature_importance_data.get("error"))
-        if feature_importance_data.get("fi_df") is not None:
-            feature_importance_csv = feature_importance_data["fi_df"].to_csv(index=False).encode("utf-8-sig")
-            st.markdown('<div style="margin-top:24px"></div>', unsafe_allow_html=True)
-            st.download_button("Feature Importance CSV", feature_importance_csv, file_name=f"feature_importance_{best_model_label}.csv", mime="text/csv")
-
-    with tab_visualization:
-        render_viz(dataframe)
 
     render_nav(competition_result)

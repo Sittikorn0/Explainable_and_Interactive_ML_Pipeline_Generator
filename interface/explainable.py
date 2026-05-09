@@ -13,6 +13,7 @@ from interface.explainable_components.ui_feature_importance import render_import
 from interface.explainable_components.ui_model_guide import render_guide
 from interface.explainable_components.ui_pipeline_trace import render_trace
 from interface.explainable_components.ui_comparison import render_comparison
+from ml_process.ui_components.views import render_viz
 
 def render_explainable():
     from app import page_header, navigate
@@ -29,7 +30,7 @@ def render_explainable():
             navigate("ml_process")
         return
 
-    dataframe            = st.session_state.get("main_df")
+    dataframe            = st.session_state.get("transformed_df", st.session_state.get("main_df"))
     transformation_summary = st.session_state.get("trans_summary", {})
     target_column    = (st.session_state.get("_trans_target_saved") or
                      st.session_state.get("target_col"))
@@ -107,7 +108,7 @@ def render_explainable():
     X_test = st.session_state["_xai_X_test"]
     y_test = st.session_state["_xai_y_test"]
 
-    tabs_labels = ["Feature Importance", "Model Guide", "Pipeline Trace"]
+    tabs_labels = ["Feature Importance", "Data Visualization", "Model Guide", "Pipeline Trace"]
     if has_comparison():
         tabs_labels.append("Diff Views")
 
@@ -119,14 +120,18 @@ def render_explainable():
 
     with tabs_objects[1]:
         st.markdown("<br>", unsafe_allow_html=True)
-        render_guide(best_model_label, task_type, evaluation_metrics)
+        render_viz(dataframe)
 
     with tabs_objects[2]:
+        st.markdown("<br>", unsafe_allow_html=True)
+        render_guide(best_model_label, task_type, evaluation_metrics)
+
+    with tabs_objects[3]:
         st.markdown("<br>", unsafe_allow_html=True)
         render_trace()
         
     if has_comparison():
-        with tabs_objects[3]:
+        with tabs_objects[4]:
             st.markdown("<br>", unsafe_allow_html=True)
             render_comparison()
 

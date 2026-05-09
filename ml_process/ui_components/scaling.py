@@ -73,7 +73,7 @@ def render_scaling(dataframe: pd.DataFrame, target_column: str,
     <div style="color: #7AA2F7; margin-bottom: 6px; letter-spacing: 0.05em; font-weight: 700;">LOG TRANSFORM SPEC:</div>
     <div style="color: #94A3B8; line-height: 1.6;">
         Method: log1p(x)<br>
-        Target: {', '.join(heavy_skew_columns[:3])}{'...' if len(heavy_skew_columns)>3 else ''}
+        Applied to: {', '.join(heavy_skew_columns[:3])}{'...' if len(heavy_skew_columns)>3 else ''}
     </div>
 </div>
 """, unsafe_allow_html=True)

@@ -81,29 +81,28 @@ def render_best_model_card(result: dict, best_label: str):
     best_cv, best_std = ranked[0][1]["cv_score"], ranked[0][1]["cv_std"]
     avg_std = sum(v["cv_std"] for _, v in ranked) / len(ranked)
 
-    r2 = (f"ห่างจาก {ranked[1][1]['label']} {round(best_cv - ranked[1][1]['cv_score'], 4)} "
-          f"({round((best_cv - ranked[1][1]['cv_score']) / (ranked[1][1]['cv_score'] + 1e-9) * 100, 1)}%)"
-          if len(ranked) >= 2 else "")
-    r3 = (f"±Std={best_std:.4f} {'≤' if best_std <= avg_std else '>'} "
-          f"avg({avg_std:.4f}) — {'stable' if best_std <= avg_std else 'score ยังสูงสุด'}")
-    r4 = MODEL_WHY.get(best_label, f"{best_label} ให้ผลดีที่สุดกับชุดข้อมูลนี้")
+    r2_desc = (f"นำหน้า {ranked[1][1]['label']} อยู่ {round(best_cv - ranked[1][1]['cv_score'], 4)} "
+               f"({round((best_cv - ranked[1][1]['cv_score']) / (ranked[1][1]['cv_score'] + 1e-9) * 100, 1)}%)"
+               if len(ranked) >= 2 else "เป็นโมเดลที่มีประสิทธิภาพสูงสุดในทุกการทดสอบ")
+    r3_desc = ("มีความเสถียรสูงกว่าค่าเฉลี่ย" if best_std <= avg_std else "แม้มีความผันผวนแต่คะแนนยังคงเป็นอันดับหนึ่ง")
+    r4_desc = MODEL_WHY.get(best_label, "สถาปัตยกรรมเหมาะสมกับรูปแบบของข้อมูลชุดนี้ที่สุด")
 
     st.markdown(f"""
 <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;
 padding:14px 18px;margin-top:12px">
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-    <span style="background:#3fb950;color:#0d1117;font-weight:700;font-size:0.75rem;
-    padding:2px 10px;border-radius:10px">BEST MODEL</span>
-    <span style="font-family:monospace;font-weight:700;color:#e6edf3">{best_label}</span>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+    <span style="background:#3fb950;color:#0d1117;font-weight:700;font-size:0.85rem;
+    padding:3px 12px;border-radius:12px">BEST MODEL</span>
+    <span style="font-family:monospace;font-weight:700;color:#e6edf3;font-size:1.1rem">{best_label}</span>
   </div>
-  <div style="font-size:0.82rem;color:#c9d1d9;line-height:1.9">
-    <b style="color:#58a6ff">1. CV Score สูงสุด</b> ({best_cv:.4f}) {r2}<br>
-    <b style="color:#3fb950">2. Stability</b> — {r3}<br>
-    <b style="color:#d29922">3. Model</b> — {r4}
+  <div style="font-size:0.95rem;color:#c9d1d9;line-height:2.0">
+    <b style="color:#58a6ff">1. Cross-Val Score สูงสุด</b> {best_cv:.4f} {r2_desc}<br>
+    <b style="color:#3fb950">2. Consistency สูงสุด</b> ±Std = {best_std:.4f} {r3_desc}<br>
+    <b style="color:#d29922">3. Model Insight</b> {r4_desc}
   </div>
-  <div style="margin-top:10px;padding-top:10px;border-top:1px solid #30363d;
-  font-size:0.76rem;color:#8b949e">
-    Cross-Validation = train/validate 3 รอบ สะท้อนประสิทธิภาพกับข้อมูลใหม่ได้ดีกว่า training score
+  <div style="margin-top:12px;padding-top:10px;border-top:1px solid #30363d;
+  font-size:0.85rem;color:#8b949e">
+    Cross-Validation คือการจำลองการทดสอบหลายรอบเพื่อให้มั่นใจว่าโมเดลจะทำงานได้ดีกับข้อมูลใหม่ในอนาคต
   </div>
 </div>""", unsafe_allow_html=True)
 
@@ -114,18 +113,33 @@ def render_metrics_explain(metrics: dict, task_type: str):
     if task_type == "classification":
         acc = metrics.get("Accuracy", 0)
         f1  = metrics.get("F1(Mac)", 0)
-        lines = (f"• <b style='color:#58a6ff'>Accuracy {acc}</b> — ทำนายถูก {acc*100:.1f}% ของ test set<br>"
-                 f"• <b style='color:#58a6ff'>Precision (Macro)</b> — ค่าเฉลี่ย Precision ของทุก class เท่ากัน<br>"
-                 f"• <b style='color:#58a6ff'>Recall (Macro)</b> — ค่าเฉลี่ย Recall ของทุก class เท่ากัน<br>"
-                 f"• <b style='color:#58a6ff'>F1 (Macro) {f1}</b> — ค่าเฉลี่ย F1 ของทุก class เท่ากัน")
+        items = [
+            ("#3fb950", "Accuracy", f"ทำนายถูก {acc*100:.1f}% ของข้อมูลทั้งหมดใน Test set"),
+            ("#58a6ff", "Precision", "ความแม่นยำของการทำนายในแต่ละ Class (ทายว่าเป็น A แล้วเป็น A จริงไหม)"),
+            ("#d29922", "Recall", "ความสามารถในการหาตัวอย่างใน Class นั้นๆ (ในบรรดาที่เป็น A จริงๆ เราหาเจอเท่าไหร่)"),
+            ("#bc8cff", "F1 Score", f"ค่าเฉลี่ยแบบ Harmonic ระหว่าง Precision และ Recall (ค่าปัจจุบัน: {f1:.4f})")
+        ]
     else:
         r2, rmse = metrics.get("R² Score", 0), metrics.get("RMSE", 0)
-        lines = (f"• <b style='color:#58a6ff'>R² {r2}</b> — อธิบาย variance ได้ {max(0, r2)*100:.1f}% (1=perfect)<br>"
-                 f"• <b style='color:#58a6ff'>RMSE {rmse}</b> — error เฉลี่ยในหน่วยเดียวกับ target<br>"
-                 f"• <b style='color:#58a6ff'>MSE</b> — เหมือน RMSE แต่ยกกำลัง 2")
-    st.markdown(f'<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;'
-                f'padding:12px 16px;margin:8px 0;font-size:0.81rem;color:#c9d1d9;line-height:1.8">'
-                f'{lines}</div>', unsafe_allow_html=True)
+        items = [
+            ("#3fb950", "R² Score", f"ความสามารถในการอธิบายข้อมูล (0-1) ยิ่งสูงยิ่งดี โมเดลนี้อธิบายได้ {max(0, r2)*100:.1f}%"),
+            ("#f85149", "RMSE", f"ค่าความผิดพลาดเฉลี่ย (หน่วยเดียวกับ Target) ยิ่งต่ำยิ่งดี ปัจจุบันผิดพลาดเฉลี่ย ±{rmse:.4f}"),
+            ("#f85149", "MSE", "ค่าความผิดพลาดกำลังสอง (ให้น้ำหนักกับ Error ตัวที่ใหญ่เป็นพิเศษ)")
+        ]
+
+    rows_html = ""
+    for color, label, desc in items:
+        rows_html += f"""<div style="display:flex; align-items:flex-start; gap:16px; margin-bottom:14px">
+<div style="background:{color}22; color:{color}; border:1px solid {color}44; font-size:0.8rem; font-weight:700; padding:4px 0; border-radius:6px; text-transform:uppercase; margin-top:2px; width:110px; text-align:center; flex-shrink:0">{label}</div>
+<div style="font-size:1.0rem; color:#8b949e; line-height:1.6; padding-top:2px">{desc}</div>
+</div>"""
+
+    st.markdown(f"""<div style="background:#161b22; border:1px solid #30363d; border-radius:12px; padding:24px 28px; margin:20px 0">
+<div style="font-size:0.85rem; color:#e6edf3; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; margin-bottom:20px; opacity:0.5">Metric Glossary — คำอธิบายตัวชี้วัด</div>
+<div style="display:flex; flex-direction:column">
+{rows_html}
+</div>
+</div>""", unsafe_allow_html=True)
 
 
 # ── Confusion Matrix Explanation ──────────────────────────────────────────────
@@ -139,13 +153,25 @@ def render_cm_explain(y_test, y_pred):
     correct   = int(np.trace(cm_arr))
     incorrect = int(cm_arr.sum() - correct)
     total     = correct + incorrect
-    st.markdown(f"""
-<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;
-padding:12px 16px;margin:8px 0;font-size:0.81rem;color:#c9d1d9;line-height:1.8">
-  <b style="color:#e6edf3">วิธีอ่าน Confusion Matrix</b><br>
-  • <b style="color:#58a6ff">Diagonal</b> = ทำนายถูก ({correct}/{total} = {correct/total*100:.1f}%)<br>
-  • <b style="color:#d29922">นอก Diagonal</b> = ทำนายผิด ({incorrect} samples)<br>
-  • แถว = Actual (ค่าจริง), คอลัมน์ = Predicted (ที่ model ทำนาย)
+    
+    items = [
+        ("#58a6ff", "Diagonal", f"แนวทแยง = <b>ทำนายถูก</b> ({correct}/{total} = {correct/total*100:.1f}%)"),
+        ("#d29922", "Outside", f"นอกแนวทแยง = <b>ทำนายผิด</b> ({incorrect} samples)"),
+        ("#8b949e", "Axis", "แถว = ค่าจริง (Actual), คอลัมน์ = ที่โมเดลทาย (Predicted)")
+    ]
+
+    rows_html = ""
+    for color, label, desc in items:
+        rows_html += f"""<div style="display:flex; align-items:flex-start; gap:16px; margin-bottom:14px">
+<div style="background:{color}22; color:{color}; border:1px solid {color}44; font-size:0.8rem; font-weight:700; padding:4px 0; border-radius:6px; text-transform:uppercase; margin-top:2px; width:110px; text-align:center; flex-shrink:0">{label}</div>
+<div style="font-size:1.0rem; color:#8b949e; line-height:1.6; padding-top:2px">{desc}</div>
+</div>"""
+
+    st.markdown(f"""<div style="background:#161b22; border:1px solid #30363d; border-radius:12px; padding:24px 28px; margin:20px 0">
+<div style="font-size:0.85rem; color:#e6edf3; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; margin-bottom:20px; opacity:0.5">Confusion Matrix Guide — วิธีอ่านตารางการทำนาย</div>
+<div style="display:flex; flex-direction:column">
+{rows_html}
+</div>
 </div>""", unsafe_allow_html=True)
 
 
@@ -236,6 +262,39 @@ def render_viz(df: pd.DataFrame):
                          color_continuous_scale="RdBu_r", range_color=[-1, 1], aspect="auto")
         fig2.update_layout(template="plotly_dark", height=380, margin=dict(t=20, b=20))
         st.plotly_chart(fig2, width="stretch")
+
+
+def render_metric_cards(metrics_dict: dict):
+    """แสดง metrics ในรูปแบบพรีเมียมการ์ด"""
+    # กรองเฉพาะค่าที่เป็นตัวเลข
+    display_metrics = {k: v for k, v in metrics_dict.items() if isinstance(v, (int, float))}
+    cols = st.columns(len(display_metrics))
+    
+    style_map = {
+        "Accuracy":       {"color": "#3fb950"},
+        "Precision(Mac)": {"color": "#58a6ff"},
+        "Recall(Mac)":    {"color": "#d29922"},
+        "F1(Mac)":        {"color": "#bc8cff"},
+        "MSE":            {"color": "#f85149"},
+        "RMSE":           {"color": "#f85149"},
+        "R² Score":       {"color": "#3fb950"},
+    }
+
+    for i, (name, val) in enumerate(display_metrics.items()):
+        style = style_map.get(name, {"color": "#8b949e"})
+        formatted_val = f"{val:.4f}" if isinstance(val, (float, np.float64, np.float32)) else str(val)
+        with cols[i]:
+            st.markdown(f"""
+            <div style="border-bottom: 2px solid {style['color']}33; padding: 12px 0; margin-bottom: 15px">
+                <div style="color:#8b949e; font-size:0.85rem; font-weight:600; text-transform:uppercase; 
+                display:flex; align-items:center; gap:8px; letter-spacing:0.07em">
+                    <span style="color:{style['color']}; font-size:14px">●</span> {name}
+                </div>
+                <div style="color:#e6edf3; font-size:2.2rem; font-weight:800; margin-top:4px; letter-spacing:-0.02em">
+                    {formatted_val}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
 
 # ── Navigation ────────────────────────────────────────────────────────────────

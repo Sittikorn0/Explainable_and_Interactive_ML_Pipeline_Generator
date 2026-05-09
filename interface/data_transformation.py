@@ -10,7 +10,7 @@ from ml_process.ui_components.feature_select    import render_feature_selection,
 def render_summary_view(dataframe: pd.DataFrame, transformed_dataframe: pd.DataFrame,
                     summary_dict: dict, target_column: str):
     st.markdown("---")
-    st.markdown('<div class="section-header">SUMMARY REPORT</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">รายงานสรุปการแปลงข้อมูล (SUMMARY REPORT)</div>', unsafe_allow_html=True)
 
     method_label = SCALING_LABELS.get(summary_dict["scaling_method"], summary_dict["scaling_method"]).upper()
     
@@ -18,39 +18,57 @@ def render_summary_view(dataframe: pd.DataFrame, transformed_dataframe: pd.DataF
 <div class="premium-card premium-card-blue" style="padding: 24px !important;">
     <div style="display: flex; justify-content: space-between; text-align: center; gap: 20px;">
         <div style="flex: 1;">
-            <div class="technical-label" style="justify-content: center; margin-bottom: 6px; font-size: 0.8rem;">ORIGINAL</div>
+            <div class="technical-label" style="justify-content: center; margin-bottom: 6px; font-size: 0.8rem;">คอลัมน์ตั้งต้น</div>
             <div class="technical-value" style="font-size: 1.4rem;">{summary_dict["original_cols"]}</div>
         </div>
         <div style="flex: 1; border-left: 1px solid rgba(148, 163, 184, 0.1);">
-            <div class="technical-label" style="justify-content: center; margin-bottom: 6px; font-size: 0.8rem; color: #F59E0B;">PURGED</div>
+            <div class="technical-label" style="justify-content: center; margin-bottom: 6px; font-size: 0.8rem; color: #F59E0B;">คัดออก</div>
             <div class="technical-value" style="font-size: 1.4rem; color: #F59E0B;">{summary_dict.get('dropped_cols', 0)}</div>
         </div>
         <div style="flex: 1; border-left: 1px solid rgba(148, 163, 184, 0.1);">
-            <div class="technical-label" style="justify-content: center; margin-bottom: 6px; font-size: 0.8rem; color: #BB9AF7;">FINAL</div>
+            <div class="technical-label" style="justify-content: center; margin-bottom: 6px; font-size: 0.8rem; color: #BB9AF7;">คอลัมน์ที่เหลือ</div>
             <div class="technical-value" style="font-size: 1.4rem; color: #BB9AF7;">{summary_dict["final_cols"]}</div>
         </div>
         <div style="flex: 2; border-left: 1px solid rgba(148, 163, 184, 0.1);">
-            <div class="technical-label" style="justify-content: center; margin-bottom: 6px; font-size: 0.8rem;">SCALING STRATEGY</div>
+            <div class="technical-label" style="justify-content: center; margin-bottom: 6px; font-size: 0.8rem;">เทคนิคการปรับสเกล</div>
             <div class="technical-value" style="font-size: 1.1rem; letter-spacing: 0.05em; color: #7AA2F7;">{method_label}</div>
         </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-    with st.expander("TRANSFORMED DATA PREVIEW"):
+    with st.expander("ตัวอย่างข้อมูลหลังการแปลง (DATA PREVIEW)"):
         st.markdown(f"""
-<div style="font-family: monospace; font-size: 0.85rem; color: #94A3B8; margin-bottom: 12px;">
-    [INFO] Scaling ({method_label}) will be applied during ML Process for maximum precision.
+<div style="font-family: 'Sarabun', sans-serif; font-size: 0.85rem; color: #94A3B8; margin-bottom: 12px;">
+    [ข้อมูล] การปรับสเกล ({method_label}) จะถูกคำนวณและใช้งานจริงในขั้นตอน ML เพื่อความแม่นยำสูงสุดและป้องกันข้อมูลรั่วไหล
 </div>
 """, unsafe_allow_html=True)
         st.dataframe(transformed_dataframe.head(5), width="stretch")
 
+    with st.expander("TECHNICAL AUDIT LOG"):
+        st.markdown(f"""
+<div style="font-family: 'Sarabun', sans-serif; font-size: 0.9rem; line-height: 1.6;">
+    <div style="color: #7AA2F7; margin-bottom: 8px; font-weight: 700;">[การตรวจสอบความสมบูรณ์ของระบบ]</div>
+    <div style="margin-left: 12px; color: #94A3B8;">
+        • <b>ความครบถ้วน:</b> ตรวจสอบพบ {summary_dict["original_cols"]} คอลัมน์จากข้อมูลตั้งต้น<br>
+        • <b>ฟีเจอร์ที่ถูกคัดออก:</b> นำออก {summary_dict.get('dropped_cols', 0)} คอลัมน์ที่ซ้ำซ้อนหรือมีความสัมพันธ์กันสูงเกินไป<br>
+        • <b>มิติข้อมูล:</b> ปรับลดมิติข้อมูลเหลือ {summary_dict["final_cols"]} คอลัมน์เพื่อความแม่นยำ<br>
+        • <b>ความต่อเนื่อง:</b> ไม่พบการแอบลบแถวข้อมูล (จำนวนแถว: {dataframe.shape[0]:,} → {transformed_dataframe.shape[0]:,})
+    </div>
+    <div style="color: #BB9AF7; margin-top: 12px; margin-bottom: 8px; font-weight: 700;">[การดำเนินการเบื้องหลัง]</div>
+    <div style="margin-left: 12px; color: #94A3B8;">
+        • <b>การปรับสเกล (Scaling):</b> เตรียมใช้ {method_label} ในขั้นตอน ML เพื่อป้องกันข้อมูลรั่วไหล (Data Leakage)<br>
+        • <b>เป้าหมาย (Target):</b> ล็อกคอลัมน์ '{target_column}' เป็นตัวแปรที่ต้องการพยากรณ์
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
     # Success message minimal style
     st.markdown(f"""
 <div style="background: rgba(16, 185, 129, 0.05); border-left: 3px solid #10B981; padding: 16px 20px; border-radius: 4px; margin-top: 20px;">
-    <div style="color: #10B981; font-family: monospace; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.1em; margin-bottom: 4px;">[STATUS: READY]</div>
+    <div style="color: #10B981; font-family: 'Sarabun', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.1em; margin-bottom: 4px;">[สถานะ: พร้อมดำเนินการ]</div>
     <div style="color: #6EE7B7; font-size: 0.95rem;">
-        Transform completed. System will use <b>{summary_dict["scaling_method"]}</b> in the next step.
+        การแปลงข้อมูลเสร็จสมบูรณ์ ระบบพร้อมนำไปสอนโมเดลในขั้นตอนถัดไปโดยใช้เทคนิค <b>{method_label}</b>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -151,8 +169,8 @@ def render_transformation():
                 st.session_state["trans_confirmed"]     = True
                 
                 # [Persistence] Save data and metadata immediately
-                from data_prepare.loading_data import save_to_local, save_trans_metadata
-                save_to_local(transformed_dataframe, file_name)
+                from data_prepare.loading_data import save_transformed_df, save_trans_metadata
+                save_transformed_df(transformed_dataframe)
                 save_trans_metadata(transformation_summary, target_column)
                 
                 # ลบผล ML เก่าออกเพื่อให้ต้องเริ่มใหม่
@@ -186,10 +204,6 @@ def render_transformation():
     with back_button_col:
         if st.button("Back", type="secondary", width="stretch"):
             from app import navigate
-            if "_main_df_backup" in st.session_state:
-                st.session_state["main_df"] = st.session_state.pop("_main_df_backup")
-            st.session_state.pop("trans_confirmed", None)
-            st.session_state.pop("transformed_df", None)
             navigate("eda")
 
     with next_button_col:
@@ -199,8 +213,6 @@ def render_transformation():
             disabled=not is_confirmed,
         ):
             from app import navigate
-            st.session_state["_main_df_backup"] = st.session_state.get("main_df")
-            st.session_state["main_df"]      = st.session_state["transformed_df"]
             st.session_state["ml_target_col_preset"] = st.session_state.get("_trans_target_saved")
             navigate("ml_process")
         if not is_confirmed:

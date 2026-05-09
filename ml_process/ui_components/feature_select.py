@@ -11,41 +11,58 @@ def render_leakage_check(leakage_items: list) -> list:
         return []
 
     high_risk_items  = [item for item in leakage_items if item["severity"] == "high"]
+    card_class = "premium-card-red" if high_risk_items else "premium-card-amber"
     border_color = "#f85149" if high_risk_items else "#d29922"
-    description_text  = (f"พบ {len(high_risk_items)} คอลัมน์เสี่ยงสูง — แนะนำตัดออกทันที"
-             if high_risk_items else
-             f"พบ {len(leakage_items)} คอลัมน์น่าสงสัย — โปรดตรวจสอบ")
+    
+    title_text = "CRITICAL LEAKAGE DETECTED" if high_risk_items else "POTENTIAL LEAKAGE DETECTED"
+    status_text = (f"พบ {len(high_risk_items)} คอลัมน์เสี่ยงสูง — แนะนำตัดออกทันทีเพื่อป้องกันโมเดลจำคำตอบ"
+                  if high_risk_items else
+                  f"พบ {len(leakage_items)} คอลัมน์น่าสงสัย — โปรดตรวจสอบความเกี่ยวข้องกับ Target")
 
-    st.markdown(
-        f'<div style="background: rgba(248, 81, 73, 0.03); border-left: 3px solid {border_color}; border-radius: 4px;'
-        f'padding: 20px 24px; margin: 12px 0;">'
-        f'<div style="color: {border_color}; font-size: 1.05rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">'
-        f'Potential Data Leakage Detected</div>'
-        f'<div style="color: #8b949e; font-size: 0.9rem; font-family: monospace; letter-spacing: 0.02em;">STATUS: {description_text.upper()}</div>'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown(f"""
+    <div class="premium-card {card_class}" style="padding: 20px 24px !important;">
+        <div class="technical-label" style="color: {border_color}; margin-bottom: 6px; font-size: 0.8rem; letter-spacing: 0.12em; font-weight: 700;">{title_text}</div>
+        <div style="font-size: 1rem; color: #94A3B8; line-height: 1.6;">{status_text}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     columns_to_drop = []
+    st.markdown('<div style="margin-top: 24px;"></div>', unsafe_allow_html=True)
+    
     for item in leakage_items:
-        severity_color = "#f85149" if item["severity"] == "high" else "#d29922"
-        severity_label = "HIGH RISK" if item["severity"] == "high" else "MEDIUM RISK"
-        reasons_text = " • ".join(item["reasons"])
-        st.markdown(
-            f'<div style="display:flex; gap:16px; align-items:flex-start; padding:14px 0; border-bottom:1px solid rgba(148,163,184,0.08)">'
-            f'<span style="font-family:monospace; color:{severity_color}; font-size:0.8rem; font-weight:700; letter-spacing:0.05em; margin-top:2px;">{severity_label}</span>'
-            f'<div style="flex:1">'
-            f'<div class="technical-value" style="font-size:1.15rem; color:#f8fafc">{item["col"]}</div>'
-            f'<div style="color:#64748b; font-size:0.9rem; margin-top:4px; font-family:monospace; line-height:1.4;">{reasons_text}</div>'
-            f'</div></div>',
-            unsafe_allow_html=True,
-        )
-        if st.checkbox(
-            f"Drop `{item['col']}`",
-            value=(item["severity"] == "high"),
-            key=f"drop_leakage_{item['col']}",
-        ):
-            columns_to_drop.append(item["col"])
+        is_high = item["severity"] == "high"
+        severity_color = "#f85149" if is_high else "#d29922"
+        bg_color = "rgba(248, 81, 73, 0.1)" if is_high else "rgba(210, 153, 34, 0.1)"
+        severity_label = "HIGH RISK" if is_high else "MEDIUM RISK"
+        
+        reasons_html = "".join([f'<div style="margin-bottom:2px;">• {r}</div>' for r in item["reasons"]])
+        
+        col_container = st.container()
+        with col_container:
+            st.markdown(f"""
+            <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(148, 163, 184, 0.1); 
+            border-radius: 8px; padding: 16px 20px; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div style="font-family: monospace; font-size: 1.1rem; color: #f8fafc; font-weight: 600;">{item['col']}</div>
+                    <div style="background: {bg_color}; color: {severity_color}; font-size: 0.7rem; font-weight: 700; 
+                    padding: 3px 10px; border-radius: 4px; border: 1px solid {severity_color}44; letter-spacing: 0.05em;">
+                        {severity_label}
+                    </div>
+                </div>
+                <div style="color: #64748b; font-size: 0.85rem; font-family: monospace; line-height: 1.5;">
+                    {reasons_html}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if st.checkbox(
+                f"Drop `{item['col']}` from training set",
+                value=is_high,
+                key=f"drop_leakage_{item['col']}",
+            ):
+                columns_to_drop.append(item["col"])
+        
+        st.markdown('<div style="margin-bottom: 20px;"></div>', unsafe_allow_html=True)
 
     return columns_to_drop
 
