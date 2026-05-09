@@ -48,6 +48,8 @@ from data_prepare.loading.state_saver import (
     load_outlier_bounds,
     save_trans_metadata,
     load_trans_metadata,
+    save_transformed_df,
+    load_transformed_df,
 )
 
 __all__ = [
@@ -72,5 +74,7 @@ __all__ = [
     "save_outlier_bounds",
     "load_outlier_bounds",
     "save_trans_metadata",
-    "load_trans_metadata"
+    "load_trans_metadata",
+    "save_transformed_df",
+    "load_transformed_df"
 ]

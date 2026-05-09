@@ -152,14 +152,24 @@ div[data-testid="stDownloadButton"] button:hover {
             st.session_state["_ml_scaling_used"] = sc_used
             st.session_state["_ml_leakage_warnings"] = leak_warn
             st.session_state["trans_confirmed"] = True
-            st.session_state["transformed_df"] = st.session_state.get("main_df")
+            from data_prepare.loading_data import load_transformed_df
+            recovered_trans_df = load_transformed_df()
+            if recovered_trans_df is not None:
+                st.session_state["transformed_df"] = recovered_trans_df
+            else:
+                st.session_state["transformed_df"] = st.session_state.get("main_df")
         else:
             t_sum, t_tar = load_trans_metadata()
             if t_sum:
                 st.session_state["trans_summary"] = t_sum
                 st.session_state["_trans_target_saved"] = t_tar
                 st.session_state["trans_confirmed"] = True
-                st.session_state["transformed_df"] = st.session_state.get("main_df")
+                from data_prepare.loading_data import load_transformed_df
+                recovered_trans_df = load_transformed_df()
+                if recovered_trans_df is not None:
+                    st.session_state["transformed_df"] = recovered_trans_df
+                else:
+                    st.session_state["transformed_df"] = st.session_state.get("main_df")
 
     # Restore cleaning status
     cur_file = st.session_state.get("last_uploaded_file", "")

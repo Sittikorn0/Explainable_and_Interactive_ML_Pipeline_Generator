@@ -6,7 +6,7 @@ import streamlit as st
 
 from data_prepare.loading.session_manager import (
     local_path, metadata_path, cleaned_csv_path, target_path,
-    ml_cache_path, ml_meta_path, ensure_cache_dir
+    ml_cache_path, ml_meta_path, ensure_cache_dir, transformed_path
 )
 from data_prepare.loading.file_reader import sanitize_for_parquet
 
@@ -53,7 +53,8 @@ def delete_local() -> None:
     files_to_delete = [
         local_path(), metadata_path(), cleaned_csv_path(), target_path(),
         ml_cache_path(), ml_meta_path(),
-        outlier_bounds_path(), trans_meta_path(), trace_log_path()
+        outlier_bounds_path(), trans_meta_path(), trace_log_path(),
+        transformed_path()
     ]
     for file_path in files_to_delete:
         try:
@@ -172,3 +173,16 @@ def load_trans_metadata() -> tuple[dict | None, str | None]:
     except Exception as error:
         print(f"load_trans_metadata error: {error}")
         return None, None
+
+def save_transformed_df(dataset: pd.DataFrame) -> None:
+    ensure_cache_dir()
+    sanitize_for_parquet(dataset).to_parquet(transformed_path(), index=False)
+
+def load_transformed_df() -> pd.DataFrame | None:
+    path = transformed_path()
+    if not os.path.exists(path):
+        return None
+    try:
+        return pd.read_parquet(path)
+    except Exception:
+        return None

@@ -122,3 +122,7 @@ def trans_meta_path() -> str:
 def trace_log_path() -> str:
     ensure_cache_dir()
     return cache_path("trace_log", "json")
+
+def transformed_path() -> str:
+    ensure_cache_dir()
+    return cache_path("transformed", "parquet")
