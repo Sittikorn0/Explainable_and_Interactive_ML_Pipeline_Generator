@@ -1,5 +1,7 @@
 import streamlit as st
 
+SANS_FONT = "'DM Sans','Sarabun',sans-serif"
+
 
 def badge(text: str, color: str = "blue") -> str:
     colors = {
@@ -45,4 +47,20 @@ def render_metrics_row(metrics: list[tuple[str, str]]):
 <div style="color: #E2E8F0; font-size: 1.75rem; font-weight: 700; word-break: break-word; line-height: 1.15;">{value}</div>
 </div>"""
     st.markdown(f'<div style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 1rem;">{cards_html}</div>', unsafe_allow_html=True)
+
+
+def page_header(title: str, subtitle: str = "") -> None:
+    """เรนเดอร์ส่วนหัวของหน้าจอพร้อม Title และ Subtitle"""
+    st.markdown(
+        f'<div style="margin-bottom:2rem; margin-top:0.5rem;">'
+        f'<h2 style="font-family:{SANS_FONT};font-size:1.6rem;font-weight:700;'
+        f'color:#C0CAF5;margin:0 0 4px;letter-spacing:-0.02em;">{title}</h2>'
+        + (
+            f'<p style="font-family:{SANS_FONT};font-size:1rem;color:#787C99;margin:0;font-weight:400;">{subtitle}</p>'
+            if subtitle
+            else ""
+        )
+        + "</div>",
+        unsafe_allow_html=True,
+    )
 
