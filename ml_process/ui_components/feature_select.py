@@ -3,66 +3,79 @@ import pandas as pd
 import plotly.express as px
 
 def render_leakage_check(leakage_items: list) -> list:
-    """แสดง leakage warning และให้ user เลือก drop column ที่น่าสงสัย"""
+    """แสดง leakage warning และให้ user เลือก drop column ที่น่าสงสัย (เฉพาะ High Risk)"""
     st.markdown('<div class="section-header" style="color: #f85149; border-bottom-color: rgba(248, 81, 73, 0.2);">LEAKAGE CHECK</div>', unsafe_allow_html=True)
 
-    if not leakage_items:
-        st.success("ไม่พบ column ที่น่าสงสัย — dataset ดูสะอาด")
+    # กรองเอาเฉพาะ High Risk ตามที่ผู้ใช้ต้องการ
+    high_risk_items = [item for item in leakage_items if item["severity"] == "high"]
+
+    if not high_risk_items:
+        st.markdown("**[ OK ]** ไม่พบ High Risk Leakage — dataset พร้อมสำหรับการเทรน")
         return []
 
-    high_risk_items  = [item for item in leakage_items if item["severity"] == "high"]
-    card_class = "premium-card-red" if high_risk_items else "premium-card-amber"
-    border_color = "#f85149" if high_risk_items else "#d29922"
-    
-    title_text = "CRITICAL LEAKAGE DETECTED" if high_risk_items else "POTENTIAL LEAKAGE DETECTED"
-    status_text = (f"พบ {len(high_risk_items)} คอลัมน์เสี่ยงสูง — แนะนำตัดออกทันทีเพื่อป้องกันโมเดลจำคำตอบ"
-                  if high_risk_items else
-                  f"พบ {len(leakage_items)} คอลัมน์น่าสงสัย — โปรดตรวจสอบความเกี่ยวข้องกับ Target")
+    title_text = "CRITICAL LEAKAGE DETECTED"
+    status_text = f"พบ {len(high_risk_items)} คอลัมน์เสี่ยงสูง — แนะนำตัดออกทันทีเพื่อป้องกันโมเดลจำคำตอบ"
 
     st.markdown(f"""
-    <div class="premium-card {card_class}" style="padding: 20px 24px !important;">
-        <div class="technical-label" style="color: {border_color}; margin-bottom: 6px; font-size: 0.8rem; letter-spacing: 0.12em; font-weight: 700;">{title_text}</div>
-        <div style="font-size: 1rem; color: #94A3B8; line-height: 1.6;">{status_text}</div>
-    </div>
-    """, unsafe_allow_html=True)
+<div style="background-color: rgba(248, 81, 73, 0.05); border: 1px solid rgba(248, 81, 73, 0.3); border-radius: 8px; padding: 20px;">
+<div style="color: #f85149; font-weight: bold; font-family: monospace; font-size: 1.05rem; margin-bottom: 8px;">{title_text}</div>
+<div style="color: #E2E8F0; font-size: 1rem; line-height: 1.6;">{status_text}</div>
+</div>
+""", unsafe_allow_html=True)
 
     columns_to_drop = []
-    st.markdown('<div style="margin-top: 24px;"></div>', unsafe_allow_html=True)
     
-    for item in leakage_items:
-        is_high = item["severity"] == "high"
-        severity_color = "#f85149" if is_high else "#d29922"
-        bg_color = "rgba(248, 81, 73, 0.1)" if is_high else "rgba(210, 153, 34, 0.1)"
-        severity_label = "HIGH RISK" if is_high else "MEDIUM RISK"
-        
-        reasons_html = "".join([f'<div style="margin-bottom:2px;">• {r}</div>' for r in item["reasons"]])
-        
-        col_container = st.container()
-        with col_container:
-            st.markdown(f"""
-            <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(148, 163, 184, 0.1); 
-            border-radius: 8px; padding: 16px 20px; margin-bottom: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <div style="font-family: monospace; font-size: 1.1rem; color: #f8fafc; font-weight: 600;">{item['col']}</div>
-                    <div style="background: {bg_color}; color: {severity_color}; font-size: 0.7rem; font-weight: 700; 
-                    padding: 3px 10px; border-radius: 4px; border: 1px solid {severity_color}44; letter-spacing: 0.05em;">
-                        {severity_label}
-                    </div>
-                </div>
-                <div style="color: #64748b; font-size: 0.85rem; font-family: monospace; line-height: 1.5;">
-                    {reasons_html}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+    # กรณีมีข้อมูลเยอะ (> 3) -> ใช้ Compact View ใน Expander
+    if len(high_risk_items) > 3:
+        with st.expander(">> ตรวจสอบรายละเอียดคอลัมน์ที่น่าสงสัยทั้งหมด", expanded=False):
+            st.markdown('<div style="margin-bottom: 15px;"></div>', unsafe_allow_html=True)
             
-            if st.checkbox(
-                f"Drop `{item['col']}` from training set",
-                value=is_high,
-                key=f"drop_leakage_{item['col']}",
-            ):
-                columns_to_drop.append(item["col"])
-        
-        st.markdown('<div style="margin-bottom: 20px;"></div>', unsafe_allow_html=True)
+            # 1. แนะนำให้ตัดออก (Multiselect)
+            all_leakage_cols = [item["col"] for item in high_risk_items]
+            
+            selected_cols = st.multiselect(
+                "เลือกคอลัมน์ที่จะตัดออก (Drop Columns):",
+                options=all_leakage_cols,
+                default=all_leakage_cols,
+                help="ระบบเลือกคอลัมน์ที่มีความเสี่ยงสูงไว้ให้เป็นค่าเริ่มต้น"
+            )
+            columns_to_drop.extend(selected_cols)
+            
+            st.markdown("---")
+            st.caption("รายละเอียดเหตุผลประกอบการตัดสินใจ:")
+            
+            # 2. แสดงตารางเหตุผลแบบกะทัดรัด
+            for item in high_risk_items:
+                reasons_text = ", ".join([r.replace("**", "") for r in item["reasons"]])
+                st.markdown(f"**[!] {item['col']}**: {reasons_text}")
+                
+    else:
+        # กรณีมีข้อมูลน้อย -> ใช้ Detailed View (Card ใหญ่)
+        st.markdown('<div style="margin-top: 24px;"></div>', unsafe_allow_html=True)
+        for item in high_risk_items:
+            with st.container():
+                reasons_html = "".join([f"<li style='margin-bottom: 4px;'>{r}</li>" for r in item["reasons"]])
+                st.markdown(f"""
+<div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px 20px; margin-bottom: 12px;">
+<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 10px;">
+<span style="font-size: 1.1rem; font-weight: 600; color: #f8fafc; font-family: monospace;">{item['col']}</span>
+<span style="color: #f85149; font-size: 0.75rem; font-weight: bold; background: rgba(248, 81, 73, 0.1); padding: 2px 8px; border-radius: 4px;">HIGH RISK</span>
+</div>
+<ul style="color: #94A3B8; font-size: 0.95rem; line-height: 1.5; margin: 0; padding-left: 20px;">
+{reasons_html}
+</ul>
+</div>
+""", unsafe_allow_html=True)
+                
+                if st.checkbox(
+                    f"Drop `{item['col']}`",
+                    value=True,
+                    key=f"drop_leakage_{item['col']}",
+                ):
+                    columns_to_drop.append(item["col"])
+            st.markdown('<div style="margin-bottom: 20px;"></div>', unsafe_allow_html=True)
+
+    return columns_to_drop
 
     return columns_to_drop
 
@@ -75,7 +88,7 @@ def render_feature_selection(dataframe: pd.DataFrame, target_column: str,
     drop_low_variance   = feature_selection_analysis["drop_low_var"]
 
     if not drop_high_correlation and not drop_low_variance:
-        st.success("ไม่พบ features ที่ควรตัดออก")
+        st.markdown("**[ OK ]** ไม่พบ features ที่ควรตัดออก")
         return []
 
     columns_to_drop = []
@@ -88,9 +101,9 @@ def render_feature_selection(dataframe: pd.DataFrame, target_column: str,
     # High Correlation
     if drop_high_correlation:
         st.markdown(f"""
-<div class="premium-card premium-card-amber" style="padding: 20px 24px !important;">
-    <div class="technical-label" style="color: #F59E0B; margin-bottom: 6px; font-size: 0.8rem; letter-spacing: 0.12em; font-weight: 700;">HIGH CORRELATION DETECTED</div>
-    <div style="font-size: 1rem; color: #94A3B8; line-height: 1.6;">{feature_selection_analysis["reason_corr"]}</div>
+<div style="background-color: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+<div style="color: #F59E0B; font-weight: bold; font-family: monospace; font-size: 1.05rem; margin-bottom: 8px;">HIGH CORRELATION DETECTED</div>
+<div style="color: #E2E8F0; font-size: 1rem; line-height: 1.6;">{feature_selection_analysis['reason_corr']}</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -123,9 +136,9 @@ def render_feature_selection(dataframe: pd.DataFrame, target_column: str,
     # Low Variance
     if drop_low_variance:
         st.markdown(f"""
-<div class="premium-card premium-card-amber" style="margin: 24px 0 20px 0 !important; padding: 20px 24px !important;">
-    <div class="technical-label" style="color: #F59E0B; margin-bottom: 6px; font-size: 0.8rem; letter-spacing: 0.12em; font-weight: 700;">LOW VAR DETECTED</div>
-    <div style="font-size: 1rem; color: #94A3B8; line-height: 1.6;">{feature_selection_analysis["reason_var"]}</div>
+<div style="background-color: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+<div style="color: #F59E0B; font-weight: bold; font-family: monospace; font-size: 1.05rem; margin-bottom: 8px;">LOW VAR DETECTED</div>
+<div style="color: #E2E8F0; font-size: 1rem; line-height: 1.6;">{feature_selection_analysis['reason_var']}</div>
 </div>
 """, unsafe_allow_html=True)
 

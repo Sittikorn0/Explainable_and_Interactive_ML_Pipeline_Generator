@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import skew
 from data_prepare.logic.statistics import get_outlier_bounds
+from explainable.knowledge_base.engine import suggest
 
 # Core Analyzer (Main Entry Point)
 def analyze_all(dataset: pd.DataFrame, target_column: str) -> dict:
@@ -22,12 +23,12 @@ def detect_task(dataset: pd.DataFrame, target_column: str) -> str:
     ตรวจสอบและตัดสินใจว่าข้อมูลนี้เป็นปัญหา Classification หรือ Regression
 
     เกณฑ์การตัดสินใจ:
-    - ถ้าเป็น string/category → Classification เสมอ
-    - ถ้าเป็นตัวเลข และมีค่าไม่ซ้ำ ≤ 15 ค่า → Classification (มองเป็นคลาสแยกส่วน)
-    - ถ้าเป็นตัวเลข และมีค่าไม่ซ้ำ > 100 ค่า → Regression เสมอ (มองเป็นค่าต่อเนื่อง)
-    - ถ้าเป็นตัวเลข มีค่าไม่ซ้ำระหว่าง 16-100 ค่า → ตรวจสอบสัดส่วน (Ratio):
-        - ถ้า Ratio ≥ 5% ของจำนวนข้อมูลทั้งหมด → Regression
-        - ถ้า Ratio < 5% → Classification
+    - ถ้าเป็น string/category จะเป็น Classification เสมอ
+    - ถ้าเป็นตัวเลข และมีค่าไม่ซ้ำ ≤ 15 ค่า จะเป็น Classification (มองเป็นคลาสแยกส่วน)
+    - ถ้าเป็นตัวเลข และมีค่าไม่ซ้ำ > 100 ค่า จะเป็น Regression เสมอ (มองเป็นค่าต่อเนื่อง)
+    - ถ้าเป็นตัวเลข มีค่าไม่ซ้ำระหว่าง 16-100 ค่า จะตรวจสอบสัดส่วน (Ratio):
+        - ถ้า Ratio ≥ 5% ของจำนวนข้อมูลทั้งหมด จะเป็น Regression
+        - ถ้า Ratio < 5% จะเป็น Classification
     """
     target_series = dataset[target_column]
     
@@ -70,48 +71,38 @@ def analyze_encoding(dataset: pd.DataFrame, target_column: str) -> list[dict]:
         num_unique_values = dataset[column_name].nunique()
         unique_to_row_ratio = num_unique_values / total_rows
 
-        # เลือกวิธีแนะนำ (Recommended) และเหตุผล
-        if num_unique_values == 2:
-            recommended_method = "label_encoding"
-            reason = (
-                f"มีเพียง **2 categories** ({', '.join(dataset[column_name].dropna().unique().astype(str))}) "
-                f"— Label Encoding (0/1) เพียงพอและไม่สิ้นเปลืองหน่วยความจำ"
-            )
-            warning_message = None
+        # ── ใช้ Rule Engine แนะนำ Encoding Method ──
+        facts = {
+            "cardinality":       num_unique_values,
+            "cardinality_ratio": unique_to_row_ratio,
+        }
+        rule_result = suggest("encoding", facts)
 
-        elif num_unique_values <= 10:
-            recommended_method = "one_hot_encoding"
-            reason = (
-                f"มี **{num_unique_values} categories** ซึ่งถือว่าน้อย (Low Cardinality) "
-                f"— One-hot Encoding เหมาะที่สุดเพราะไม่สร้างลำดับ (Ordinal Relationship) "
-                f"ที่ไม่มีอยู่จริง"
-            )
-            warning_message = None
-
-        elif num_unique_values <= 20:
-            recommended_method = "one_hot_encoding"
-            reason = (
-                f"มี **{num_unique_values} categories** — One-hot Encoding ยังใช้งานได้ "
-                f"แต่จะสร้างเพิ่ม {num_unique_values-1} คอลัมน์ใหม่"
-            )
-            warning_message = f"การใช้ One-hot จะทำให้โครงสร้างข้อมูลกว้างขึ้น {num_unique_values-1} คอลัมน์"
-
-        elif unique_to_row_ratio > 0.5:
-            recommended_method = "drop_column"
-            reason = (
-                f"มี **{num_unique_values} unique values** จากทั้งหมด {total_rows:,} แถว "
-                f"({unique_to_row_ratio*100:.0f}%) — ค่าแตกต่างกันแทบทุกแถว (เช่น ID หรือชื่อ) "
-                f"คอลัมน์นี้ไม่มีประโยชน์ในการให้โมเดลเรียนรู้"
-            )
-            warning_message = "คอลัมน์นี้อาจเป็นข้อมูลระบุตัวตน (ID) หรือข้อความอิสระ (Free-text) ควรตัดออก"
-
+        # Map rule action → encoding key
+        _enc_action_map = {
+            "one_hot_encoding": "one_hot_encoding",
+            "label_encoding":   "label_encoding",
+            "drop_column":      "drop_column",
+        }
+        if rule_result:
+            recommended_method = _enc_action_map.get(rule_result["action"], "label_encoding")
+            reason      = rule_result["explanation"]
+            reference   = rule_result["reference"]
+            confidence  = rule_result["confidence"]
+            rule_id     = rule_result["rule_id"]
         else:
             recommended_method = "label_encoding"
-            reason = (
-                f"มี **{num_unique_values} categories** (High Cardinality) "
-                f"— Label Encoding ดีกว่า One-hot เพราะหากใช้ One-hot จะสร้างคอลัมน์มากเกินไป "
-                f"จนอาจเกิดปัญหา Curse of Dimensionality"
-            )
+            reason      = f"มี {num_unique_values} categories — ใช้ Label Encoding เป็น default"
+            reference   = "Topic 9 — Data Transformation"
+            confidence  = 0.6
+            rule_id     = "ENC_FALLBACK"
+
+        warning_message = None
+        if recommended_method == "drop_column":
+            warning_message = "คอลัมน์นี้อาจเป็นข้อมูลระบุตัวตน (ID) หรือข้อความอิสระจึงควรตัดออก"
+        elif num_unique_values > 10 and recommended_method == "one_hot_encoding":
+            warning_message = f"การใช้ One-hot จะทำให้โครงสร้างข้อมูลกว้างขึ้น {num_unique_values-1} คอลัมน์"
+        elif num_unique_values > 20 and recommended_method == "label_encoding":
             warning_message = f"ข้อควรระวัง: High cardinality มีถึง {num_unique_values} ค่าที่ไม่ซ้ำกัน"
 
         analysis_results.append({
@@ -120,6 +111,9 @@ def analyze_encoding(dataset: pd.DataFrame, target_column: str) -> list[dict]:
             "recommended": recommended_method,
             "options":     ["one_hot_encoding", "label_encoding", "ordinal_encoding", "drop_column"],
             "reason":      reason,
+            "reference":   reference,
+            "confidence":  confidence,
+            "rule_id":     rule_id,
             "warning":     warning_message,
             "sample_values": list(dataset[column_name].dropna().unique()[:5]),
         })
@@ -195,40 +189,42 @@ def analyze_scaling(dataset: pd.DataFrame, target_column: str) -> dict:
     is_skewed       = len(columns_skewed) > 0
     has_heavy_skew  = len(columns_heavy_skewed) > 0
 
-    # เลือกวิธี Scaling ที่เหมาะสม (Recommended)
-    if has_outliers:
-        recommended_method = "robust_scaler"
-        reason = (
-            f"พบ Outlier เป็นจำนวนมากใน **{len(columns_with_outliers)} คอลัมน์** "
-            f"({', '.join(columns_with_outliers[:3])}{'...' if len(columns_with_outliers)>3 else ''}) "
-            f"— **Robust Scaler** เหมาะที่สุดเนื่องจากใช้ค่ามัธยฐาน (Median) และ IQR แทนการใช้ Mean/Std "
-            f"ทำให้ค่าสุดโต่ง (Extreme values) ไม่ดึงสเกลให้บิดเบี้ยว"
-        )
-    elif has_heavy_skew:
-        recommended_method = "log_transform"
-        reason = (
-            f"พบข้อมูลที่เบ้รุนแรง (Skewness > 2) ใน **{len(columns_heavy_skewed)} คอลัมน์** "
-            f"({', '.join(columns_heavy_skewed[:3])}{'...' if len(columns_heavy_skewed)>3 else ''}) "
-            f"— **Log Transform** จะช่วยลดความเบ้ของข้อมูลก่อน จากนั้นจึงปรับสเกลด้วย Standard Scaler"
-        )
-    elif is_skewed:
-        recommended_method = "minmax_scaler"
-        reason = (
-            f"พบข้อมูลกระจายตัวแบบเบ้ใน **{len(columns_skewed)} คอลัมน์** "
-            f"({', '.join(columns_skewed[:3])}{'...' if len(columns_skewed)>3 else ''}) "
-            f"— **MinMax Scaler** จะปรับค่าทั้งหมดให้อยู่ในช่วง [0, 1] ซึ่งเหมาะกับข้อมูลที่ไม่ใช่โค้งปกติ (Normal Distribution)"
-        )
+    # ── ใช้ Rule Engine แนะนำ Scaling Method ──
+    facts = {
+        "no_numeric":     False,
+        "has_outliers":   has_outliers,
+        "is_skewed":      is_skewed,
+        "has_heavy_skew": has_heavy_skew,
+    }
+    rule_result = suggest("scaling", facts)
+
+    _scl_action_map = {
+        "robust_scaler":   "robust_scaler",
+        "log_transform":   "log_transform",
+        "minmax_scaler":   "minmax_scaler",
+        "standard_scaler": "standard_scaler",
+        "no_scaling":      "no_scaling",
+    }
+    if rule_result:
+        recommended_method = _scl_action_map.get(rule_result["action"], "standard_scaler")
+        reason     = rule_result["explanation"]
+        reference  = rule_result["reference"]
+        confidence = rule_result["confidence"]
+        rule_id    = rule_result["rule_id"]
     else:
         recommended_method = "standard_scaler"
-        reason = (
-            f"ข้อมูลประเภทตัวเลขส่วนใหญ่มีการกระจายตัวใกล้เคียงโค้งปกติ (Normal Distribution) "
-            f"และไม่มี Outlier มากนัก — **Standard Scaler** (Z-score normalization) เหมาะสมที่สุด"
-        )
+        reason     = "ใช้ Standard Scaler เป็น default"
+        reference  = "Topic 9 — Data Transformation"
+        confidence = 0.7
+        rule_id    = "SCL_FALLBACK"
 
     return {
         "recommended":    recommended_method,
         "options":        ["log_transform", "standard_scaler", "minmax_scaler", "robust_scaler", "no_scaling"],
         "reason":         reason,
+        "reference":      reference,
+        "confidence":     confidence,
+        "rule_id":        rule_id,
         "column_stats":   column_statistics,
         "has_outliers":   has_outliers,
         "is_skewed":      is_skewed,
@@ -288,12 +284,12 @@ def analyze_feature_selection(dataset: pd.DataFrame, target_column: str) -> dict
             })
 
     reason_for_corr_drop = (
-        "คอลัมน์ที่มี **Correlation ≥ 0.85** เมื่อเทียบกับคอลัมน์อื่น "
-        "ถือว่ามีข้อมูลซ้ำซ้อนกันมาก (Multicollinearity) — การเก็บทั้งคู่ไว้จะทำให้โมเดล "
+        "คอลัมน์ที่มี Correlation ≥ 0.85 เมื่อเทียบกับคอลัมน์อื่น "
+        "ถือว่ามีข้อมูลซ้ำซ้อนกันมาก (Multicollinearity) การเก็บทั้งคู่ไว้จะทำให้โมเดล "
         "ให้น้ำหนักเกินความเป็นจริง และแปลผลได้ยาก"
     )
     reason_for_var_drop = (
-        "คอลัมน์ที่มี **Variance ต่ำมาก** (Coefficient of Variation < 1%) ถือว่าไม่มีข้อมูลที่เป็นประโยชน์ "
+        "คอลัมน์ที่มี Variance ต่ำมาก (Coefficient of Variation < 1%) ถือว่าไม่มีข้อมูลที่เป็นประโยชน์ "
         "เพราะค่าเกือบทั้งหมดเหมือนกัน โมเดลไม่สามารถเรียนรู้ Pattern จากข้อมูลที่ไม่มีความแตกต่างกันได้"
     )
 

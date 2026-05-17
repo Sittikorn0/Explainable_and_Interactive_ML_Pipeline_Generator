@@ -8,7 +8,7 @@ def skew_insight(column_skew: float) -> str:
     """สร้างข้อความอธิบาย skewness"""
     absolute_skew = abs(column_skew)
     if absolute_skew < 0.5:
-        shape_description = "ใกล้ Normal (สมมาตร)"
+        shape_description = "ใกล้สมมาตร (Normal-like)"
     elif absolute_skew < 1:
         shape_description = "เบ้เล็กน้อย (Moderately Skewed)"
     else:
@@ -16,11 +16,11 @@ def skew_insight(column_skew: float) -> str:
 
     direction_description = ""
     if column_skew > 0.5:
-        direction_description = " → หางยาวไปทางขวา (Right-skewed)"
+        direction_description = " → หางยาวไปทางขวา"
     elif column_skew < -0.5:
-        direction_description = " → หางยาวไปทางซ้าย (Left-skewed)"
+        direction_description = " → หางยาวไปทางซ้าย"
 
-    return f"Skewness = {column_skew:.2f} → {shape_description}{direction_description}"
+    return f"**Skewness = {column_skew:.2f}** ({shape_description}{direction_description})"
 
 
 def render_distributions_tab(dataframe: pd.DataFrame, target_column: str):
@@ -55,7 +55,7 @@ def render_distributions_tab(dataframe: pd.DataFrame, target_column: str):
             x=selected_distribution_column,
             marginal="box",
             nbins=30,
-            color_discrete_sequence=["#0082CE"],
+            color_discrete_sequence=["#7AA2F7"],
         )
         histogram_figure.update_layout(template="plotly_dark", height=450, showlegend=False)
         st.plotly_chart(histogram_figure, width="stretch")
@@ -63,34 +63,34 @@ def render_distributions_tab(dataframe: pd.DataFrame, target_column: str):
         # Insight สำหรับ Numeric
         column_data = dataframe[selected_distribution_column].dropna()
         if len(column_data) < 2 or column_data.nunique() <= 1:
-            st.info(f"**{selected_distribution_column}:** ข้อมูลไม่เพียงพอสำหรับวิเคราะห์ Skewness")
+            st.info(f"**{selected_distribution_column}:** ข้อมูลไม่เพียงพอสำหรับวิเคราะห์รูปแบบการกระจายตัว")
         else:
             column_skew_value = float(skew(column_data))
-            skewness_insight = skew_insight(column_skew_value)
+            base_insight = skew_insight(column_skew_value)
 
             if abs(column_skew_value) >= 1:
                 column_minimum = float(column_data.min())
-                if column_minimum <= 0:
-                    transformation_recommendation = "**Yeo-Johnson Transformation** (รองรับค่า 0 และค่าลบ)"
-                else:
-                    transformation_recommendation = "Log, Box-Cox, หรือ Yeo-Johnson Transformation"
-                skewness_insight += (
-                    f"\n\n**คำแนะนำ** (อ้างอิง Topic 9): ข้อมูลเบ้มาก (|Skew| ≥ 1) "
-                    f"อาจต้อง Transform ก่อนสร้างโมเดล เช่น {transformation_recommendation}"
+                transformation_recommendation = (
+                    "**Yeo-Johnson Transformation** (เนื่องจากมีค่า 0 หรือค่าลบ)"
+                    if column_minimum <= 0 else
+                    "**Log, Box-Cox, หรือ Yeo-Johnson Transformation**"
+                )
+                action_text = (
+                    f"- **สถานะ:** ข้อมูลเบ้มาก (|Skew| ≥ 1)\n"
+                    f"- **คำแนะนำ:** อาจต้องทำ Data Transformation ก่อนสร้างโมเดล เช่น {transformation_recommendation}"
                 )
             elif abs(column_skew_value) >= 0.5:
-                skewness_insight += (
-                    "\n\n**เกณฑ์การตัดสิน** (อ้างอิง Topic 2): "
-                    "|Skew| ≥ 0.5 = เบ้เล็กน้อย — ยังใช้ได้กับโมเดลส่วนใหญ่ "
-                    "แต่ควรพิจารณา Transform ถ้า |Skew| ≥ 1"
+                action_text = (
+                    f"- **สถานะ:** ข้อมูลเบ้เล็กน้อย (0.5 ≤ |Skew| < 1)\n"
+                    f"- **คำแนะนำ:** ยังสามารถใช้กับโมเดลส่วนใหญ่ได้โดยตรง แต่หากเบ้เข้าใกล้ 1 อาจพิจารณา Transform"
                 )
             else:
-                skewness_insight += (
-                    "\n\n**เกณฑ์การตัดสิน** (อ้างอิง Topic 2): "
-                    "|Skew| < 0.5 = ใกล้ Normal — เหมาะสำหรับทุกโมเดล ไม่จำเป็นต้อง Transform"
+                action_text = (
+                    f"- **สถานะ:** ข้อมูลกระจายตัวแบบสมมาตร (|Skew| < 0.5)\n"
+                    f"- **คำแนะนำ:** เหมาะสำหรับทุกโมเดล ไม่จำเป็นต้องจัดการเพิ่มเติม"
                 )
 
-            st.info(f"**{selected_distribution_column}:** {skewness_insight}")
+            st.info(f"**ผลการวิเคราะห์: {selected_distribution_column}**\n\n{base_insight}\n\n{action_text}")
 
     elif selected_distribution_column in datetime_columns:
         # Datetime Distribution
@@ -137,7 +137,7 @@ def render_distributions_tab(dataframe: pd.DataFrame, target_column: str):
                 x=selected_distribution_column,
                 y="count",
                 markers=True,
-                color_discrete_sequence=["#0082CE"],
+                color_discrete_sequence=["#7AA2F7"],
             )
             line_chart_figure.update_layout(template="plotly_dark", height=450)
             st.plotly_chart(line_chart_figure, width="stretch")
@@ -157,7 +157,7 @@ def render_distributions_tab(dataframe: pd.DataFrame, target_column: str):
             category_counts.head(20),
             x=selected_distribution_column,
             y="count",
-            color_discrete_sequence=["#0082CE"],
+            color_discrete_sequence=["#7AA2F7"],
         )
         bar_chart_figure.update_layout(template="plotly_dark", height=450, showlegend=False)
         st.plotly_chart(bar_chart_figure, width="stretch")
@@ -168,16 +168,20 @@ def render_distributions_tab(dataframe: pd.DataFrame, target_column: str):
         top_category_count = int(category_counts.iloc[0]["count"]) if len(category_counts) > 0 else 0
         top_category_percentage = (top_category_count / len(dataframe) * 100) if len(dataframe) > 0 else 0
 
-        categorical_insight = f"มี **{number_of_unique_categories}** ค่า Unique — ค่าที่พบมากสุดคือ **{top_category_value}** ({top_category_percentage:.1f}%)"
+        insight_lines = [
+            f"**ผลการวิเคราะห์: {selected_distribution_column}**\n",
+            f"- **จำนวนกลุ่ม (Unique):** {number_of_unique_categories} กลุ่ม",
+            f"- **กลุ่มที่พบมากที่สุด:** **{top_category_value}** ({top_category_percentage:.1f}%)"
+        ]
 
         # ตรวจ Class Imbalance (ถ้าเป็น Target)
         if selected_distribution_column == target_column and number_of_unique_categories <= 20:
             minimum_class_count = int(category_counts["count"].min())
             maximum_class_count = int(category_counts["count"].max())
             if maximum_class_count > 3 * minimum_class_count:
-                categorical_insight += (
-                    "\n\n**Class Imbalance:** ค่าที่พบมากสุดมากกว่าค่าที่พบน้อยสุด "
-                    f"ถึง {maximum_class_count / minimum_class_count:.1f} เท่า — อาจต้องจัดการก่อนสร้างโมเดล"
-                )
+                imbalance_ratio = maximum_class_count / minimum_class_count
+                insight_lines.append(f"\n[!] **แจ้งเตือน Class Imbalance:**")
+                insight_lines.append(f"คลาสที่พบมากสุด มีจำนวนมากกว่าคลาสที่น้อยสุดถึง **{imbalance_ratio:.1f} เท่า**")
+                insight_lines.append(f"*(อาจต้องจัดการข้อมูลก่อนสร้างโมเดล เช่น ทำ Oversampling, Undersampling, หรือปรับ Class Weight)*")
 
-        st.info(f"**{selected_distribution_column}:** {categorical_insight}")
+        st.info("\n".join(insight_lines))

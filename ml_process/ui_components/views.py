@@ -11,27 +11,23 @@ from ml_process.logic.config import MODEL_WHY
 
 def render_target_info(target_col: str, task: str, n_unique: int):
     st.markdown(f"""
-<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;
-padding:10px 16px;margin-bottom:16px;display:flex;gap:16px;align-items:center">
+<div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+padding: 16px 20px; margin-bottom: 24px; display: flex; gap: 24px; align-items: center;">
   <div>
-    <div style="font-size:0.75rem;color:#8b949e;text-transform:uppercase;
-    letter-spacing:1px;margin-bottom:2px">Target Column</div>
-    <div style="font-family:monospace;font-weight:700;font-size:0.95rem;
-    color:#58a6ff">{target_col}</div>
+    <div style="font-size: 0.85rem; color: #94A3B8; font-family: monospace; text-transform: uppercase; margin-bottom: 4px;">Target Column</div>
+    <div style="font-family: monospace; font-weight: bold; font-size: 1.1rem; color: #7AA2F7;">{target_col}</div>
   </div>
-  <div style="width:1px;height:32px;background:#30363d"></div>
+  <div style="width: 1px; height: 32px; background: rgba(255,255,255,0.1);"></div>
   <div>
-    <div style="font-size:0.75rem;color:#8b949e;text-transform:uppercase;
-    letter-spacing:1px;margin-bottom:2px">Task</div>
-    <div style="font-weight:700;font-size:0.88rem;color:#3fb950">
+    <div style="font-size: 0.85rem; color: #94A3B8; font-family: monospace; text-transform: uppercase; margin-bottom: 4px;">Task</div>
+    <div style="font-weight: bold; font-size: 1.1rem; color: #10B981;">
       {task.upper()}
     </div>
   </div>
-  <div style="width:1px;height:32px;background:#30363d"></div>
+  <div style="width: 1px; height: 32px; background: rgba(255,255,255,0.1);"></div>
   <div>
-    <div style="font-size:0.75rem;color:#8b949e;text-transform:uppercase;
-    letter-spacing:1px;margin-bottom:2px">Unique Values</div>
-    <div style="font-weight:700;font-size:0.88rem;color:#e6edf3">
+    <div style="font-size: 0.85rem; color: #94A3B8; font-family: monospace; text-transform: uppercase; margin-bottom: 4px;">Unique Values</div>
+    <div style="font-weight: bold; font-size: 1.1rem; color: #E2E8F0;">
       {n_unique}
     </div>
   </div>
@@ -42,11 +38,11 @@ padding:10px 16px;margin-bottom:16px;display:flex;gap:16px;align-items:center">
 
 def render_competition_desc():
     st.markdown("""
-<div style="background:#161b22;border:1px solid #30363d;border-radius:10px;
-padding:14px 18px;margin-bottom:16px;font-size:0.83rem;color:#8b949e;line-height:1.8">
-  1. Train <b style="color:#e6edf3">ทุก model</b> บน Train set (80%) พร้อม Auto Hyperparameter Tuning<br>
+<div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+padding: 16px 20px; margin-bottom: 24px; font-size: 0.95rem; color: #94A3B8; line-height: 1.8;">
+  1. Train <b style="color: #E2E8F0;">ทุก model</b> บน Train set (80%) พร้อม Auto Hyperparameter Tuning<br>
   2. เปรียบเทียบ Cross-Validation Score<br>
-  3. เลือก <b style="color:#58a6ff">Best Model</b> อัตโนมัติ<br>
+  3. เลือก <b style="color: #7AA2F7;">Best Model</b> อัตโนมัติ<br>
   4. Evaluate บน Test set (20%)<br>
 </div>""", unsafe_allow_html=True)
 
@@ -54,17 +50,18 @@ padding:14px 18px;margin-bottom:16px;font-size:0.83rem;color:#8b949e;line-height
 # ── Model Cards ───────────────────────────────────────────────────────────────
 
 def render_model_cards(avail: dict, model_desc: dict):
-    st.markdown(f'<div style="font-weight:600;font-size:0.85rem;color:#8b949e;margin-bottom:10px">'
+    st.markdown(f'<div style="font-weight:600; font-size:0.95rem; color:#94A3B8; margin-bottom:12px">'
                 f'Models ที่จะแข่งขัน ({len(avail)} ตัว)</div>', unsafe_allow_html=True)
     col_a, col_b = st.columns(2)
     for i, (key, label) in enumerate(avail.items()):
-        card = (f'<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;'
-                f'padding:10px 14px;margin:4px 0;display:flex;align-items:flex-start;gap:10px">'
-                f'<div style="width:8px;height:8px;border-radius:50%;background:#3fb950;'
-                f'flex-shrink:0;margin-top:5px"></div>'
-                f'<div><div style="font-family:monospace;font-weight:600;font-size:0.83rem;'
-                f'color:#e6edf3">{label}</div>'
-                f'<div style="font-size:0.74rem;color:#8b949e;margin-top:1px">'
+        card = (f'<div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;'
+                f'padding: 16px; margin: 6px 0; display: flex; align-items: flex-start; gap: 16px;'
+                f'min-height: 110px;">'
+                f'<div style="width: 8px; height: 8px; border-radius: 50%; background: #10B981;'
+                f'flex-shrink: 0; margin-top: 8px; box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);"></div>'
+                f'<div><div style="font-family: monospace; font-weight: bold; font-size: 1.05rem;'
+                f'color: #E2E8F0;">{label}</div>'
+                f'<div style="font-size: 0.9rem; color: #94A3B8; margin-top: 6px; line-height: 1.6;">'
                 f'{model_desc.get(key, "")}</div></div></div>')
         with (col_a if i % 2 == 0 else col_b):
             st.markdown(card, unsafe_allow_html=True)
@@ -88,20 +85,20 @@ def render_best_model_card(result: dict, best_label: str):
     r4_desc = MODEL_WHY.get(best_label, "สถาปัตยกรรมเหมาะสมกับรูปแบบของข้อมูลชุดนี้ที่สุด")
 
     st.markdown(f"""
-<div style="background:#161b22;border:1px solid #30363d;border-radius:10px;
-padding:14px 18px;margin-top:12px">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-    <span style="background:#3fb950;color:#0d1117;font-weight:700;font-size:0.85rem;
-    padding:3px 12px;border-radius:12px">BEST MODEL</span>
-    <span style="font-family:monospace;font-weight:700;color:#e6edf3;font-size:1.1rem">{best_label}</span>
+<div style="background-color: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px;
+padding: 20px; margin-top: 16px; margin-bottom: 24px;">
+  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+    <span style="background: #10B981; color: #0d1117; font-weight: bold; font-family: monospace; font-size: 0.9rem;
+    padding: 4px 12px; border-radius: 4px;">BEST MODEL</span>
+    <span style="font-family: monospace; font-weight: bold; color: #E2E8F0; font-size: 1.25rem;">{best_label}</span>
   </div>
-  <div style="font-size:0.95rem;color:#c9d1d9;line-height:2.0">
-    <b style="color:#58a6ff">1. Cross-Val Score สูงสุด</b> {best_cv:.4f} {r2_desc}<br>
-    <b style="color:#3fb950">2. Consistency สูงสุด</b> ±Std = {best_std:.4f} {r3_desc}<br>
-    <b style="color:#d29922">3. Model Insight</b> {r4_desc}
+  <div style="font-size: 1rem; color: #E2E8F0; line-height: 2.0;">
+    <b style="color: #7AA2F7;">1. Cross-Val Score สูงสุด</b> {best_cv:.4f} <span style="color: #94A3B8;">({r2_desc})</span><br>
+    <b style="color: #10B981;">2. Consistency สูงสุด</b> ±Std = {best_std:.4f} <span style="color: #94A3B8;">({r3_desc})</span><br>
+    <b style="color: #F59E0B;">3. Model Insight</b> <span style="color: #94A3B8;">{r4_desc}</span>
   </div>
-  <div style="margin-top:12px;padding-top:10px;border-top:1px solid #30363d;
-  font-size:0.85rem;color:#8b949e">
+  <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(16, 185, 129, 0.1);
+  font-size: 0.85rem; color: #64748b; font-family: monospace;">
     Cross-Validation คือการจำลองการทดสอบหลายรอบเพื่อให้มั่นใจว่าโมเดลจะทำงานได้ดีกับข้อมูลใหม่ในอนาคต
   </div>
 </div>""", unsafe_allow_html=True)
@@ -134,8 +131,8 @@ def render_metrics_explain(metrics: dict, task_type: str):
 <div style="font-size:1.0rem; color:#8b949e; line-height:1.6; padding-top:2px">{desc}</div>
 </div>"""
 
-    st.markdown(f"""<div style="background:#161b22; border:1px solid #30363d; border-radius:12px; padding:24px 28px; margin:20px 0">
-<div style="font-size:0.85rem; color:#e6edf3; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; margin-bottom:20px; opacity:0.5">Metric Glossary — คำอธิบายตัวชี้วัด</div>
+    st.markdown(f"""<div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 24px 28px; margin: 24px 0">
+<div style="font-size: 0.85rem; color: #94A3B8; font-weight: bold; font-family: monospace; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 20px;">Metric Glossary — คำอธิบายตัวชี้วัด</div>
 <div style="display:flex; flex-direction:column">
 {rows_html}
 </div>
@@ -153,37 +150,34 @@ def render_cm_explain(y_test, y_pred):
     correct   = int(np.trace(cm_arr))
     incorrect = int(cm_arr.sum() - correct)
     total     = correct + incorrect
+    accuracy_pct = (correct / total) * 100 if total > 0 else 0
+    incorrect_pct = (incorrect / total) * 100 if total > 0 else 0
     
-    items = [
-        ("#58a6ff", "Diagonal", f"แนวทแยง = <b>ทำนายถูก</b> ({correct}/{total} = {correct/total*100:.1f}%)"),
-        ("#d29922", "Outside", f"นอกแนวทแยง = <b>ทำนายผิด</b> ({incorrect} samples)"),
-        ("#8b949e", "Axis", "แถว = ค่าจริง (Actual), คอลัมน์ = ที่โมเดลทาย (Predicted)")
-    ]
-
-    rows_html = ""
-    for color, label, desc in items:
-        rows_html += f"""<div style="display:flex; align-items:flex-start; gap:16px; margin-bottom:14px">
-<div style="background:{color}22; color:{color}; border:1px solid {color}44; font-size:0.8rem; font-weight:700; padding:4px 0; border-radius:6px; text-transform:uppercase; margin-top:2px; width:110px; text-align:center; flex-shrink:0">{label}</div>
-<div style="font-size:1.0rem; color:#8b949e; line-height:1.6; padding-top:2px">{desc}</div>
-</div>"""
-
-    st.markdown(f"""<div style="background:#161b22; border:1px solid #30363d; border-radius:12px; padding:24px 28px; margin:20px 0">
-<div style="font-size:0.85rem; color:#e6edf3; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; margin-bottom:20px; opacity:0.5">Confusion Matrix Guide — วิธีอ่านตารางการทำนาย</div>
-<div style="display:flex; flex-direction:column">
-{rows_html}
-</div>
-</div>""", unsafe_allow_html=True)
+    st.markdown(f"""
+    <div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; 
+    padding: 16px 24px; margin-top: 8px; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; gap: 32px;">
+        <div style="color: #E2E8F0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+            <span style="color: #10B981; font-size: 1.1rem; line-height: 1;">●</span> 
+            <span><span style="font-weight: bold;">ทำนายถูก:</span> {correct:,} รายการ <span style="color: #94A3B8; margin-left: 4px;">({accuracy_pct:.1f}%)</span></span>
+        </div>
+        <div style="width: 1px; height: 20px; background-color: rgba(255,255,255,0.1);"></div>
+        <div style="color: #E2E8F0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+            <span style="color: #EF4444; font-size: 1.1rem; line-height: 1;">●</span> 
+            <span><span style="font-weight: bold;">ทำนายผิด:</span> {incorrect:,} รายการ <span style="color: #94A3B8; margin-left: 4px;">({incorrect_pct:.1f}%)</span></span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 # ── Scatter Explanation ───────────────────────────────────────────────────────
 
 def render_scatter_explain():
     st.markdown("""
-<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;
-padding:12px 16px;margin:8px 0;font-size:0.81rem;color:#c9d1d9;line-height:1.8">
-  <b style="color:#e6edf3">วิธีอ่าน Actual vs Predicted</b><br>
-  • <b style="color:#58a6ff">แกน X</b> = ค่าจริง, <b style="color:#58a6ff">แกน Y</b> = ค่าที่ทำนาย<br>
-  • <b style="color:#3fb950">เส้นประแดง</b> = Perfect line — จุดที่ดีควรอยู่บนหรือใกล้เส้นนี้<br>
+<div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+padding: 16px 20px; margin: 12px 0; font-size: 0.9rem; color: #94A3B8; line-height: 1.8">
+  <b style="color: #E2E8F0;">วิธีอ่าน Actual vs Predicted</b><br>
+  • <b style="color: #7AA2F7;">แกน X</b> = ค่าจริง, <b style="color: #7AA2F7;">แกน Y</b> = ค่าที่ทำนาย<br>
+  • <b style="color: #10B981;">เส้นประแดง</b> = Perfect line — จุดที่ดีควรอยู่บนหรือใกล้เส้นนี้<br>
   • จุดที่กระจายสม่ำเสมอรอบเส้น = model ไม่มี systematic bias
 </div>""", unsafe_allow_html=True)
 
@@ -206,19 +200,19 @@ def render_fi(fi_df: pd.DataFrame | None, best_label: str, fi_error: str | None)
 
         total  = fi_df["Importance"].sum()
         medals = ["#1", "#2", "#3"]
-        html = ('<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px 16px;margin:8px 0">'
-                '<div style="font-size:0.81rem;color:#c9d1d9;line-height:1.8">'
+        html = ('<div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px 20px; margin: 12px 0">'
+                '<div style="font-size: 0.9rem; color: #94A3B8; line-height: 1.8">'
                 '• ยิ่งแท่งยาว = feature มีผลต่อ model มากกว่า<br>'
                 '• feature ที่ importance ต่ำมากอาจพิจารณาตัดออกเพื่อลด complexity</div>'
-                '<div style="margin-top:8px">')
+                '<div style="margin-top: 12px">')
         for i, row in fi_df.head(3).iterrows():
             pct = row["Importance"] / (total + 1e-9) * 100
-            html += (f'<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;'
-                     f'background:#0d1117;border-radius:4px;margin:2px 0">'
-                     f'<span>{medals[i]}</span>'
-                     f'<span style="font-family:monospace;color:#e6edf3;flex:1">{row["Feature"]}</span>'
-                     f'<span style="color:#58a6ff">{row["Importance"]:.4f}</span>'
-                     f'<span style="color:#8b949e;font-size:0.76rem">({pct:.1f}%)</span></div>')
+            html += (f'<div style="display:flex; align-items:center; gap:12px; padding: 8px 12px;'
+                     f'background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; margin: 6px 0">'
+                     f'<span style="font-weight: bold; color: #BB9AF7;">{medals[i]}</span>'
+                     f'<span style="font-family:monospace; color: #E2E8F0; flex: 1; font-size: 1rem;">{row["Feature"]}</span>'
+                     f'<span style="color: #7AA2F7; font-weight: bold;">{row["Importance"]:.4f}</span>'
+                     f'<span style="color: #64748b; font-size: 0.85rem">({pct:.1f}%)</span></div>')
         html += '</div></div>'
         st.markdown(html, unsafe_allow_html=True)
 

@@ -1,5 +1,5 @@
 import streamlit as st
-from data_prepare.loading_data import load_from_local, load_target_col, delete_local
+from data_prepare.loading_data import load_from_local, load_target_col, delete_local, get_session_id
 from data_prepare.logic.target_col import suggest_target
 from explainable.state_manager.pipeline_state import get_step_status, STEP_ORDER, STEP_LABELS
 
@@ -8,20 +8,33 @@ from interface.ui_helpers import page_header, SANS_FONT
 from interface.app_components.ui_navigation import render_step_indicator
 from interface.app_components.ui_dialogs import confirm_rollback, confirm_reset_dialog
 
-# Pages
-from interface.upload import render_upload
-from interface.cleaning import render_cleaning
-from interface.eda import render_eda
-from interface.data_transformation import render_transformation
-from interface.model_process import render_ml_process
-from interface.explainable import render_explainable
+# Pages (Lazy Loading for Performance)
+def load_upload(): 
+    from interface.upload import render_upload
+    render_upload()
+def load_cleaning(): 
+    from interface.cleaning import render_cleaning
+    render_cleaning()
+def load_eda(): 
+    from interface.eda import render_eda
+    render_eda()
+def load_transformation(): 
+    from interface.data_transformation import render_transformation
+    render_transformation()
+def load_model_process(): 
+    from interface.model_process import render_ml_process
+    render_ml_process()
+def load_explainable(): 
+    from interface.explainable import render_explainable
+    render_explainable()
 
-upload_page = st.Page(render_upload, title="Upload Dataset", url_path="upload")
-cleaning_page = st.Page(render_cleaning, title="Data Cleaning", url_path="cleaning")
-eda_page = st.Page(render_eda, title="Exploratory Data Analysis", url_path="eda")
-trans_page = st.Page(render_transformation, title="Data Transformation", url_path="transformation")
-ml_page = st.Page(render_ml_process, title="ML Process & Leaderboard", url_path="model_process")
-explain_page = st.Page(render_explainable, title="Explainable & Insights", url_path="explainable")
+upload_page = st.Page(load_upload, title="Upload Dataset", url_path="upload")
+cleaning_page = st.Page(load_cleaning, title="Data Cleaning", url_path="cleaning")
+eda_page = st.Page(load_eda, title="Exploratory Data Analysis", url_path="eda")
+trans_page = st.Page(load_transformation, title="Data Transformation", url_path="transformation")
+ml_page = st.Page(load_model_process, title="ML Process & Leaderboard", url_path="model_process")
+explain_page = st.Page(load_explainable, title="Explainable & Insights", url_path="explainable")
+
 
 pages_mapping = {
     "upload": upload_page,
@@ -41,6 +54,9 @@ load_css("interface/styles/app.css")
 def navigate(step_name: str):
     """เปลี่ยนหน้าโดยใช้ st.switch_page ร่วมกับ session_state"""
     st.session_state["_step"] = step_name
+    # Ensure UID is in query params before switching pages to prevent state loss
+    if "user_uuid" in st.session_state:
+        st.query_params["uid"] = st.session_state["user_uuid"]
     st.rerun()
 
 def reset_session_state():
@@ -52,16 +68,24 @@ def reset_session_state():
 
 def main():
     st.set_page_config(
-        page_title="AutoML Senior Project",
+        page_title="Explainable ML Pipeline",
         page_icon="./icon.png",
         layout="wide",
         initial_sidebar_state="expanded",
     )
+    
+    # Initialize Session ID and Sync URL
+    get_session_id()
+    
+    # Restore Trace Log from disk if available
+    from explainable.state_manager.trace_log import restore_log
+    restore_log()
 
     # UI Global Styling (Metrics, Cards, etc.)
     st.markdown("""
 <style>
-[data-testid="stMetricValue"] * { font-size: 2.5rem !important; font-weight: 700 !important; color: #7AA2F7 !important; }
+[data-testid="stMetricValue"] * { font-size: 1.8rem !important; font-weight: 700 !important; color: #7AA2F7 !important; }
+[data-testid="stMetricValue"] > div { white-space: normal !important; overflow: visible !important; word-break: break-word !important; }
 
 /* Premium Technical Cards */
 .premium-card {
@@ -201,13 +225,16 @@ div[data-testid="stDownloadButton"] button:hover {
 
     # --- Header UI ---
     st.markdown(f"""
-        <div style="display: flex; flex-direction: column; gap: 2px; margin-bottom: 12px;">
+        <div style="display: flex; flex-direction: column; gap: 2px; margin-bottom: 24px;">
             <h1 style="margin: 0; padding: 0; font-size: 2.2rem; font-weight: 800; color: #7AA2F7; letter-spacing: -0.5px; line-height: 1.2;">
-                Explainable & Interactive ML Pipeline Generator
+                Explainable and Interactive ML Pipeline Generator
             </h1>
-            <p style="margin: 0; padding: 0; font-size: 1rem; color: #94A3B8; font-weight: 500; opacity: 0.9;">
+            <div style="font-size: 1.05rem; color: #94A3B8; font-weight: 500; opacity: 0.8; max-width: 900px; line-height: 1.4;">
+                Explainable and Interactive Machine Learning Pipeline Generator for Data Science Education
+            </div>
+            <div style="font-size: 0.85rem; color: #94A3B8; opacity: 0.5; margin-top: 8px; font-weight: 400;">
                 Data Science 1312414 | Education Only
-            </p>
+            </div>
         </div>
     """, unsafe_allow_html=True)
 

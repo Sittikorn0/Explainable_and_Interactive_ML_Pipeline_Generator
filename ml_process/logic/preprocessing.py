@@ -20,6 +20,46 @@ def sample_data(features: pd.DataFrame, target: pd.Series, max_sample_rows: int)
     sampled_target = target.iloc[sampled_indices].reset_index(drop=True)
     
     return sampled_features, sampled_target
+ 
+# Datetime Feature Extraction
+def datetime_fit_transform(features_train: pd.DataFrame, features_test: pd.DataFrame) -> tuple:
+    """
+    ตรวจจับและแตก Feature จากคอลัมน์ที่เป็น Datetime อัตโนมัติ (Year, Month, Day, DayOfWeek)
+    """
+    features_train = features_train.copy()
+    features_test = features_test.copy()
+    
+    for col in features_train.columns:
+        # 1. พยายามแปลง Object ที่มีรูปแบบวันที่ให้เป็น Datetime
+        if features_train[col].dtype == 'object':
+            try:
+                non_nulls = features_train[col].dropna()
+                if not non_nulls.empty:
+                    sample = str(non_nulls.iloc[0])
+                    # เช็คเบื้องต้นว่ามีสัญลักษณ์วันที่
+                    if any(char in sample for char in ['-', '/', '.', ':']):
+                        pd.to_datetime(sample) # ลองแปลงดู
+                        features_train[col] = pd.to_datetime(features_train[col], errors='coerce')
+                        features_test[col]  = pd.to_datetime(features_test[col], errors='coerce')
+            except:
+                continue
+
+        # 2. ถ้าเป็น Datetime แล้ว ให้ทำการแตกข้อมูลเป็นตัวเลข
+        if pd.api.types.is_datetime64_any_dtype(features_train[col]):
+            for df in [features_train, features_test]:
+                df[f"{col}_year"]      = df[col].dt.year
+                df[f"{col}_month"]     = df[col].dt.month
+                df[f"{col}_day"]       = df[col].dt.day
+                df[f"{col}_dayofweek"] = df[col].dt.dayofweek
+                # ดึงชั่วโมงมาด้วยถ้ามีข้อมูลเวลา
+                if df[col].dt.hour.sum() > 0:
+                    df[f"{col}_hour"] = df[col].dt.hour
+            
+            # ลบคอลัมน์ Datetime เดิมออกเพื่อให้โมเดลทำงานได้
+            features_train = features_train.drop(columns=[col])
+            features_test  = features_test.drop(columns=[col])
+            
+    return features_train, features_test
 
 # Categorical Encoding
 def encode_fit_transform(features_train: pd.DataFrame, features_test: pd.DataFrame) -> tuple:
@@ -67,10 +107,14 @@ def encode_fit_transform(features_train: pd.DataFrame, features_test: pd.DataFra
     return features_train, features_test
 
 # Missing Value Handling (Cleaning)
-def clean_fit_transform(features_train: pd.DataFrame, features_test: pd.DataFrame) -> tuple:
+def clean_fit_transform(features_train: pd.DataFrame, features_test: pd.DataFrame, missing_rules: dict = None) -> tuple:
     """
     เติมค่าว่าง (Missing Value) ป้องกัน Data Leakage โดยคำนวณค่าสถิติจาก features_train เท่านั้น
+    และใช้กฎจากหน้า UI Data Cleaning (missing_rules)
     """
+    if missing_rules is None:
+        missing_rules = {}
+        
     # จัดการข้อมูลประเภท Boolean และ Infinity
     for dataset_split in [features_train, features_test]:
         boolean_columns = dataset_split.select_dtypes(include="bool").columns
@@ -78,16 +122,38 @@ def clean_fit_transform(features_train: pd.DataFrame, features_test: pd.DataFram
             dataset_split[col] = dataset_split[col].astype(int)
         dataset_split.replace([np.inf, -np.inf], 0, inplace=True)
 
-    # คำนวณค่ามัธยฐาน (Median) จาก features_train 
+    # คำนวณค่าจาก features_train ตาม rules
     fill_values_dict = {}
     for column_name in features_train.columns:
         if features_train[column_name].isna().any() or features_test[column_name].isna().any():
-            if pd.api.types.is_numeric_dtype(features_train[column_name]):
+            strategy = missing_rules.get(column_name, "median" if pd.api.types.is_numeric_dtype(features_train[column_name]) else "most frequent")
+            
+            if strategy == "mean":
+                fill_values_dict[column_name] = features_train[column_name].mean()
+            elif strategy == "median":
                 fill_values_dict[column_name] = features_train[column_name].median()
-            else:
-                fill_values_dict[column_name] = 0
+            elif strategy == "median (rounded)":
+                fill_values_dict[column_name] = round(features_train[column_name].median())
+            elif strategy == "most frequent":
+                modes = features_train[column_name].mode()
+                fill_values_dict[column_name] = modes.iloc[0] if not modes.empty else 0
+            elif strategy == "forward fill":
+                features_train[column_name] = features_train[column_name].ffill()
+                features_test[column_name] = features_test[column_name].ffill()
+                continue
+            elif strategy == "backward fill":
+                features_train[column_name] = features_train[column_name].bfill()
+                features_test[column_name] = features_test[column_name].bfill()
+                continue
+            elif strategy == "drop rows":
+                # Drop rows happens before split. If it reaches here, fallback to median/mode
+                if pd.api.types.is_numeric_dtype(features_train[column_name]):
+                    fill_values_dict[column_name] = features_train[column_name].median()
+                else:
+                    modes = features_train[column_name].mode()
+                    fill_values_dict[column_name] = modes.iloc[0] if not modes.empty else 0
                 
-            if pd.isna(fill_values_dict[column_name]):
+            if pd.isna(fill_values_dict.get(column_name, 0)):
                 fill_values_dict[column_name] = 0
 
     # เติมค่าว่างให้ทั้ง Train และ Test
@@ -95,6 +161,26 @@ def clean_fit_transform(features_train: pd.DataFrame, features_test: pd.DataFram
         features_train = features_train.fillna(fill_values_dict)
         features_test  = features_test.fillna(fill_values_dict)
 
+    return features_train, features_test
+
+# Outlier Handling (Clipping)
+def outlier_fit_transform(features_train: pd.DataFrame, features_test: pd.DataFrame, outlier_rules: dict = None) -> tuple:
+    """
+    คลิป Outliers โดยใช้ขอบเขตที่ได้จากกฎหน้า UI (ซึ่งตั้งอยู่บนโครงสร้างข้อมูลดั้งเดิม แต่ตัดที่ Train/Test แบบแยกกัน)
+    """
+    if outlier_rules is None:
+        outlier_rules = {}
+        
+    for column_name, rule in outlier_rules.items():
+        if column_name in features_train.columns:
+            strategy = rule.get("strategy")
+            lower = rule.get("lower")
+            upper = rule.get("upper")
+            
+            if strategy == "clip":
+                features_train[column_name] = features_train[column_name].clip(lower=lower, upper=upper)
+                features_test[column_name] = features_test[column_name].clip(lower=lower, upper=upper)
+                
     return features_train, features_test
 
 # Scaling
@@ -147,7 +233,7 @@ def scale_data(features_train: pd.DataFrame, features_test: pd.DataFrame, scalin
     return features_train, features_test
 
 # Main Pipeline
-def preprocess(dataset: pd.DataFrame, target_column: str, scaling_method: str = "standard_scaler") -> tuple:
+def preprocess(dataset: pd.DataFrame, target_column: str, scaling_method: str = "standard_scaler", missing_rules: dict = None, outlier_rules: dict = None) -> tuple:
     """
     ท่อส่งข้อมูลหลัก (Pipeline) สำหรับเตรียมข้อมูลก่อนเข้าโมเดล
     ออกแบบให้ปราศจาก Data Leakage อย่างสมบูรณ์ 
@@ -181,11 +267,17 @@ def preprocess(dataset: pd.DataFrame, target_column: str, scaling_method: str = 
         features, target, test_size=0.2, random_state=42, stratify=stratify_strategy
     )
 
+    # Datetime Handling (แตก Feature วันเวลาออกเป็นตัวเลข)
+    features_train, features_test = datetime_fit_transform(features_train, features_test)
+
     # Encoding
     features_train, features_test = encode_fit_transform(features_train, features_test)
 
+    # Outlier Clipping
+    features_train, features_test = outlier_fit_transform(features_train, features_test, outlier_rules)
+
     # Cleaning
-    features_train, features_test = clean_fit_transform(features_train, features_test)
+    features_train, features_test = clean_fit_transform(features_train, features_test, missing_rules)
 
     # Scaling
     features_train, features_test = scale_data(features_train, features_test, scaling_method)

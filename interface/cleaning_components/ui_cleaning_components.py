@@ -10,18 +10,18 @@ from data_prepare.logic.cleaning_logic import (
 from explainable.state_manager.trace_log import track_cleaning, track_cleaning_bulk
 
 MISSING_STRATEGY_INFO = {
-    "mean": "แทนค่าว่างด้วยค่าเฉลี่ย — เหมาะกับข้อมูล Continuous ที่กระจายแบบ Normal",
-    "median": "แทนค่าว่างด้วยค่ากลาง — เหมาะกับข้อมูลที่มี Skew หรือมี Outlier",
-    "median (rounded)": "แทนค่าว่างด้วยค่ากลาง แล้วปัดเป็นจำนวนเต็ม — เหมาะกับข้อมูล Discrete เช่น อายุ จำนวนสินค้า",
-    "most frequent": "แทนค่าว่างด้วยค่าที่พบบ่อยสุด (Mode) — เหมาะกับข้อมูล Categorical หรือ Discrete",
-    "forward fill": "ใช้ค่าแถวก่อนหน้ามาแทน (Forward Fill) — เหมาะกับข้อมูลที่เรียงตามเวลา เช่น Time Series (อ้างอิง Topic 7)",
-    "backward fill": "ใช้ค่าแถวถัดไปมาแทน (Backward Fill) — เหมาะกับข้อมูลที่เรียงตามเวลา เช่น Time Series (อ้างอิง Topic 7)",
-    "drop rows": "ลบทั้งแถวที่มีค่าว่าง (Listwise Deletion) — ข้อมูลสะอาด แต่อาจสูญเสียข้อมูล",
+    "mean": "แทนด้วยค่าเฉลี่ย (Mean) เหมาะกับข้อมูลตัวเลขที่กระจายตัวปกติ",
+    "median": "แทนด้วยค่ากลาง (Median) เหมาะกับข้อมูลที่เบ้หรือมีค่าผิดปกติ",
+    "median (rounded)": "แทนด้วยค่ากลางแบบปัดเศษ เหมาะกับข้อมูลจำนวนเต็ม",
+    "most frequent": "แทนด้วยฐานนิยม (Mode) เหมาะกับข้อมูลหมวดหมู่ (Categorical)",
+    "forward fill": "ดึงค่าก่อนหน้ามาเติม (Forward Fill) เหมาะกับข้อมูลอนุกรมเวลา",
+    "backward fill": "ดึงค่าถัดไปมาเติม (Backward Fill) เหมาะกับข้อมูลอนุกรมเวลา",
+    "drop rows": "ลบแถวทิ้ง (Removal) ตัดแถวที่มีค่าว่างออกจากการวิเคราะห์",
 }
 
 OUTLIER_STRATEGY_INFO = {
-    "clip": "ตัดค่าให้อยู่ในขอบเขต — เก็บทุกแถวไว้ แต่ลดอิทธิพลของค่าสุดโต่ง",
-    "drop rows": "ลบแถวที่มีค่าเกินขอบเขต — เหมาะเมื่อค่าสุดโต่งเป็นข้อผิดพลาด",
+    "clip": "จำกัดขอบเขต (Clipping) ปรับค่าผิดปกติให้อยู่ในเกณฑ์เพื่อรักษาจำนวนข้อมูล",
+    "drop rows": "ลบแถวที่ผิดปกติ (Removal) ตัดแถวทิ้ง เหมาะสำหรับกรณีที่ข้อมูลมีความผิดพลาดจากการบันทึก",
 }
 
 HORIZONTAL_RULE_HTML = (
@@ -81,8 +81,11 @@ def render_drop_columns(working_dataframe: pd.DataFrame, target_column: str):
 
     with st.expander("Drop Columns คืออะไร?", expanded=False):
         st.markdown(
-            "ลบคอลัมน์ที่ไม่ต้องการออกจาก Dataset เช่น ID column, free-text column, "
-            "หรือคอลัมน์ที่มีค่าว่างมากเกินไป ซึ่งไม่มีประโยชน์ต่อการสร้างโมเดล"
+            "**ทำไมต้องลบคอลัมน์ (Drop Columns)?**\n\n"
+            "คอลัมน์บางประเภทไม่ได้ช่วยให้โมเดลเรียนรู้ได้ดีขึ้น ควรพิจารณาลบทิ้ง เช่น:\n"
+            "- **ID / รหัสระบุตัวตน:** ไม่มีผลต่อการทำนาย และอาจทำให้โมเดลจำแพทเทิร์นผิด\n"
+            "- **ข้อความยาวๆ (Free-text):** ไม่สามารถนำมาคำนวณได้โดยตรงหากไม่ผ่านกระบวนการ NLP\n"
+            "- **ค่าว่างมากเกินไป:** หากข้อมูลแหว่งเกิน 80% การเติมค่าใหม่ (Imputation) อาจทำให้ได้ข้อมูลที่ไม่สมจริง"
         )
 
     if not target_column or target_column not in working_dataframe.columns:
@@ -141,9 +144,10 @@ def render_duplicates(working_dataframe: pd.DataFrame, duplicate_count: int):
     else:
         with st.expander("Duplicates คืออะไร?", expanded=False):
             st.markdown(
-                "**Duplicated Entries** คือแถวข้อมูลที่ซ้ำกันทุกคอลัมน์ "
-                "อาจเกิดจากการบันทึกซ้ำ, import ข้อมูลซ้อน, หรือ system error "
-                "ส่งผลให้โมเดลให้น้ำหนักกับข้อมูลนั้นมากเกินจริง"
+                "**ข้อมูลซ้ำ (Duplicated Entries) คืออะไร?**\n\n"
+                "แถวข้อมูลที่มีค่าเหมือนกันทุกคอลัมน์ มักเกิดจากข้อผิดพลาดในการบันทึกหรือการดึงข้อมูลซ้อนทับกัน\n\n"
+                "**ทำไมต้องลบ?**\n\n"
+                "หากปล่อยไว้ โมเดลจะให้น้ำหนักกับข้อมูลตัวอย่างนั้นมากเกินความเป็นจริง (Bias) จึงควร **ลบทิ้ง (Drop)** เสมอ"
             )
         st.write(f"พบแถวซ้ำ **{duplicate_count:,}** แถว")
         if st.button("Drop duplicate rows", key="drop_dup"):
@@ -173,17 +177,16 @@ def render_missing_values(working_dataframe: pd.DataFrame, missing_columns_dict:
 
     with st.expander("Missing Data คืออะไร? (อ้างอิง Topic 7)", expanded=False):
         st.markdown(
-            "**Missing Data** คือค่าว่างที่ขาดหายไปในชุดข้อมูล "
-            "อาจเกิดจากการป้อนข้อมูลไม่สมบูรณ์ อุปกรณ์ทำงานผิดพลาด หรือไฟล์สูญหาย\n\n"
-            "**ประเภทของ Missing Data** (Little and Rubin, 1987):\n"
-            "- **MCAR** (Missing Completely at Random): หายไปโดยบังเอิญ ไม่เกี่ยวกับตัวแปรใดเลย\n"
-            "- **MAR** (Missing at Random): การหายไปเกี่ยวข้องกับตัวแปรอื่น เช่น ผู้หญิงมักไม่เปิดเผยน้ำหนัก\n"
-            "- **MNAR** (Missing Not at Random): การหายไปเกี่ยวข้องกับค่าของตัวเอง เช่น คนน้ำหนักมากมักไม่ตอบ\n\n"
-            "**วิธีจัดการ** (อ้างอิง Topic 7 — Handling Missing Data):\n"
-            "- **Mean/Median Imputation**: แทนด้วยค่ากลาง เหมาะกับข้อมูลตัวเลข\n"
-            "- **Most Frequent**: แทนด้วย Mode เหมาะกับข้อมูล Categorical\n"
-            "- **Forward/Backward Fill**: ใช้ค่าแถวข้างเคียง เหมาะกับ Time Series\n"
-            "- **Listwise Deletion (Drop Rows)**: ลบแถวที่มีค่าว่าง"
+            "**Missing Data (ข้อมูลสูญหาย) คืออะไร?**\n\n"
+            "ค่าว่างที่ขาดหายไปในชุดข้อมูล ซึ่งอาจเกิดจากการกรอกข้อมูลไม่ครบ หรือระบบบันทึกผิดพลาด\n\n"
+            "**รูปแบบการหายไป 3 ประเภท:**\n"
+            "1. **MCAR (หายแบบสุ่มแท้จริง):** หายไปโดยบังเอิญ ไม่เกี่ยวกับข้อมูลช่องอื่นเลย\n"
+            "2. **MAR (หายแบบมีเงื่อนไข):** การหายไปมีความสัมพันธ์กับข้อมูลคอลัมน์อื่น (เช่น ผู้หญิงมักไม่ระบุน้ำหนัก)\n"
+            "3. **MNAR (จงใจไม่ตอบ):** การหายไปสัมพันธ์กับค่าความลับของตัวมันเอง (เช่น คนรายได้สูงมักไม่ระบุรายได้)\n\n"
+            "**วิธีรับมือที่แนะนำ:**\n"
+            "- **Mean / Median:** เติมด้วยค่าเฉลี่ยหรือค่ามัธยฐาน (เหมาะกับข้อมูลตัวเลข)\n"
+            "- **Most Frequent:** เติมด้วยข้อมูลที่พบซ้ำบ่อยที่สุด (เหมาะกับข้อมูลหมวดหมู่)\n"
+            "- **Drop Rows:** ลบแถวนั้นทิ้ง (ใช้เมื่อข้อมูลหายเพียงเล็กน้อยมากๆ เพื่อไม่ให้กระทบภาพรวม)"
         )
 
     select_all_col, deselect_all_col, _, global_strategy_col, apply_selected_col, apply_all_col = st.columns(ACTION_BAR_COLUMNS)
@@ -221,6 +224,7 @@ def render_missing_values(working_dataframe: pd.DataFrame, missing_columns_dict:
             dataframe_work = use_missing_strategy_bulk(dataframe_work, strategies_to_apply_dict)
             for col_name, applied_strategy in strategies_to_apply_dict.items():
                 track_cleaning("missing", col_name, applied_strategy)
+                st.session_state.setdefault("missing_rules", {})[col_name] = applied_strategy
                 
             st.session_state["working_df"] = dataframe_work
             st.session_state["cleaning_confirmed"] = False
@@ -237,6 +241,7 @@ def render_missing_values(working_dataframe: pd.DataFrame, missing_columns_dict:
             dataframe_work = use_missing_strategy_bulk(dataframe_work, strategies_to_apply_dict)
             for col_name, applied_strategy in strategies_to_apply_dict.items():
                 track_cleaning("missing", col_name, applied_strategy)
+                st.session_state.setdefault("missing_rules", {})[col_name] = applied_strategy
                 
             st.session_state["working_df"] = dataframe_work
             st.session_state["cleaning_confirmed"] = False
@@ -263,6 +268,7 @@ def render_missing_values(working_dataframe: pd.DataFrame, missing_columns_dict:
                 st.session_state["working_df"] = dataframe_work
                 st.session_state["cleaning_confirmed"] = False
                 track_cleaning("missing", col_name, chosen_strategy)
+                st.session_state.setdefault("missing_rules", {})[col_name] = chosen_strategy
                 st.rerun()
 
         st.caption(MISSING_STRATEGY_INFO.get(chosen_strategy, ""))
@@ -280,16 +286,15 @@ def render_outliers(working_dataframe: pd.DataFrame, outlier_columns_dict: dict,
 
     with st.expander("ระบบตรวจจับ Outlier อย่างไร? (อ้างอิง Topic 8)", expanded=False):
         st.markdown(
-            "**Outlier** คือค่าที่ผิดปกติ ห่างจากข้อมูลส่วนใหญ่อย่างมีนัยสำคัญ "
-            "(อ้างอิง Topic 8 — Outlier Detection)\n\n"
-            "ระบบเลือกวิธีตรวจจับ **อัตโนมัติตาม Skewness** ของข้อมูล:\n"
-            "- **|Skew| < 0.5** → ข้อมูลใกล้ Normal → ใช้ **Z-Score** "
-            "(ค่าที่ห่างจาก Mean เกิน **3 SD** — 3-sigma rule ครอบคลุม 99.7% ของข้อมูล Normal)\n"
-            "- **|Skew| ≥ 0.5** → ข้อมูลเบ้ → ใช้ **IQR** "
-            "(ค่านอกช่วง Q1 − 1.5×IQR ถึง Q3 + 1.5×IQR)\n\n"
-            "**เหตุผลที่ใช้ Skewness = 0.5 เป็น threshold**: "
-            "|Skew| < 0.5 ถือว่าข้อมูลสมมาตรเพียงพอที่จะสมมติการกระจายแบบ Normal ได้ "
-            "จึงใช้ Z-Score ได้อย่างน่าเชื่อถือ (อ้างอิง Topic 2 — Basic Statistical Description of Data)"
+            "**Outlier (ข้อมูลผิดปกติ) คืออะไร?**\n\n"
+            "ข้อมูลที่มีค่าผิดปกติหรือห่างจากข้อมูลส่วนใหญ่อย่างมีนัยสำคัญ ซึ่งอาจทำให้โมเดลเรียนรู้รูปแบบที่ผิดเพี้ยนไป\n\n"
+            "**ระบบเลือกวิธีตรวจจับอัตโนมัติตามรูปทรงข้อมูล (Skewness):**\n"
+            "- **ใช้ Z-Score** (เมื่อ |Skew| < 0.5) \n"
+            "  เหมาะกับข้อมูลที่มีการกระจายตัวแบบสมมาตร (ระฆังคว่ำ) โดยจะตัดค่าที่ห่างจากค่าเฉลี่ยเกิน 3 SD\n"
+            "- **ใช้ IQR** (เมื่อ |Skew| ≥ 0.5) \n"
+            "  เหมาะกับข้อมูลที่เบ้ไปทางใดทางหนึ่ง โดยจะใช้ระยะห่างระหว่างควอไทล์ที่ 1 และ 3 ในการกำหนดขอบเขต\n\n"
+            "**วิธีรับมือ:**\n"
+            "มักใช้การ **จำกัดขอบเขต (Clipping)** โดยบีบค่าที่เกินเกณฑ์ให้กลับมาอยู่ในขอบเขตสูงสุด/ต่ำสุด เพื่อรักษาจำนวนข้อมูลไว้"
         )
 
     select_all_col, deselect_all_col, _, global_strategy_col, apply_selected_col, apply_all_col = st.columns(ACTION_BAR_COLUMNS)
@@ -328,6 +333,8 @@ def render_outliers(working_dataframe: pd.DataFrame, outlier_columns_dict: dict,
             for col_name in checked_outlier_columns:
                 track_cleaning("outlier", col_name, global_outlier_strategy)
                 treated_outliers[col_name] = global_outlier_strategy
+                outlier_bounds = outlier_columns_dict[col_name]
+                st.session_state.setdefault("outlier_rules", {})[col_name] = {"strategy": global_outlier_strategy, "lower": outlier_bounds["Lower"], "upper": outlier_bounds["Upper"]}
                 
             st.session_state["working_df"] = dataframe_work
             st.session_state["cleaning_confirmed"] = False
@@ -345,6 +352,8 @@ def render_outliers(working_dataframe: pd.DataFrame, outlier_columns_dict: dict,
             for col_name in outlier_columns_dict:
                 track_cleaning("outlier", col_name, global_outlier_strategy)
                 treated_outliers[col_name] = global_outlier_strategy
+                outlier_bounds = outlier_columns_dict[col_name]
+                st.session_state.setdefault("outlier_rules", {})[col_name] = {"strategy": global_outlier_strategy, "lower": outlier_bounds["Lower"], "upper": outlier_bounds["Upper"]}
                 
             st.session_state["working_df"] = dataframe_work
             st.session_state["cleaning_confirmed"] = False
@@ -375,6 +384,7 @@ def render_outliers(working_dataframe: pd.DataFrame, outlier_columns_dict: dict,
                 st.session_state["cleaning_confirmed"] = False
                 st.session_state.setdefault("treated_outlier_cols", {})[col_name] = chosen_strategy
                 track_cleaning("outlier", col_name, chosen_strategy)
+                st.session_state.setdefault("outlier_rules", {})[col_name] = {"strategy": chosen_strategy, "lower": lower_bound, "upper": upper_bound}
                 st.rerun()
 
         st.caption(OUTLIER_STRATEGY_INFO.get(chosen_strategy, ""))
@@ -403,8 +413,8 @@ def render_summary(working_dataframe: pd.DataFrame, original_dataframe: pd.DataF
         ]
         summary_dataframe = pd.DataFrame({
             "Metric": ["Rows", "Columns", "Missing Values", "Duplicates", "Outliers"],
-            "Before": [f"{before_state['rows']:,}", f"{before_state['cols']}", f"{before_state['missing']:,}", f"{before_state['dups']:,}", f"{before_state['outliers']:,}"],
-            "After":  [f"{after_state['rows']:,}", f"{after_state['cols']}", f"{after_state['missing']:,}", f"{after_state['dups']:,}", f"{after_state['outliers']:,}"],
+            "Before": [before_state['rows'], before_state['cols'], before_state['missing'], before_state['dups'], before_state['outliers']],
+            "After":  [after_state['rows'], after_state['cols'], after_state['missing'], after_state['dups'], after_state['outliers']],
             "Changed": changed_values,
         })
     else:
@@ -417,14 +427,18 @@ def render_summary(working_dataframe: pd.DataFrame, original_dataframe: pd.DataF
         ]
         summary_dataframe = pd.DataFrame({
             "Metric": ["Rows", "Columns", "Missing Values", "Duplicates", "Outliers"],
-            "Before": [f"{original_dataframe.shape[0]:,}", f"{original_dataframe.shape[1]}", f"{int(original_dataframe.isnull().sum().sum()):,}", f"{duplicate_before:,}", f"{outlier_before:,}"],
-            "After": [f"{working_dataframe.shape[0]:,}", f"{working_dataframe.shape[1]}", f"{int(working_dataframe.isnull().sum().sum()):,}", f"{duplicate_count:,}", f"{total_outlier:,}"],
+            "Before": [original_dataframe.shape[0], original_dataframe.shape[1], int(original_dataframe.isnull().sum().sum()), duplicate_before, outlier_before],
+            "After": [working_dataframe.shape[0], working_dataframe.shape[1], int(working_dataframe.isnull().sum().sum()), duplicate_count, total_outlier],
             "Changed": changed_values,
         })
 
     styled_summary = (
         summary_dataframe.style
         .apply(color_changed, subset=["Changed"])
-        .format({"Changed": lambda value: "—" if value == 0 else f"+{value:,}" if value > 0 else f"{value:,}"})
+        .format({
+            "Before": "{:,}",
+            "After": "{:,}",
+            "Changed": lambda value: "—" if value == 0 else f"+{value:,}" if value > 0 else f"{value:,}"
+        })
     )
     st.dataframe(styled_summary, width="stretch", hide_index=True)

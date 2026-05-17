@@ -133,9 +133,15 @@ def render_cleaning():
         outlier_before = st.session_state["original_outlier_count"]
         render_summary(working_dataframe, dataframe, duplicate_before, outlier_before, total_missing_values, duplicate_rows_count, total_outlier)
 
-        # Confirm / Reset
-        _, confirm_col1, confirm_col2, _ = st.columns([2, 1.5, 1.5, 2])
-        with confirm_col1:
+        # Confirm / Reset / Download Row
+        is_confirmed = st.session_state.get("cleaning_confirmed", False)
+        if is_confirmed:
+            _, b_col1, b_col2, b_col3, _ = st.columns([1, 2, 1.8, 3.2, 1])
+        else:
+            _, b_col1, b_col2, _ = st.columns([2, 2, 2, 2])
+            b_col3 = None
+
+        with b_col1:
             if st.button("Confirm & Save", type="primary", width="stretch"):
                 original_filename = st.session_state.get("last_uploaded_file", "dataset.csv")
                 st.session_state["cleaning_summary_snapshot"] = {
@@ -155,30 +161,31 @@ def render_cleaning():
                 
                 from explainable.state_manager.pipeline_state import commit_step
                 commit_step("cleaning", st.session_state["cleaning_summary_snapshot"])
-                st.success("บันทึกข้อมูลที่ Cleaned แล้ว")
+                st.success("บันทึกข้อมูลเรียบร้อย")
                 st.rerun()
-        with confirm_col2:
+
+        with b_col2:
             if st.button("Reset", type="secondary", width="stretch"):
                 st.session_state["working_df"] = dataframe.copy()
                 st.session_state["cleaning_confirmed"] = False
                 st.session_state.pop("_treated_outlier_cols", None)
                 st.session_state.pop("cleaning_summary_snapshot", None)
                 st.session_state.pop("original_outlier_bounds", None)
-                st.info("Reset กลับ original data แล้ว")
+                st.info("Reset ข้อมูลเรียบร้อย")
                 st.rerun()
 
-        # Download
-        if st.session_state.get("cleaning_confirmed"):
-            csv_path = st.session_state.get("cleaned_csv_path")
-            if csv_path and os.path.exists(csv_path):
-                with open(csv_path, "rb") as file_obj:
-                    st.download_button(
-                        label=f"Download {st.session_state['last_uploaded_file']}",
-                        data=file_obj,
-                        file_name=st.session_state["last_uploaded_file"],
-                        mime="text/csv",
-                        width="stretch",
-                    )
+        if b_col3 and is_confirmed:
+            with b_col3:
+                csv_path = st.session_state.get("cleaned_csv_path")
+                if csv_path and os.path.exists(csv_path):
+                    with open(csv_path, "rb") as file_obj:
+                        st.download_button(
+                            label="Download Cleaned Dataset",
+                            data=file_obj,
+                            file_name=st.session_state["last_uploaded_file"],
+                            mime="text/csv",
+                            width="stretch",
+                        )
 
     # Navigation
     st.divider()

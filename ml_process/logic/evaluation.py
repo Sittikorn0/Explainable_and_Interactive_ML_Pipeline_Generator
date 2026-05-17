@@ -40,9 +40,9 @@ def show_residual_plot(actual_values, predicted_values):
     fig = px.scatter(
         x=predicted, y=residuals, opacity=0.6,
         labels={'x': 'Predicted Values', 'y': 'Residuals (Actual - Predicted)'},
-        color_discrete_sequence=["#d29922"]
+        color_discrete_sequence=["#F59E0B"]
     )
-    fig.add_hline(y=0, line_dash="dash", line_color="#f85149")
+    fig.add_hline(y=0, line_dash="dash", line_color="#EF4444")
     fig.update_layout(template="plotly_dark", height=400, margin=dict(t=20, b=20))
     st.plotly_chart(fig, width="stretch")
 
@@ -55,7 +55,7 @@ def show_error_dist(actual_values, predicted_values):
     fig = px.histogram(
         errors, nbins=50, 
         labels={'value': 'Prediction Error'},
-        color_discrete_sequence=["#bc8cff"]
+        color_discrete_sequence=["#BB9AF7"]
     )
     fig.update_layout(template="plotly_dark", height=400, margin=dict(t=20, b=20), showlegend=False)
     st.plotly_chart(fig, width="stretch")
@@ -140,8 +140,8 @@ def show_confusion_matrix(actual_values, predicted_values):
         height=450,
         margin=dict(t=40, b=40, l=40, r=40),
         font=dict(size=13),
-        xaxis_title=dict(font=dict(size=14, color="#8b949e")),
-        yaxis_title=dict(font=dict(size=14, color="#8b949e")),
+        xaxis_title=dict(font=dict(size=14, color="#94A3B8")),
+        yaxis_title=dict(font=dict(size=14, color="#94A3B8")),
         coloraxis_showscale=True # นำแถบสีกลับมาตามต้องการ
     )
     
@@ -164,11 +164,11 @@ def show_pred_vs_actual(actual_values, predicted_values):
     
     figure = px.scatter(
         plot_dataset, x="Actual", y="Predicted", opacity=0.6,
-        color_discrete_sequence=["#58a6ff"]
+        color_discrete_sequence=["#7AA2F7"]
     )
     figure.add_shape(
         type="line", x0=min_value, y0=min_value, x1=max_value, y1=max_value,
-        line=dict(color="red", dash="dash", width=1.5)
+        line=dict(color="#EF4444", dash="dash", width=1.5)
     )
     figure.update_layout(template="plotly_dark", height=420, margin=dict(t=20, b=20))
     st.plotly_chart(figure, width="stretch")

@@ -49,7 +49,10 @@ def apply_feature_selection(dataset: pd.DataFrame, columns_to_drop: list, target
     return dataset.drop(columns=safe_columns_to_drop)
 
 
-def apply_all(dataset: pd.DataFrame, encoding_decisions: dict, scaling_method: str, columns_to_drop: list, target_column: str) -> tuple:
+def apply_all(dataset: pd.DataFrame, encoding_decisions: dict, scaling_method: str,
+              columns_to_drop: list, target_column: str,
+              scaling_analysis: dict | None = None,
+              encoding_analysis: list | None = None) -> tuple:
     """
     Apply transformations ตามลำดับ:
       - Feature Selection
@@ -91,15 +94,32 @@ def apply_all(dataset: pd.DataFrame, encoding_decisions: dict, scaling_method: s
         transformed_dataset[target_column] = label_encoder.fit_transform(transformed_dataset[target_column].astype(str))
 
     # ❌ ไม่ scale ที่นี่ — preprocess.py จะทำให้หลัง split
-    
+
+    # ── ดึง Rule reference จาก analysis เพื่อส่งต่อให้ trace_log ──
+    enc_rule_refs = {}
+    if encoding_analysis:
+        for info in encoding_analysis:
+            col = info.get("col")
+            if col and col in encoding_decisions:
+                enc_rule_refs[col] = {
+                    "reference":  info.get("reference", ""),
+                    "confidence": info.get("confidence"),
+                    "rule_id":    info.get("rule_id", ""),
+                }
+
     transformation_summary = {
-        "original_rows":  dataset.shape[0],
-        "original_cols":  dataset.shape[1],
-        "dropped_cols":   len(columns_to_drop),
-        "encoded_cols":   len(encoding_decisions),
-        "final_cols":     transformed_dataset.shape[1],
-        "scaling_method": scaling_method,
-        "task_type":      task_type,
+        "original_rows":      dataset.shape[0],
+        "original_cols":      dataset.shape[1],
+        "dropped_cols":       len(columns_to_drop),
+        "encoded_cols":       len(encoding_decisions),
+        "final_cols":         transformed_dataset.shape[1],
+        "scaling_method":     scaling_method,
+        "task_type":          task_type,
+        # ── rule engine metadata ──
+        "scaling_reference":  scaling_analysis.get("reference", "")  if scaling_analysis else "",
+        "scaling_confidence": scaling_analysis.get("confidence")      if scaling_analysis else None,
+        "scaling_rule_id":    scaling_analysis.get("rule_id", "")    if scaling_analysis else "",
+        "enc_rule_refs":      enc_rule_refs,
     }
 
-    return transformed_dataset, transformation_summary
+    return transformed_dataset, transformation_summary

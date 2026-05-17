@@ -64,22 +64,22 @@ MODEL_GUIDE_INFO = {
 
 METRIC_EXPLAIN_INFO = {
     "classification": [
-        ("Accuracy",        "#58a6ff", "% ที่ทำนายถูกจากทั้งหมด — ใช้ได้ดีเมื่อ class ไม่เสียสมดุล"),
-        ("F1(Mac)",         "#3fb950", "ค่าเฉลี่ยของ F1 ทุก class — เหมาะกับ class ที่ไม่สมดุล"),
-        ("Precision(Mac)",  "#d29922", "บรรดาที่ทำนายว่าเป็น class X — มีกี่ % ที่ถูกจริง"),
-        ("Recall(Mac)",     "#bc8cff", "บรรดาที่เป็น class X จริงๆ — model ตรวจพบได้กี่ %"),
+        ("Accuracy",        "#7AA2F7", "% ที่ทำนายถูกจากทั้งหมด — ใช้ได้ดีเมื่อ class ไม่เสียสมดุล", r"\text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}"),
+        ("F1(Mac)",         "#9ECE6A", "ค่าเฉลี่ยของ F1 ทุก class — เหมาะกับ class ที่ไม่สมดุล", r"F1 = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}"),
+        ("Precision(Mac)",  "#E0AF68", "บรรดาที่ทำนายว่าเป็น class X — มีกี่ % ที่ถูกจริง", r"\text{Precision} = \frac{TP}{TP + FP}"),
+        ("Recall(Mac)",     "#BB9AF7", "บรรดาที่เป็น class X จริงๆ — model ตรวจพบได้กี่ %", r"\text{Recall} = \frac{TP}{TP + FN}"),
     ],
     "regression": [
-        ("R² Score", "#58a6ff", "model อธิบาย variance ของข้อมูลได้กี่ % (1.0 = perfect)"),
-        ("RMSE",     "#3fb950", "error เฉลี่ยในหน่วยเดียวกับ target — ยิ่งต่ำยิ่งดี"),
-        ("MSE",      "#d29922", "เหมือน RMSE แต่ยกกำลัง 2 — error ใหญ่ถูก penalize มากกว่า"),
+        ("R² Score", "#7AA2F7", "model อธิบาย variance ของข้อมูลได้กี่ % (1.0 = perfect)", r"R^2 = 1 - \frac{\sum_{i} (y_i - \hat{y}_i)^2}{\sum_{i} (y_i - \bar{y})^2}"),
+        ("RMSE",     "#9ECE6A", "error เฉลี่ยในหน่วยเดียวกับ target — ยิ่งต่ำยิ่งดี", r"\text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2}"),
+        ("MSE",      "#E0AF68", "เหมือน RMSE แต่ยกกำลัง 2 — error ใหญ่ถูก penalize มากกว่า", r"\text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2"),
     ],
 }
 
 CARD_COLUMNS_INFO = [
-    ("#58a6ff", "หลักการ",  "simple"),
-    ("#3fb950", "จุดแข็ง",  "strength"),
-    ("#f85149", "จุดอ่อน",  "weakness"),
+    ("#7AA2F7", "หลักการ",  "simple"),
+    ("#9ECE6A", "จุดแข็ง",  "strength"),
+    ("#F7768E", "จุดอ่อน",  "weakness"),
 ]
 
 def render_guide(best_model_label: str, task_type: str, metrics_dict: dict):
@@ -117,7 +117,7 @@ def render_guide(best_model_label: str, task_type: str, metrics_dict: dict):
     )
 
     value_columns = st.columns(len(metric_rows_info))
-    for col, (name, color, _) in zip(value_columns, metric_rows_info):
+    for col, (name, color, *_) in zip(value_columns, metric_rows_info):
         metric_value = metrics_dict.get(name, "—")
         with col:
             st.markdown(
@@ -131,16 +131,15 @@ def render_guide(best_model_label: str, task_type: str, metrics_dict: dict):
             )
 
     st.markdown("<br>", unsafe_allow_html=True)
-    render_section_header("ความหมายของแต่ละ Metric")
+    st.markdown("<br>", unsafe_allow_html=True)
 
-    for name, color, explanation in metric_rows_info:
-        st.markdown(
-            f'<div style="background:{BACKGROUND_COLOR};border:1px solid {BORDER_COLOR};'
-            f'border-left:3px solid {color};border-radius:0 {BORDER_RADIUS} {BORDER_RADIUS} 0;'
-            f'padding:{PADDING_STYLE};{MARGIN_GAP};display:flex;gap:16px;align-items:flex-start">'
-            f'<div style="font-family:monospace;font-weight:700;color:{color};'
-            f'min-width:108px;font-size:1rem;flex-shrink:0">{name}</div>'
-            f'<div style="color:{TEXT_COLOR};font-size:1rem;line-height:1.75">{explanation}</div>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
+    with st.expander("คำอธิบายและสูตรคำนวณของแต่ละตัวชี้วัด"):
+        for name, color, explanation, formula in metric_rows_info:
+            st.markdown(
+                f'<div style="border-left: 3px solid {color}; padding-left: 12px; margin-top: 12px;">'
+                f'<strong style="color: {color}; font-family: monospace; font-size: 1.05rem;">{name}</strong>'
+                f'<p style="color: {TEXT_COLOR}; margin: 4px 0 0 0;">{explanation}</p>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+            st.latex(formula)

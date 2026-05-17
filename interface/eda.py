@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
 from data_prepare.logic.data_distribute import data_distribution
-from data_prepare.logic.target_col import describe_target
 
 from interface.eda_components.ui_profile import render_profile_tab
 from interface.eda_components.ui_distributions import render_distributions_tab
 from interface.eda_components.ui_relationships import render_relationships_tab
+from interface.eda_components.ui_target_info import render_target_info
 
 def format_percentage(count: int, percentage: float) -> str:
     if count == 0:
@@ -74,7 +74,7 @@ def render_eda():
     if target_column not in dataframe.columns:
         target_column = dataframe.columns[-1]
         st.warning(f"Target column ที่เลือกไว้ไม่พบใน dataset — ใช้ **{target_column}** แทน")
-    st.info(f"**Target Column:** {target_column}  \n{describe_target(dataframe, target_column)}")
+    render_target_info(dataframe, target_column)
 
     if not pd.api.types.is_numeric_dtype(dataframe[target_column]) and dataframe[target_column].nunique() <= 20:
         target_class_counts = dataframe[target_column].value_counts()

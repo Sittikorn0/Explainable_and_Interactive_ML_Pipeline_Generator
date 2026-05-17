@@ -40,7 +40,13 @@ def restore_log():
 
 # ── Core ──────────────────────────────────────────────────────────────────────
 
+def _ensure_restored():
+    """Ensures session state is synced with disk before any modification."""
+    if not st.session_state.get(_LOG_KEY) and os.path.exists(trace_log_path()):
+        restore_log()
+
 def append(entry: dict):
+    _ensure_restored()
     log = st.session_state.setdefault(_LOG_KEY, [])
     # ค้นหาว่ามี step นี้อยู่แล้วหรือไม่ ถ้ามีให้แทนที่ (Update) ถ้าไม่มีให้เพิ่มใหม่ (Append)
     existing_idx = next((i for i, e in enumerate(log) if e.get("step") == entry.get("step")), None)
@@ -64,6 +70,7 @@ def clear():
 
 def remove_steps_from(step_names: list[str]):
     """ลบ trace entries ของ step ที่ระบุ (ใช้ตอน rollback)"""
+    _ensure_restored()
     log = st.session_state.get(_LOG_KEY, [])
     st.session_state[_LOG_KEY] = [e for e in log if e.get("step") not in step_names]
     _persist_log()
@@ -133,6 +140,7 @@ def log_upload(df, file_name: str, target_col: str, task_hint: str,
 # ── Cleaning ──────────────────────────────────────────────────────────────────
 
 def track_cleaning(action_type: str, col: str, detail: str):
+    _ensure_restored()
     actions = st.session_state.setdefault(_ACTIONS_KEY, [])
     actions = [a for a in actions if not (a["col"] == col and a["type"] == action_type)]
     actions.append({"type": action_type, "col": col, "detail": detail})
@@ -294,9 +302,15 @@ def log_transformation(summary: dict, enc_decisions: dict, scaling_method: str, 
 
     explanations = []
 
-    # ทำไมต้องปรับขนาด
+    # ทำไมต้องปรับขนาด — ดึง reference จาก rule engine ถ้ามี
+    scaling_ref  = summary.get("scaling_reference", "")
+    scaling_conf = summary.get("scaling_confidence", None)
+    scaling_rule = summary.get("scaling_rule_id", "")
+
     reason = _SCALING_REASONS.get(scaling_method, f"ใช้ {scaling_method}")
-    explanations.append(f"ทำไมปรับขนาดด้วย {scaling_method}? → {reason}")
+    ref_str = f" [อ้างอิง: {scaling_ref}]" if scaling_ref else ""
+    conf_str = f" | ความเชื่อมั่น: {int(scaling_conf*100)}%" if scaling_conf is not None else ""
+    explanations.append(f"ทำไมปรับขนาดด้วย {scaling_method}?{ref_str}{conf_str} → {reason}")
 
     if scaling_method != "no_scaling":
         explanations.append(
@@ -305,13 +319,17 @@ def log_transformation(summary: dict, enc_decisions: dict, scaling_method: str, 
             "ปรับขนาดช่วยให้ทุกคอลัมน์มีน้ำหนักเท่าเทียมกัน"
         )
 
-    # ทำไมต้องแปลงข้อความ
+    # ทำไมต้องแปลงข้อความ — ดึง reference จาก enc_rule_refs ถ้ามี
+    enc_rule_refs = summary.get("enc_rule_refs", {})
     for method, cols in enc_by_method.items():
+        col_refs = [enc_rule_refs.get(c, {}) for c in cols]
+        ref_ex = next((r.get("reference", "") for r in col_refs if r.get("reference")), "")
+        ref_str = f" [อ้างอิง: {ref_ex}]" if ref_ex else ""
         reason = _ENCODING_REASONS.get(method, f"ใช้ {method}")
         cols_str = ", ".join(cols[:3])
         if len(cols) > 3:
             cols_str += f" อีก {len(cols)-3} ตัว"
-        explanations.append(f"ทำไมแปลง {cols_str} ด้วย {method}? → {reason}")
+        explanations.append(f"ทำไมแปลง {cols_str} ด้วย {method}?{ref_str} → {reason}")
 
     if enc_by_method:
         explanations.append(

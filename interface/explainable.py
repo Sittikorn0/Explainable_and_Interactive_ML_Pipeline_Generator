@@ -42,9 +42,9 @@ def render_explainable():
 
     # Summary banner
     banner_items_list = [
-        ("Best Model", best_model_label,                          "#58a6ff"),
-        ("Task",       task_type.upper(),                   "#3fb950"),
-        ("Dataset",    f"{dataframe.shape[0]:,} × {dataframe.shape[1]}", "#d29922"),
+        ("Best Model", best_model_label,                          "#7AA2F7"),
+        ("Task",       task_type.upper(),                   "#9ECE6A"),
+        ("Dataset",    f"{dataframe.shape[0]:,} × {dataframe.shape[1]}", "#E0AF68"),
     ]
     banner_columns = st.columns(3)
     for col, (label, value, color) in zip(banner_columns, banner_items_list):
@@ -66,10 +66,10 @@ def render_explainable():
     if is_perfect:
         st.markdown(
             f"""
-            <div style="background: rgba(248, 81, 73, 0.05); border-left: 4px solid #f85149; border-radius: 4px; padding: 18px 24px; margin-bottom: 28px;">
+            <div style="background: rgba(247, 118, 142, 0.05); border-left: 4px solid #F7768E; border-radius: 4px; padding: 18px 24px; margin-bottom: 28px;">
                 <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px;">
-                    <span style="color: #f85149; font-family: monospace; font-weight: 900; font-size: 1.2rem;">!</span>
-                    <strong style="color: #f85149; font-size: 1.05rem; letter-spacing: 0.02em; text-transform: uppercase;">Technical Warning: Potential Data Leakage</strong>
+                    <span style="color: #F7768E; font-family: monospace; font-weight: 900; font-size: 1.2rem;">[!]</span>
+                    <strong style="color: #F7768E; font-size: 1.05rem; letter-spacing: 0.02em; text-transform: uppercase;">Technical Warning: Potential Data Leakage</strong>
                 </div>
                 <p style="color: #8b949e; margin: 0; font-size: 0.92rem; line-height: 1.6; font-weight: 400;">
                     คะแนนโมเดลมีความแม่นยำระดับสมบูรณ์แบบ (1.000) ซึ่งเป็นสัญญาณของความผิดปกติในชุดข้อมูล 

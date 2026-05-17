@@ -4,6 +4,8 @@ import numpy as np
 import plotly.express as px
 from data_prepare.logic.data_type_detection import actual_type
 
+MODERN_PALETTE = ["#7AA2F7", "#BB9AF7", "#7DCFFF", "#F7768E", "#9ECE6A", "#E0AF68", "#FF9E64", "#2AC3DE"]
+
 def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
     st.subheader("Relationships & Redundancy")
 
@@ -54,7 +56,7 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
                     x=selected_feature,
                     y=target_column,
                     markers=True,
-                    color_discrete_sequence=["#0082CE"],
+                    color_discrete_sequence=["#7AA2F7"],
                 )
                 relationship_line_figure.update_layout(
                     template="plotly_dark",
@@ -72,7 +74,7 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
                     y="count",
                     color=target_column,
                     markers=True,
-                    color_discrete_sequence=px.colors.qualitative.Set2,
+                    color_discrete_sequence=MODERN_PALETTE,
                 )
                 relationship_line_figure.update_layout(template="plotly_dark", height=380)
                 st.plotly_chart(relationship_line_figure, width="stretch")
@@ -84,9 +86,9 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
                 x=selected_feature,
                 y=target_column,
                 opacity=0.6,
-                color_discrete_sequence=["#0082CE"],
+                color_discrete_sequence=["#7AA2F7"],
                 trendline="ols",
-                trendline_color_override="#f87171",
+                trendline_color_override="#F7768E",
             )
             relationship_scatter_figure.update_layout(template="plotly_dark", height=380)
             st.plotly_chart(relationship_scatter_figure, width="stretch")
@@ -102,7 +104,7 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
                 x=target_column,
                 y=selected_feature,
                 color=target_column,
-                color_discrete_sequence=px.colors.qualitative.Set2,
+                color_discrete_sequence=MODERN_PALETTE,
                 category_orders={target_column: median_ordering},
             )
             relationship_box_figure.update_layout(template="plotly_dark", height=380, showlegend=False)
@@ -123,7 +125,7 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
                 x=selected_feature,
                 y=target_column,
                 color=selected_feature,
-                color_discrete_sequence=px.colors.qualitative.Set2,
+                color_discrete_sequence=MODERN_PALETTE,
                 category_orders={selected_feature: median_ordering},
             )
             relationship_box_figure.update_layout(template="plotly_dark", height=380, showlegend=False)
@@ -143,7 +145,7 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
                 y="count",
                 color=target_column,
                 barmode="group",
-                color_discrete_sequence=px.colors.qualitative.Set2,
+                color_discrete_sequence=MODERN_PALETTE,
                 category_orders={selected_feature: category_ordering},
             )
             relationship_bar_figure.update_layout(template="plotly_dark", height=380)
@@ -182,7 +184,7 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
                     y="Feature",
                     orientation="h",
                     color="color",
-                    color_discrete_map={"positive": "#4ade80", "negative": "#f87171"},
+                    color_discrete_map={"positive": "#9ECE6A", "negative": "#F7768E"},
                     range_x=[-1, 1],
                     text=target_correlation_dataframe["Correlation"].round(2),
                 )
@@ -224,7 +226,7 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
                     color="Class",
                     orientation="h",
                     barmode="group",
-                    color_discrete_sequence=px.colors.qualitative.Set2,
+                    color_discrete_sequence=MODERN_PALETTE,
                     category_orders={"Feature": spread_ordering},
                 )
                 class_mean_bar_figure.update_layout(
@@ -267,14 +269,15 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
                         )
 
             if highly_correlated_pairs:
-                correlated_pairs_text = ", ".join(
-                    [f"**{col_a}** ↔ **{col_b}** (r={corr_val})" for col_a, col_b, corr_val in highly_correlated_pairs]
+                correlated_pairs_bullets = "\n".join(
+                    [f"- **{col_a}** และ **{col_b}** (ความสัมพันธ์: {corr_val})" for col_a, col_b, corr_val in highly_correlated_pairs]
                 )
                 st.warning(
-                    f"**Multicollinearity ที่อาจเป็นปัญหา** (อ้างอิง Topic 2): {correlated_pairs_text}\n\n"
-                    "คอลัมน์ที่มี Correlation สูง (|r| > 0.8) อาจให้ข้อมูลซ้ำซ้อนกัน "
-                    "ซึ่งอาจทำให้โมเดลบางชนิด (เช่น Linear Regression) ทำงานได้ไม่ดี "
-                    "อาจพิจารณาลบคอลัมน์ใดคอลัมน์หนึ่งออก"
+                    "[!] **แจ้งเตือนปัญหา Multicollinearity (ข้อมูลซ้ำซ้อน)**\n\n"
+                    "พบคอลัมน์ที่มีความสัมพันธ์กันเองสูงมาก (|r| > 0.8):\n"
+                    f"{correlated_pairs_bullets}\n\n"
+                    "**ผลกระทบ:** อาจทำให้โมเดลที่อ่อนไหว (เช่น Linear/Logistic Regression) สับสนและทำนายผิดพลาดได้\n\n"
+                    "**คำแนะนำ:** ควรพิจารณา **ลบคอลัมน์ใดคอลัมน์หนึ่ง** ในคู่ที่ซ้ำซ้อนกันออก"
                 )
         else:
             st.info("Need more numeric columns for correlation.")

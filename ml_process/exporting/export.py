@@ -14,12 +14,12 @@ def build_leaderboard_df(competition: dict) -> pd.DataFrame:
     errors = [(k, v) for k, v in competition.items() if v["cv_score"] is None]
     rows = []
     for i, (_, res) in enumerate(ranked):
-        params = " | ".join(f"{k}={v}" for k, v in res["best_params"].items()) if res["best_params"] else "—"
+        params = ", ".join(f"{k}={v}" for k, v in res["best_params"].items()) if res["best_params"] else "—"
         rows.append({"Rank": i + 1, "Model": res["label"],
-                     "CV Score": res["cv_score"], "±Std": res["cv_std"], "Best Params": params})
+                     "Cross-Val Score": res["cv_score"], "Cross-Val Std": res["cv_std"], "Hyperparameters": params})
     for _, res in errors:
         rows.append({"Rank": "—", "Model": res["label"],
-                     "CV Score": None, "±Std": None, "Best Params": res.get("error", "")})
+                     "Cross-Val Score": None, "Cross-Val Std": None, "Hyperparameters": res.get("error", "")})
     return pd.DataFrame(rows)
 
 
@@ -46,7 +46,7 @@ def _leaderboard_html(competition: dict, best_label: str) -> str:
     rows = ""
     for i, (_, res) in enumerate(ranked):
         is_best = res["label"] == best_label
-        params  = " · ".join(f"{k}={v}" for k, v in res["best_params"].items()) if res["best_params"] else "—"
+        params  = ", ".join(f"{k}={v}" for k, v in res["best_params"].items()) if res["best_params"] else "—"
         rank_cls = "rank-top" if i < 3 else "rank-num"
         best_tag = "<span class='best-tag'>best</span>" if is_best else ""
         row_cls  = "row-best" if is_best else ""
@@ -54,8 +54,8 @@ def _leaderboard_html(competition: dict, best_label: str) -> str:
             f'<tr class="{row_cls}">'
             f'<td><span class="{rank_cls}">{i+1}</span></td>'
             f'<td><span class="model-name">{res["label"]}</span>{best_tag}</td>'
-            f'<td class="num">{res["cv_score"]:.4f}</td>'
-            f'<td class="num muted">±{res["cv_std"]:.4f}</td>'
+            f'<td class="num-center">{res["cv_score"]:.4f}</td>'
+            f'<td class="num-center muted">±{res["cv_std"]:.4f}</td>'
             f'<td class="params-cell">{params}</td>'
             f'</tr>'
         )
@@ -70,7 +70,9 @@ def _leaderboard_html(competition: dict, best_label: str) -> str:
     return (
         f'<table class="tbl">'
         f'<thead><tr><th style="width:48px">Rank</th><th>Model</th>'
-        f'<th>CV Score</th><th>±Std</th><th>Best Params</th></tr></thead>'
+        f'<th class="num-center">Cross-Val Score</th>'
+        f'<th class="num-center">Cross-Val Std</th>'
+        f'<th>Hyperparameters</th></tr></thead>'
         f'<tbody>{rows}</tbody></table>'
     )
 
@@ -183,7 +185,7 @@ def build_html_report(result: dict, metrics: dict, fi_df=None) -> str:
 
     fi_section_html = ""
     fi_nav          = ""
-    pred_num        = "04"
+    pred_num        = "03"
     if has_fi:
         fi_section_html = f"""
       <section id="fi">
@@ -202,6 +204,150 @@ def build_html_report(result: dict, metrics: dict, fi_df=None) -> str:
         f'<div class="ss"><div class="ss-val">{n_models}</div><div class="ss-lbl">Models Tested</div></div>'
     )
 
+    css_styles = """
+/* Reset */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* Base */
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Sarabun',sans-serif;
+  background:#16161e;color:#c0caf5;font-size:14px;line-height:1.6;
+  display:flex;min-height:100vh;
+}
+
+/* ── Sidebar ─────────────────────────── */
+.sidebar{
+  width:200px;flex-shrink:0;position:sticky;top:0;height:100vh;
+  background:#1a1b26;border-right:1px solid #292e42;
+  padding:0;overflow-y:auto;display:flex;flex-direction:column;
+}
+.sidebar-brand{
+  padding:24px 20px 18px;border-bottom:1px solid #292e42;
+  font-size:.68rem;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;color:#9aa5ce;
+}
+.sidebar nav{padding:12px 0;flex:1}
+.sidebar a{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 20px;color:#9aa5ce;text-decoration:none;
+  font-size:.8rem;transition:color .15s,background .15s;
+  border-left:2px solid transparent;
+}
+.sidebar a:hover{color:#c0caf5;background:#16161e;border-left-color:#7AA2F7}
+.nav-num{
+  font-size:.65rem;font-weight:700;color:rgba(122, 162, 247, 0.7);
+  background:rgba(122, 162, 247, 0.1);padding:1px 5px;border-radius:4px;
+  flex-shrink:0;font-variant-numeric:tabular-nums;
+}
+.sidebar-footer{
+  padding:16px 20px;border-top:1px solid #292e42;
+  font-size:.72rem;color:#565f89;line-height:1.5;
+}
+
+/* ── Main ────────────────────────────── */
+.main{flex:1;padding:44px 56px;min-width:0}
+
+/* ── Page header ─────────────────────── */
+.page-title{font-size:1.5rem;font-weight:800;color:#c0caf5;margin-bottom:6px}
+.page-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:32px}
+.badge{
+  display:inline-flex;align-items:center;
+  padding:3px 10px;border-radius:20px;
+  font-size:.72rem;font-weight:700;letter-spacing:.04em;
+}
+.badge-task{background:rgba(122, 162, 247, 0.1);color:#7AA2F7;border:1px solid rgba(122, 162, 247, 0.2)}
+.badge-model{background:rgba(158, 206, 106, 0.1);color:#9ECE6A;border:1px solid rgba(158, 206, 106, 0.2)}
+.meta-time{color:#565f89;font-size:.78rem;margin-left:4px}
+
+/* ── Summary strip ───────────────────── */
+.strip{
+  display:flex;flex-wrap:wrap;gap:0;
+  background:#1f2335;border:1px solid #3b4261;border-radius:10px;
+  margin-bottom:44px;overflow:hidden;
+}
+.ss{
+  flex:1;min-width:100px;padding:18px 20px;
+  border-right:1px solid #292e42;text-align:center;
+}
+.ss:last-child{border-right:none}
+.ss-val{font-size:1.25rem;font-weight:800;color:#c0caf5;font-variant-numeric:tabular-nums}
+.ss-lbl{font-size:.68rem;color:#9aa5ce;text-transform:uppercase;letter-spacing:.07em;margin-top:3px}
+
+/* ── Sections ────────────────────────── */
+section{margin-bottom:52px}
+.sec-hd{display:flex;align-items:flex-start;gap:12px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid #292e42}
+.sec-num{
+  font-size:.65rem;font-weight:800;color:#7AA2F7;
+  background:rgba(122, 162, 247, 0.1);border:1px solid rgba(122, 162, 247, 0.2);
+  border-radius:5px;padding:3px 7px;flex-shrink:0;
+  margin-top:1px;letter-spacing:.04em;
+}
+.sec-title{font-size:1rem;font-weight:700;color:#c0caf5}
+.sec-sub{font-size:.78rem;color:#9aa5ce;margin-top:2px}
+
+/* ── Two-col grid ────────────────────── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.col-card{background:#1f2335;border:1px solid #3b4261;border-radius:10px;padding:20px}
+.col-card-title{font-size:.72rem;font-weight:700;text-transform:uppercase;
+                 letter-spacing:.08em;color:#9aa5ce;margin-bottom:14px}
+
+/* ── Metric cards ────────────────────── */
+.mc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.mc{background:#16161e;border:1px solid #292e42;border-radius:8px;padding:14px 16px}
+.mc-lbl{font-size:.68rem;color:#9aa5ce;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.mc-val{font-size:1.2rem;font-weight:800;color:#7AA2F7;font-variant-numeric:tabular-nums}
+
+/* ── Tables ──────────────────────────── */
+.tbl{width:100%;border-collapse:collapse;font-size:.835rem}
+.tbl th{
+  background:#16161e;color:#9aa5ce;font-weight:600;
+  text-align:left;padding:9px 12px;
+  border-bottom:1px solid #3b4261;
+  font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;
+}
+.tbl td{padding:9px 12px;border-bottom:1px solid #292e42;vertical-align:middle}
+.tbl tbody tr:hover td{background:#1f2335}
+.num{font-variant-numeric:tabular-nums;text-align:right}
+.num-center{font-variant-numeric:tabular-nums;text-align:center}
+.muted{color:#565f89}
+.row-best td{background:rgba(158, 206, 106, 0.05)}
+.row-error{opacity:.45}
+.row-idx{color:#565f89;font-size:.78rem;width:36px}
+.params-cell{font-size:.75rem;color:#9aa5ce;max-width:280px}
+.error-msg{color:#F7768E;font-size:.78rem}
+
+/* ── Rank / badges ───────────────────── */
+.rank-top{
+  display:inline-block;width:22px;height:22px;line-height:22px;
+  text-align:center;border-radius:50%;font-size:.72rem;font-weight:800;
+  background:rgba(122, 162, 247, 0.1);color:#7AA2F7;
+}
+.rank-num{color:#565f89;font-size:.8rem;font-weight:600}
+.model-name{font-weight:600;color:#c0caf5}
+.best-tag{
+  font-size:.65rem;font-weight:700;letter-spacing:.05em;
+  background:rgba(158, 206, 106, 0.1);color:#9ECE6A;border:1px solid rgba(158, 206, 106, 0.2);
+  padding:1px 7px;border-radius:10px;margin-left:8px;
+}
+
+/* ── Feature bar ─────────────────────── */
+.bar-bg{background:#292e42;border-radius:3px;height:6px}
+.bar-fill{background:#7AA2F7;height:6px;border-radius:3px;min-width:2px}
+.feat{color:#7DCFFF;font-family:ui-monospace,'SFMono-Regular',monospace;font-size:.8rem}
+
+/* ── Prediction summary ──────────────── */
+.stat-row{
+  display:flex;gap:0;background:#1f2335;border:1px solid #3b4261;
+  border-radius:10px;margin-bottom:16px;overflow:hidden;
+}
+.stat{flex:1;padding:16px 20px;text-align:center;border-right:1px solid #292e42}
+.stat:last-child{border-right:none}
+.stat-val{display:block;font-size:1.3rem;font-weight:800;font-variant-numeric:tabular-nums}
+.stat-lbl{display:block;font-size:.68rem;color:#9aa5ce;text-transform:uppercase;letter-spacing:.07em;margin-top:3px}
+.ok{color:#9ECE6A}.ng{color:#F7768E}.hi{color:#7AA2F7}.bold{font-weight:700}
+.table-note{color:#565f89;font-size:.75rem;margin-bottom:8px}
+"""
+
     return f"""<!DOCTYPE html>
 <html lang="th">
 <head>
@@ -209,146 +355,7 @@ def build_html_report(result: dict, metrics: dict, fi_df=None) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ML Report — {best_label}</title>
 <style>
-/* Reset */
-*,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
-
-/* Base */
-body{{
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Sarabun',sans-serif;
-  background:#0d1117;color:#e6edf3;font-size:14px;line-height:1.6;
-  display:flex;min-height:100vh;
-}}
-
-/* ── Sidebar ─────────────────────────── */
-.sidebar{{
-  width:200px;flex-shrink:0;position:sticky;top:0;height:100vh;
-  background:#010409;border-right:1px solid #21262d;
-  padding:0;overflow-y:auto;display:flex;flex-direction:column;
-}}
-.sidebar-brand{{
-  padding:24px 20px 18px;border-bottom:1px solid #21262d;
-  font-size:.68rem;font-weight:800;letter-spacing:.14em;
-  text-transform:uppercase;color:#8b949e;
-}}
-.sidebar nav{{padding:12px 0;flex:1}}
-.sidebar a{{
-  display:flex;align-items:center;gap:10px;
-  padding:8px 20px;color:#8b949e;text-decoration:none;
-  font-size:.8rem;transition:color .15s,background .15s;
-  border-left:2px solid transparent;
-}}
-.sidebar a:hover{{color:#e6edf3;background:#0d1117;border-left-color:#388bfd}}
-.nav-num{{
-  font-size:.65rem;font-weight:700;color:#388bfd44;
-  background:#1f3a5f22;padding:1px 5px;border-radius:4px;
-  flex-shrink:0;font-variant-numeric:tabular-nums;
-}}
-.sidebar-footer{{
-  padding:16px 20px;border-top:1px solid #21262d;
-  font-size:.72rem;color:#4b5563;line-height:1.5;
-}}
-
-/* ── Main ────────────────────────────── */
-.main{{flex:1;padding:44px 56px;min-width:0}}
-
-/* ── Page header ─────────────────────── */
-.page-title{{font-size:1.5rem;font-weight:800;color:#e6edf3;margin-bottom:6px}}
-.page-meta{{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:32px}}
-.badge{{
-  display:inline-flex;align-items:center;
-  padding:3px 10px;border-radius:20px;
-  font-size:.72rem;font-weight:700;letter-spacing:.04em;
-}}
-.badge-task{{background:#1f3a5f;color:#58a6ff;border:1px solid #388bfd33}}
-.badge-model{{background:#1a3a2a;color:#3fb950;border:1px solid #2ea04333}}
-.meta-time{{color:#4b5563;font-size:.78rem;margin-left:4px}}
-
-/* ── Summary strip ───────────────────── */
-.strip{{
-  display:flex;flex-wrap:wrap;gap:0;
-  background:#161b22;border:1px solid #30363d;border-radius:10px;
-  margin-bottom:44px;overflow:hidden;
-}}
-.ss{{
-  flex:1;min-width:100px;padding:18px 20px;
-  border-right:1px solid #21262d;text-align:center;
-}}
-.ss:last-child{{border-right:none}}
-.ss-val{{font-size:1.25rem;font-weight:800;color:#e6edf3;font-variant-numeric:tabular-nums}}
-.ss-lbl{{font-size:.68rem;color:#8b949e;text-transform:uppercase;letter-spacing:.07em;margin-top:3px}}
-
-/* ── Sections ────────────────────────── */
-section{{margin-bottom:52px}}
-.sec-hd{{display:flex;align-items:flex-start;gap:12px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid #21262d}}
-.sec-num{{
-  font-size:.65rem;font-weight:800;color:#58a6ff;
-  background:#1f3a5f;border:1px solid #388bfd33;
-  border-radius:5px;padding:3px 7px;flex-shrink:0;
-  margin-top:1px;letter-spacing:.04em;
-}}
-.sec-title{{font-size:1rem;font-weight:700;color:#e6edf3}}
-.sec-sub{{font-size:.78rem;color:#8b949e;margin-top:2px}}
-
-/* ── Two-col grid ────────────────────── */
-.two-col{{display:grid;grid-template-columns:1fr 1fr;gap:20px}}
-.col-card{{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:20px}}
-.col-card-title{{font-size:.72rem;font-weight:700;text-transform:uppercase;
-                 letter-spacing:.08em;color:#8b949e;margin-bottom:14px}}
-
-/* ── Metric cards ────────────────────── */
-.mc-grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}}
-.mc{{background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:14px 16px}}
-.mc-lbl{{font-size:.68rem;color:#8b949e;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}}
-.mc-val{{font-size:1.2rem;font-weight:800;color:#58a6ff;font-variant-numeric:tabular-nums}}
-
-/* ── Tables ──────────────────────────── */
-.tbl{{width:100%;border-collapse:collapse;font-size:.835rem}}
-.tbl th{{
-  background:#0d1117;color:#8b949e;font-weight:600;
-  text-align:left;padding:9px 12px;
-  border-bottom:1px solid #30363d;
-  font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;
-}}
-.tbl td{{padding:9px 12px;border-bottom:1px solid #21262d;vertical-align:middle}}
-.tbl tbody tr:hover td{{background:#161b2266}}
-.num{{font-variant-numeric:tabular-nums;text-align:right}}
-.muted{{color:#8b949e}}
-.row-best td{{background:#111f16}}
-.row-error{{opacity:.45}}
-.row-idx{{color:#8b949e;font-size:.78rem;width:36px}}
-.params-cell{{font-size:.75rem;color:#8b949e;max-width:280px}}
-.error-msg{{color:#f85149;font-size:.78rem}}
-
-/* ── Rank / badges ───────────────────── */
-.rank-top{{
-  display:inline-block;width:22px;height:22px;line-height:22px;
-  text-align:center;border-radius:50%;font-size:.72rem;font-weight:800;
-  background:#1f3a5f;color:#58a6ff;
-}}
-.rank-num{{color:#8b949e;font-size:.8rem;font-weight:600}}
-.model-name{{font-weight:600}}
-.best-tag{{
-  font-size:.65rem;font-weight:700;letter-spacing:.05em;
-  background:#1a3a2a;color:#3fb950;border:1px solid #2ea04333;
-  padding:1px 7px;border-radius:10px;margin-left:8px;
-}}
-
-/* ── Feature bar ─────────────────────── */
-.bar-bg{{background:#21262d;border-radius:3px;height:6px}}
-.bar-fill{{background:#388bfd;height:6px;border-radius:3px;min-width:2px}}
-.feat{{color:#79c0ff;font-family:ui-monospace,'SFMono-Regular',monospace;font-size:.8rem}}
-
-/* ── Prediction summary ──────────────── */
-.stat-row{{
-  display:flex;gap:0;background:#161b22;border:1px solid #30363d;
-  border-radius:10px;margin-bottom:16px;overflow:hidden;
-}}
-.stat{{flex:1;padding:16px 20px;text-align:center;border-right:1px solid #21262d}}
-.stat:last-child{{border-right:none}}
-.stat-val{{display:block;font-size:1.3rem;font-weight:800;font-variant-numeric:tabular-nums}}
-.stat-lbl{{display:block;font-size:.68rem;color:#8b949e;text-transform:uppercase;letter-spacing:.07em;margin-top:3px}}
-.ok{{color:#3fb950}}.ng{{color:#f85149}}.hi{{color:#58a6ff}}.bold{{font-weight:700}}
-.table-note{{color:#8b949e;font-size:.75rem;margin-bottom:8px}}
+{css_styles}
 </style>
 </head>
 <body>

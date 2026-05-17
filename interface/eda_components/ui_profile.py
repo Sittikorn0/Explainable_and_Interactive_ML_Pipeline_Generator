@@ -39,16 +39,14 @@ def render_profile_tab(dataframe: pd.DataFrame, target_column: str, outlier_deta
         },
     )
 
-    with st.expander("Attribute Types & ML Category คืออะไร? (อ้างอิง Topic 2)"):
+    with st.expander("Attribute Types & ML Category คืออะไร?"):
         st.markdown(
-            "**ประเภทข้อมูลตาม Machine Learning** (อ้างอิง Topic 2 — Getting to Know Your Data):\n\n"
+            "**ประเภทข้อมูลตาม Machine Learning**:\n\n"
             "| ประเภท | ความหมาย | ตัวอย่าง | ค่ากลางที่ใช้ได้ |\n"
             "|--------|---------|---------|----------------|\n"
             "| **Categorical/Nominal** | ข้อมูลเชิงหมวดหมู่ ไม่มีลำดับ | สีผม, เพศ, จังหวัด | Mode เท่านั้น |\n"
             "| **Numeric/Discrete** | ตัวเลขจำนวนเต็ม นับได้ | จำนวนสินค้า, อายุ | Mean, Median, Mode |\n"
             "| **Numeric/Continuous** | ตัวเลขทศนิยม วัดได้ | น้ำหนัก, อุณหภูมิ | Mean, Median |\n"
             "| **Datetime** | วันที่/เวลา | 2024-01-01 | — |\n\n"
-            "**Target** คือคอลัมน์ที่ต้องการทำนาย ซึ่งเลือกไว้ในขั้นตอน Upload\n\n"
-            "> Topic 2 ยังอธิบายถึง **Ordinal** (ข้อมูลที่มีลำดับ เช่น Low/Medium/High) "
-            "และ **Binary** (ข้อมูล 2 ค่า เช่น Yes/No) ซึ่งระบบจัดอยู่ในกลุ่ม Categorical"
+            "**Target** คือคอลัมน์ที่ต้องการทำนาย ซึ่งเลือกไว้ในขั้นตอน Upload"
         )

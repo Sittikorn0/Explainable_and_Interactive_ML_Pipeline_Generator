@@ -4,8 +4,7 @@ import warnings
 import numpy as np
 import pandas as pd
 
-# กำหนดจำนวน CPU Cores ที่ใช้ (ไม่ให้ดึงไปหมดจนเครื่องค้าง)
-# เช่น i7-12700H (20 threads) จะใช้แค่ 6 threads เพื่อให้เครื่องยังเล่นเน็ตหรือทำงานอื่นได้ลื่นๆ
+# กำหนดจำนวน CPU Cores ที่ใช้
 N_JOBS_LIMIT = min(6, max(1, os.cpu_count() // 2)) if os.cpu_count() else 2
 
 from sklearn.linear_model import LogisticRegression, LinearRegression, SGDClassifier
@@ -82,8 +81,6 @@ def calculate_safe_cv(target_train, task_type: str):
     if task_type == "classification":
         min_class_count = int(pd.Series(target_train).value_counts().min())
         cv_splits = max(2, min(5, min_class_count))
-        # ถ้ามี class ที่มีข้อมูลไม่พอสำหรับ StratifiedKFold (ต้องมี >= cv)
-        # ให้เปลี่ยนไปใช้ KFold ธรรมดาเพื่อป้องกัน Error
         if min_class_count < cv_splits:
             return KFold(n_splits=cv_splits, shuffle=True, random_state=42)
         return cv_splits
@@ -118,9 +115,7 @@ def run_competition(features_train, features_test, target_train, target_test,
     if task_type == "classification" and target_train.dtype == object:
         target_label_encoder = LabelEncoder()
         target_train = pd.Series(target_label_encoder.fit_transform(target_train), index=target_train.index)
-        
         known_categories = set(target_label_encoder.classes_)
-        # ใช้ mode เป็น fallback ปลอดภัยกว่าตัวแรกสุด
         fallback_category = target_label_encoder.transform([pd.Series(target_label_encoder.classes_).mode()[0]])[0] 
         target_test = pd.Series(
             target_test.apply(lambda val: target_label_encoder.transform([val])[0] if val in known_categories else fallback_category),
@@ -156,15 +151,11 @@ def run_competition(features_train, features_test, target_train, target_test,
                     best_parameters = random_search.best_params_
                     cv_mean_score = float(random_search.best_score_)
                     cv_std_score = float(random_search.cv_results_["std_test_score"][random_search.best_index_])
-                    
-                    # ตั้งค่า best parameter ให้โมเดล
                     model_instance.set_params(**best_parameters)
                 else:
                     cross_val_scores = cross_val_score(model_instance, sampled_features_train, sampled_target_train, cv=cv_strategy, scoring=scorer_metric, n_jobs=N_JOBS_LIMIT)
                     cv_mean_score, cv_std_score = float(cross_val_scores.mean()), float(cross_val_scores.std())
                     
-                # Retrain โมเดลด้วยพารามิเตอร์ที่ดีที่สุดบนชุดข้อมูล features_train เต็มเสมอ (ไม่ใช้ตัวที่สุ่มมาทำ Grid Search)
-                # HistGradientBoosting ไม่มี class_weight → ใช้ sample_weight แทน
                 fit_keywords = {}
                 if task_type == "classification" and model_key in ("gradient_boosting",):
                     fit_keywords["sample_weight"] = compute_sample_weight("balanced", target_train)
@@ -185,24 +176,13 @@ def run_competition(features_train, features_test, target_train, target_test,
 
         except Exception as exception:
             competition_results[model_key] = {
-                "label": model_label, 
-                "cv_score": None,
-                "cv_std": None, 
-                "best_params": {}, 
-                "error": str(exception)
+                "label": model_label, "cv_score": None, "cv_std": None, "best_params": {}, "error": str(exception)
             }
 
     if best_model_instance is None:
-        error_lines = "\n".join(
-            f"  • {result['label']}: {result['error']}"
-            for result in competition_results.values()
-            if result.get("error")
-        )
-        raise ValueError(f"ทุก model ล้มเหลว:\n{error_lines}")
+        raise ValueError("ทุก model ล้มเหลว")
 
     predicted_test_target = best_model_instance.predict(features_test)
-    
-    # ถ้ามีการเข้ารหัส Target ให้แปลงกลับเป็น String เพื่อให้กราฟและ UI อ่านรู้เรื่อง
     if target_label_encoder is not None:
         target_test = pd.Series(target_label_encoder.inverse_transform(target_test), index=target_test.index)
         predicted_test_target = target_label_encoder.inverse_transform(predicted_test_target)

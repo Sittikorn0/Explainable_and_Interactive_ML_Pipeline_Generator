@@ -23,7 +23,7 @@ def render_scaling(dataframe: pd.DataFrame, target_column: str,
 
     column_statistics = scaling_analysis["column_stats"]
     if not column_statistics:
-        st.success("ไม่มี numeric columns ที่ต้องทำ scaling")
+        st.markdown("**[ OK ]** ไม่มี numeric columns ที่ต้องทำ scaling")
         return "no_scaling"
 
     # แสดง stats ของ numeric columns
@@ -57,11 +57,20 @@ def render_scaling(dataframe: pd.DataFrame, target_column: str,
         st.plotly_chart(figure, width="stretch")
 
     # Recommendation
-    rec_label = SCALING_LABELS.get(scaling_analysis["recommended"], scaling_analysis["recommended"]).upper()
+    rec_label  = SCALING_LABELS.get(scaling_analysis["recommended"], scaling_analysis["recommended"]).upper()
+    reference  = scaling_analysis.get("reference", "")
+    confidence = scaling_analysis.get("confidence", None)
+    rule_id    = scaling_analysis.get("rule_id", "")
+
+    conf_text = f"Confidence: {int(confidence * 100)}%" if confidence else ""
+    ref_text = f"Ref: {reference}" if reference else ""
+    meta_text = f"{conf_text} &nbsp;|&nbsp; {ref_text}" if conf_text or ref_text else ""
+    
     st.markdown(f"""
-<div class="premium-card premium-card-blue" style="padding: 20px 24px !important;">
-    <div class="technical-label" style="color: #7AA2F7; margin-bottom: 6px; font-size: 0.8rem; letter-spacing: 0.12em; font-weight: 700;">RECOMMENDED METHOD: {rec_label}</div>
-    <div style="font-size: 1rem; color: #94A3B8; line-height: 1.6;">{scaling_analysis["reason"]}</div>
+<div style="background-color: rgba(122, 162, 247, 0.05); border: 1px solid rgba(122, 162, 247, 0.2); border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+<div style="color: #7AA2F7; font-weight: bold; font-family: monospace; font-size: 1.05rem; margin-bottom: 8px; border-bottom: 1px solid rgba(122, 162, 247, 0.1); padding-bottom: 8px;">RECOMMENDED METHOD: {rec_label}</div>
+<div style="color: #E2E8F0; font-size: 1rem; line-height: 1.6;">{scaling_analysis['reason']}</div>
+<div style="color: #64748b; font-size: 0.85rem; margin-top: 12px; font-family: monospace;">{meta_text}</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -69,12 +78,12 @@ def render_scaling(dataframe: pd.DataFrame, target_column: str,
     if scaling_analysis["recommended"] == "log_transform":
         heavy_skew_columns = scaling_analysis.get("heavy_skew_cols", [])
         st.markdown(f"""
-<div style="border-left: 3px solid #7AA2F7; background: rgba(122, 162, 247, 0.03); padding: 16px 20px; margin: 12px 0; font-family: monospace; font-size: 0.9rem;">
-    <div style="color: #7AA2F7; margin-bottom: 6px; letter-spacing: 0.05em; font-weight: 700;">LOG TRANSFORM SPEC:</div>
-    <div style="color: #94A3B8; line-height: 1.6;">
-        Method: log1p(x)<br>
-        Applied to: {', '.join(heavy_skew_columns[:3])}{'...' if len(heavy_skew_columns)>3 else ''}
-    </div>
+<div style="background-color: rgba(255,255,255,0.02); border-left: 3px solid #7AA2F7; border-radius: 4px; padding: 12px 20px; margin-top: 12px; margin-bottom: 24px;">
+<div style="color: #7AA2F7; font-family: monospace; font-weight: bold; margin-bottom: 4px;">LOG TRANSFORM SPEC</div>
+<div style="color: #94A3B8; font-size: 0.95rem;">
+<strong>Method:</strong> log1p(x)<br>
+<strong>Applied to:</strong> {', '.join(heavy_skew_columns[:3])}{'...' if len(heavy_skew_columns)>3 else ''}
+</div>
 </div>
 """, unsafe_allow_html=True)
 

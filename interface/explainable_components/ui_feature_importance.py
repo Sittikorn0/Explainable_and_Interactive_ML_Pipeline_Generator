@@ -25,7 +25,7 @@ def render_importance(model, X_test, y_test, task_type):
         x=plot_dataframe["Importance"],
         y=plot_dataframe["Feature"],
         orientation="h",
-        marker=dict(color=plot_dataframe["Importance"].tolist(), colorscale="Blues", showscale=False),
+        marker=dict(color=plot_dataframe["Importance"].tolist(), colorscale=[[0, "rgba(122, 162, 247, 0.1)"], [1, "#7AA2F7"]], showscale=False),
         text=plot_dataframe["Importance"].round(3).tolist(),
         textposition="outside",
     ))
@@ -47,7 +47,7 @@ def render_importance(model, X_test, y_test, task_type):
 
     render_section_header("3 Feature สำคัญที่สุด")
 
-    rank_colors  = ["#58a6ff", "#3fb950", "#d29922"]
+    rank_colors  = ["#E0AF68", "#BB9AF7", "#7AA2F7"]
     rank_labels  = ["#1", "#2", "#3"]
     total_importance = positive_importance_features["Importance"].sum() + 1e-9
     top_3_features = positive_importance_features.head(3).reset_index(drop=True)
@@ -76,8 +76,8 @@ def render_importance(model, X_test, y_test, task_type):
     useless_features = permutation_dataframe[permutation_dataframe["Importance"] <= 0]
     if len(useless_features):
         st.markdown("<br>", unsafe_allow_html=True)
-        st.caption(
-            f"Feature ที่แทบไม่มีผล ({len(useless_features)} ตัว): "
+        st.info(
+            f"**Feature ที่แทบไม่มีผล ({len(useless_features)} ตัว):**\n"
             + ", ".join(f"`{feature}`" for feature in useless_features["Feature"].head(5))
             + (" ..." if len(useless_features) > 5 else "")
         )

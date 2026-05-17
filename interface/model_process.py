@@ -84,6 +84,8 @@ def render_ml_process():
                 X_train, X_test, y_train, y_test, task_type = preprocess(
                     dataframe, target_column,
                     scaling_method=scaling_method,
+                    missing_rules=st.session_state.get("missing_rules"),
+                    outlier_rules=st.session_state.get("outlier_rules")
                 )
                 st.session_state["ml_task_type"]    = task_type
                 st.session_state["_ml_scaling_used"] = scaling_method
@@ -146,19 +148,16 @@ def render_ml_process():
         st.caption(f"Scaling: **{scaling_used}** (fit บน Train set เท่านั้น — ป้องกัน Data Leakage)")
 
     leakage_items = st.session_state.get("_ml_leakage_warnings", [])
-    if leakage_items:
-        high_risk   = [item for item in leakage_items if item["severity"] == "high"]
-        medium_risk = [item for item in leakage_items if item["severity"] == "medium"]
-
-        leakage_color  = "#f85149" if high_risk else "#d29922"
-        leakage_title  = "ตรวจพบ Data Leakage — ค่า Metric อาจสูงผิดปกติ" if high_risk \
-                 else "พบ column ที่น่าสงสัย — ควรตรวจสอบ"
+    high_risk_items = [item for item in leakage_items if item["severity"] == "high"]
+    
+    if high_risk_items:
+        leakage_color  = "#f85149"
+        leakage_title  = "ตรวจพบความเสี่ยง Data Leakage — ค่า Metric อาจสูงผิดปกติ"
 
         rows_html_content = ""
-        for item in leakage_items:
-            severity_color = "#f85149" if item["severity"] == "high" else \
-                        "#d29922" if item["severity"] == "medium" else "#8b949e"
-            severity_label = {"high": "HIGH", "medium": "MED", "low": "LOW"}[item["severity"]]
+        for item in high_risk_items:
+            severity_color = "#f85149"
+            severity_label = "HIGH RISK"
             reasons_string = " · ".join(item["reasons"])
             rows_html_content += (
                 f'<div style="display:flex;gap:12px;align-items:flex-start;'
@@ -172,14 +171,14 @@ def render_ml_process():
             )
 
         st.markdown(
-            f'<div style="background:#1a0f0f;border:1px solid {leakage_color};border-radius:10px;'
-            f'padding:16px 20px;margin:12px 0">'
-            f'<div style="color:{leakage_color};font-weight:700;font-size:1rem;margin-bottom:4px">'
-            f'Data Leakage Warning</div>'
-            f'<div style="color:#c9d1d9;font-size:0.9rem;margin-bottom:12px">{leakage_title}</div>'
+            f'<div style="background-color: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px;'
+            f'padding: 20px 24px; margin: 16px 0">'
+            f'<div style="color: #EF4444; font-weight: bold; font-family: monospace; font-size: 1.05rem; margin-bottom: 4px">'
+            f'[!] DATA LEAKAGE WARNING</div>'
+            f'<div style="color: #E2E8F0; font-size: 0.95rem; margin-bottom: 16px">{leakage_title}</div>'
             f'{rows_html_content}'
-            f'<div style="color:#8b949e;font-size:0.85rem;margin-top:12px">'
-            f'ย้อนกลับไป <b>Transformation</b> แล้ว drop column ที่น่าสงสัยออกก่อน Run ใหม่</div>'
+            f'<div style="color: #94A3B8; font-size: 0.85rem; margin-top: 16px; border-top: 1px solid rgba(239, 68, 68, 0.1); padding-top: 12px;">'
+            f'แนะนำ: ย้อนกลับไปหน้า <b>Transformation</b> เพื่อตัดคอลัมน์เหล่านี้ออกก่อนประมวลผลใหม่</div>'
             f'</div>',
             unsafe_allow_html=True,
         )
@@ -265,10 +264,10 @@ def render_ml_process():
                 st.markdown("**Residual Plot (ความคลาดเคลื่อน)**")
                 show_residual_plot(competition_result["y_test"].values, competition_result["y_pred"])
                 st.markdown("""
-                <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;
-                padding:12px 16px;margin:8px 0;font-size:0.81rem;color:#c9d1d9;line-height:1.8">
-                  <b style="color:#e6edf3">วิธีอ่าน Residual Plot</b><br>
-                  • ดูความกระจายของ <b style="color:#d29922">Error</b> เทียบกับค่าที่ทำนาย<br>
+                <div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+                padding: 16px 20px; margin: 12px 0; font-size: 0.9rem; color: #94A3B8; line-height: 1.8">
+                  <b style="color: #E2E8F0;">วิธีอ่าน Residual Plot</b><br>
+                  • ดูความกระจายของ <b style="color: #F59E0B;">Error</b> เทียบกับค่าที่ทำนาย<br>
                   • จุดควรกระจายรอบเส้น 0 แบบไม่มีรูปแบบ (Random)<br>
                   • ถ้าจุดมีรูปแบบชัดเจน (เช่น เป็นรูปกรวย) แปลว่า model ยังมีจุดอ่อนบางพื้นที่
                 </div>""", unsafe_allow_html=True)
@@ -277,10 +276,10 @@ def render_ml_process():
             st.markdown("**Error Distribution (การกระจายตัวของความผิดพลาด)**")
             show_error_dist(competition_result["y_test"].values, competition_result["y_pred"])
             st.markdown("""
-            <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;
-            padding:12px 16px;margin:8px 0;font-size:0.81rem;color:#c9d1d9;line-height:1.8">
+            <div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+            padding: 16px 20px; margin: 12px 0; font-size: 0.9rem; color: #94A3B8; line-height: 1.8">
               • กราฟนี้แสดงว่า model มักทำนายผิดพลาดในช่วงไหนมากที่สุด<br>
-              • <b style="color:#bc8cff">รูประฆังคว่ำ (Normal)</b> ที่จุด 0 หมายถึง model มีความแม่นยำสูงสม่ำเสมอ
+              • <b style="color: #BB9AF7;">รูประฆังคว่ำ (Normal)</b> ที่จุด 0 หมายถึง model มีความแม่นยำสูงสม่ำเสมอ
             </div>""", unsafe_allow_html=True)
         predictions_csv = build_predictions_df(competition_result["y_test"], competition_result["y_pred"], task_type).to_csv(index=False).encode("utf-8-sig")
         st.markdown('<div style="margin-top:24px"></div>', unsafe_allow_html=True)
