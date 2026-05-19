@@ -14,5 +14,10 @@ __pycache__/
 ngrok.exe
 
 # Project Files
-cache/
+cache/cleaning/
+cache/dataset/
+cache/log/
+cache/model/
+cache/transformation/
+
 catboost_info/
