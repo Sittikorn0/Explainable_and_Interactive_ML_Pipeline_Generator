@@ -1,0 +1,18 @@
+# Python
+.env
+.venv
+.python-version
+__pycache__/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Tools
+.ngrok.exe.old
+ngrok.exe
+
+# Project Files
+cache/
+catboost_info/

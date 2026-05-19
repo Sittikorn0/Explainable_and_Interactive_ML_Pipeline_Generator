@@ -1,0 +1,270 @@
+/* ── Standard Modern Midnight Lab ────────────────── */
+:root {
+  --bg-primary: #1a1b26;
+  --surface-primary: #24283b;
+  --border-subtle: #414868;
+  --text-primary: #e2e8f0;
+  --text-muted: #94a3b8;
+  --accent-blue: #7aa2f7;
+  --accent-insight: #9ece6a;
+}
+
+/* ── Standard Layout (Flexible) ──────────────────── */
+.block-container {
+  padding-top: 4.5rem !important;
+  padding-bottom: 5rem !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+}
+
+/* ── Typography (Responsive) ──────────────────── */
+html,
+body,
+[class*="css"] {
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif !important;
+  font-size: 16px !important;
+  color: var(--text-primary) !important;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.01em !important;
+  color: var(--accent-blue) !important;
+}
+
+h1 {
+  font-size: 2.2rem !important;
+  font-weight: 800 !important;
+  margin-bottom: 1.5rem !important;
+}
+
+/* ── Standard Buttons (Excluding Sidebar) ────────── */
+div.stButton > button:not([data-testid="stSidebar"] button),
+div.stDownloadButton > button {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  padding: 0.5rem 1rem !important;
+  border: 1px solid var(--border-subtle) !important;
+  background-color: var(--surface-primary) !important;
+  color: var(--text-primary) !important;
+  transition: all 0.2s ease !important;
+}
+
+/* ── Sidebar Navigation (True Minimal) ─────────── */
+[data-testid="stSidebar"] div.stButton > button {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px 0px !important;
+  margin: 0 !important;
+  min-height: unset !important;
+  width: 100% !important;
+  justify-content: flex-start !important;
+}
+
+[data-testid="stSidebar"] div.stButton > button p {
+  font-size: 0.95rem !important;
+  white-space: nowrap !important;
+}
+
+div.stButton > button[kind="primary"] {
+  background-color: #ffffff !important;
+  color: #1a1b26 !important;
+  border: none !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  letter-spacing: 0.05em !important;
+  padding: 0.6rem 1.5rem !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.2s ease !important;
+}
+
+div.stButton > button[kind="primary"]:hover {
+  background-color: #ffffff !important;
+  color: #1a1b26 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ── Standard Surface (Metrics) ──────────────────── */
+[data-testid="stMetric"] {
+  background: var(--surface-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 8px !important;
+  padding: 1rem !important;
+}
+
+/* ── Standard Tabs ───────────────────────────────── */
+.stTabs [data-baseweb="tab-list"] {
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 1rem !important;
+}
+
+.stTabs [data-baseweb="tab"] {
+  height: 3rem !important;
+  transition: all 0.2s ease !important;
+  padding: 0 0.5rem !important;
+}
+
+/* บังคับขนาด Font ที่ตัวหนังสือจริงๆ */
+.stTabs [data-baseweb="tab"] * {
+  font-weight: 700 !important;
+  font-size: 1.15rem !important;
+  white-space: nowrap !important;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+  color: #ffffff !important;
+}
+
+.stTabs [aria-selected="true"] {
+  color: var(--accent-blue) !important;
+}
+
+/* Tab indicator (the line below) */
+.stTabs [data-baseweb="tab-highlight"] {
+  background-color: var(--accent-blue) !important;
+  height: 3px !important;
+  border-radius: 3px 3px 0 0 !important;
+}
+
+/* ── Standard Expander ───────────────────────────── */
+[data-testid="stExpander"] {
+  background: var(--surface-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 8px !important;
+}
+
+/* ── Sidebar ─────────────────────────────────────── */
+[data-testid="stSidebar"] {
+  background-color: #16161e !important;
+}
+
+/* ── Metric value ────────────────────────────────── */
+[data-testid="stMetricValue"] * {
+  font-size: 1.8rem !important;
+  font-weight: 700 !important;
+  color: #7aa2f7 !important;
+}
+[data-testid="stMetricValue"] > div {
+  white-space: normal !important;
+  overflow: visible !important;
+  word-break: break-word !important;
+}
+
+/* ── Premium cards ───────────────────────────────── */
+.premium-card {
+  background: rgba(30, 41, 59, 0.4) !important;
+  border: 1px solid rgba(148, 163, 184, 0.1) !important;
+  border-left: 4px solid #7aa2f7 !important;
+  border-radius: 4px !important;
+  padding: 24px !important;
+  margin: 16px 0 !important;
+}
+.premium-card-purple {
+  border-left-color: #bb9af7 !important;
+  background: rgba(88, 28, 135, 0.05) !important;
+}
+.premium-card-blue {
+  border-left-color: #7aa2f7 !important;
+  background: rgba(30, 58, 138, 0.05) !important;
+}
+.premium-card-amber {
+  border-left-color: #f59e0b !important;
+  background: rgba(120, 53, 15, 0.05) !important;
+}
+
+/* ── Monospace labels ────────────────────────────── */
+.technical-label {
+  font-family: "JetBrains Mono", "Roboto Mono", monospace !important;
+  font-size: 0.95rem !important;
+  color: #94a3b8 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  margin-bottom: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+.section-header {
+  font-family: "JetBrains Mono", "Roboto Mono", monospace !important;
+  font-size: 1.4rem !important;
+  font-weight: 700 !important;
+  color: #f8fafc !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.2em !important;
+  margin: 40px 0 24px 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1) !important;
+  padding-bottom: 10px !important;
+}
+.technical-value {
+  font-family: "JetBrains Mono", "Roboto Mono", monospace !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  color: #f8fafc !important;
+}
+
+/* ── Download button ─────────────────────────────── */
+div[data-testid="stDownloadButton"] button {
+  background-color: rgba(139, 92, 246, 0.05) !important;
+  color: #a78bfa !important;
+  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+  border-radius: 8px !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  padding: 0.53rem 1.2rem !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  width: 100% !important;
+}
+div[data-testid="stDownloadButton"] button:hover {
+  background-color: #8b5cf6 !important;
+  color: #ffffff !important;
+  border-color: #8b5cf6 !important;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* ── "New Dataset" reset button ──────────────────── */
+div[data-testid="stElementContainer"]:has(.custom-reset-marker)
+  ~ div[data-testid="stElementContainer"]
+  .stButton
+  button {
+  background-color: transparent !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(248, 113, 113, 0.4) !important;
+  border-radius: 8px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  padding: 0.45rem 1rem !important;
+}
+div[data-testid="stElementContainer"]:has(.custom-reset-marker)
+  ~ div[data-testid="stElementContainer"]
+  .stButton
+  button:hover {
+  background-color: #f87171 !important;
+  color: #ffffff !important;
+  border-color: #f87171 !important;
+}
+
+/* ── Generic secondary buttons ───────────────────── */
+.stButton button:not([kind="primary"]) {
+  background-color: transparent !important;
+  color: #94a3b8 !important;
+  border: 1px solid rgba(148, 163, 184, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+.stButton button:not([kind="primary"]):hover {
+  background-color: rgba(148, 163, 184, 0.1) !important;
+  color: #e2e8f0 !important;
+  border-color: #94a3b8 !important;
+}
