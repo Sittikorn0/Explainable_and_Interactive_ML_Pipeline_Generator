@@ -114,7 +114,7 @@ def run_competition(features_train, features_test, target_train, target_test,
     best_model_instance = None
 
     target_label_encoder = None
-    if task_type == "classification" and target_train.dtype == object:
+    if task_type == "classification":
         target_label_encoder = LabelEncoder()
         target_train = pd.Series(target_label_encoder.fit_transform(target_train), index=target_train.index)
         known_categories = set(target_label_encoder.classes_)
