@@ -300,15 +300,9 @@ def log_transformation(summary: dict, enc_decisions: dict, scaling_method: str, 
 
     explanations = []
 
-    # ทำไมต้องปรับขนาด  ดึง reference จาก rule engine ถ้ามี
-    scaling_ref  = summary.get("scaling_reference", "")
-    scaling_conf = summary.get("scaling_confidence", None)
-    scaling_rule = summary.get("scaling_rule_id", "")
-
+    # ทำไมต้องปรับขนาด
     reason = SCALING_REASONS.get(scaling_method, f"ใช้ {scaling_method}")
-    ref_str = f" [อ้างอิง: {scaling_ref}]" if scaling_ref else ""
-    conf_str = f" | ความเชื่อมั่น: {int(scaling_conf*100)}%" if scaling_conf is not None else ""
-    explanations.append(f"ทำไมปรับขนาดด้วย {scaling_method}?{ref_str}{conf_str} เหตุผลคือ {reason}")
+    explanations.append(f"ทำไมปรับขนาดด้วย {scaling_method}? เหตุผลคือ {reason}")
 
     if scaling_method != "no_scaling":
         explanations.append(
@@ -317,17 +311,13 @@ def log_transformation(summary: dict, enc_decisions: dict, scaling_method: str, 
             "ปรับขนาดช่วยให้ทุกคอลัมน์มีน้ำหนักเท่าเทียมกัน"
         )
 
-    # ทำไมต้องแปลงข้อความ  ดึง reference จาก enc_rule_refs ถ้ามี
-    enc_rule_refs = summary.get("enc_rule_refs", {})
+    # ทำไมต้องแปลงข้อความ
     for method, cols in enc_by_method.items():
-        col_refs = [enc_rule_refs.get(c, {}) for c in cols]
-        ref_ex = next((r.get("reference", "") for r in col_refs if r.get("reference")), "")
-        ref_str = f" [อ้างอิง: {ref_ex}]" if ref_ex else ""
         reason = ENCODING_REASONS.get(method, f"ใช้ {method}")
         cols_str = ", ".join(cols[:3])
         if len(cols) > 3:
             cols_str += f" อีก {len(cols)-3} ตัว"
-        explanations.append(f"ทำไมแปลง {cols_str} ด้วย {method}?{ref_str} เหตุผลคือ {reason}")
+        explanations.append(f"ทำไมแปลง {cols_str} ด้วย {method}? เหตุผลคือ {reason}")
 
     if enc_by_method:
         explanations.append(
