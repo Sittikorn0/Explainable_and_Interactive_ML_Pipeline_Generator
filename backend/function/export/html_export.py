@@ -85,14 +85,10 @@ def pred_html(y_test, y_pred, task_type: str) -> str:
             f'</div>'
         )
         header = "<tr><th>#</th><th>Actual</th><th>Predicted</th><th style='width:64px;text-align:center'>Result</th></tr>"
-        body   = "".join(
-            f'<tr>'
-            f'<td class="row-idx">{i+1}</td>'
-            f'<td>{a}</td><td>{p}</td>'
-            f'<td style="text-align:center">{"<span class=\'ok bold\'>✓</span>" if a==p else "<span class=\'ng bold\'>✗</span>"}</td>'
-            f'</tr>'
-            for i, (a, p) in enumerate(zip(y_test[:50], y_pred[:50]))
-        )
+        def _row(i, a, p):
+            icon = '<span class="ok bold">✓</span>' if a == p else '<span class="ng bold">✗</span>'
+            return f'<tr><td class="row-idx">{i+1}</td><td>{a}</td><td>{p}</td><td style="text-align:center">{icon}</td></tr>'
+        body = "".join(_row(i, a, p) for i, (a, p) in enumerate(zip(y_test[:50], y_pred[:50])))
     else:
         errs = np.abs(y_pred - y_test)
         summary = (

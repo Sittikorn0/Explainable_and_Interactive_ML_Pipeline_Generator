@@ -42,10 +42,7 @@ def render_ml_encoding(dataframe: pd.DataFrame, target_column: str,
         if len(sample_values_text) > 150:
             sample_values_text = sample_values_text[:150] + "..."
 
-        confidence = info.get("confidence")
-        reference  = info.get("reference", "")
-        
-        meta_html = f'<div style="color: #64748b; font-size: 0.85rem; margin-top: 12px; font-family: monospace;">Confidence: {int(confidence*100)}% &nbsp;|&nbsp; Ref: {reference}</div>' if confidence or reference else ""
+        meta_html = ""
         st.markdown(f"""
 <div style="margin-bottom: 24px;">
 <div style="margin-bottom: 12px;">

@@ -246,8 +246,8 @@ def render_model_process():
                 f'โมเดลได้คะแนนสูงสุดซึ่งมักเกิดจาก <b>Data Leakage</b> (ความผิดปกติของข้อมูลที่มีเฉลยปนอยู่) '
                 f'หรือความผิดพลาดในการเลือกฟีเจอร์ที่ไม่เป็นกลางต่อผลลัพธ์'
                 f'</div>'
-                f'{"<div style=\"color:#565f89; font-size:0.8rem; text-transform:uppercase; font-weight:600; margin-bottom:8px; letter-spacing:0.05em\">Suspicious Features:</div>" if feature_importance_rows else ""}'
-                f'{feature_importance_rows}'
+                + ('<div style="color:#565f89; font-size:0.8rem; text-transform:uppercase; font-weight:600; margin-bottom:8px; letter-spacing:0.05em">Suspicious Features:</div>' if feature_importance_rows else '')
+                + f'{feature_importance_rows}'
                 f'<div style="color: #565f89; font-size: 0.85rem; margin-top: 20px; border-top: 1px solid rgba(148, 163, 184, 0.1); padding-top: 16px">'
                 f'<b>Resolution:</b> กลับไปหน้า <b>Transformation</b> และพิจารณาตัด (Drop) ฟีเจอร์ที่มีอิทธิพลสูงผิดปกติออก</div>'
                 f'</div>',

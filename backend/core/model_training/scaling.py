@@ -62,15 +62,10 @@ def render_ml_scaling(dataframe: pd.DataFrame, target_column: str,
     confidence = scaling_analysis.get("confidence", None)
     rule_id    = scaling_analysis.get("rule_id", "")
 
-    conf_text = f"Confidence: {int(confidence * 100)}%" if confidence else ""
-    ref_text = f"Ref: {reference}" if reference else ""
-    meta_text = f"{conf_text} &nbsp;|&nbsp; {ref_text}" if conf_text or ref_text else ""
-    
     st.markdown(f"""
 <div style="background-color: rgba(122, 162, 247, 0.05); border: 1px solid rgba(122, 162, 247, 0.2); border-radius: 8px; padding: 20px; margin-bottom: 24px;">
 <div style="color: #7AA2F7; font-weight: bold; font-family: monospace; font-size: 1.05rem; margin-bottom: 8px; border-bottom: 1px solid rgba(122, 162, 247, 0.1); padding-bottom: 8px;">RECOMMENDED METHOD: {rec_label}</div>
 <div style="color: #E2E8F0; font-size: 1rem; line-height: 1.6;">{scaling_analysis['reason']}</div>
-<div style="color: #64748b; font-size: 0.85rem; margin-top: 12px; font-family: monospace;">{meta_text}</div>
 </div>
 """, unsafe_allow_html=True)
 

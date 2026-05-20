@@ -94,7 +94,7 @@ def analyze_scaling(dataset: pd.DataFrame, target_column: str) -> dict:
         recommended_method = _scl_action_map.get(rule_result["action"], "standard_scaler")
         reason     = rule_result["explanation"]
         reference  = rule_result["reference"]
-        confidence = rule_result["confidence"]
+        confidence = rule_result.get("confidence", 0.8)
         rule_id    = rule_result["rule_id"]
     else:
         recommended_method = "standard_scaler"

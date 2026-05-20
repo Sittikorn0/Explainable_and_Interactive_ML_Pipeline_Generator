@@ -91,54 +91,60 @@ def handle_next_step(df: pd.DataFrame, uploaded_file) -> None:
 # Render Page
 def render_upload():
     from main_compo import page_header
-    
+
     page_header(
         "Upload Dataset",
         "Support CSV, Excel, JSON ( Maximum size 200 MB )",
     )
-    
+
+    st.markdown(
+        "<style>[data-testid='stFileUploaderDeleteBtn']{display:none!important}"
+        " [data-testid='fileDeleteBtn']{display:none!important}"
+        " [data-testid='stFileUploader'] ul li button{display:none!important}</style>",
+        unsafe_allow_html=True,
+    )
     upload_file = st.file_uploader(
         "Upload",
         type=["csv", "xlsx", "xls", "json"],
         label_visibility="collapsed",
     )
-    
-    if not upload_file:
-        return
-    
-    # Check File Type
-    file_type = upload_file.name.rsplit(".", 1)[-1].lower()
-    
-    # JSON
-    is_json = file_type == "json"
-    
-    # Load File
-    if st.session_state.get("last_uploaded_file") != upload_file.name:
-        try:
-            df, warnings, json_metadata = process_data(upload_file)
-        except ValueError as e:
-            st.error(f"ไม่สามารถโหลดไฟล์ได้: {e}")
-            return
 
-        if df is None:
-            st.error("Failed to load data. Please check the file format and content.")
-            return
+    if upload_file is not None:
+        file_type = upload_file.name.rsplit(".", 1)[-1].lower()
+        is_json = file_type == "json"
 
-        save_new_file(df, upload_file.name, warnings, json_metadata)
+        if st.session_state.get("last_uploaded_file") != upload_file.name:
+            try:
+                df, warnings, json_metadata = process_data(upload_file)
+            except ValueError as e:
+                st.error(f"ไม่สามารถโหลดไฟล์ได้: {e}")
+                return
+            if df is None:
+                st.error("Failed to load data. Please check the file format and content.")
+                return
+            save_new_file(df, upload_file.name, warnings, json_metadata)
+
+    else:
+        if st.session_state.get("main_df") is None:
+            return
+        file_type = (st.session_state.get("last_uploaded_file", "") or "").rsplit(".", 1)[-1].lower()
+        is_json = file_type == "json"
+        upload_file = None
 
     df = st.session_state.get("main_df")
     warnings = st.session_state.get("file_warnings") or []
     excel_sheets = parse_excel_sheets(warnings)
     col_decisions = st.session_state.get("json_col_decisions", [])
     raw_df = st.session_state.get("json_raw_df")
+    file_name = st.session_state.get("last_uploaded_file", "")
 
     if df is None:
         return
-    
+
     # Show Data
     msg_col, badge_col = st.columns([7, 1])
     with msg_col:
-        st.success(f"โหลดไฟล์ '{upload_file.name}' สำเร็จ!")
+        st.success(f"โหลดไฟล์ '{file_name}' สำเร็จ!")
     with badge_col:
         st.markdown(file_badge(file_type), unsafe_allow_html=True)
 
@@ -161,11 +167,11 @@ def render_upload():
             )
         else:
             st.success("โครงสร้าง JSON ตรงไปตรงมา ไม่พบ Nested Fields", icon="✅")
-            
+
     # Tabs
     tab_names = ["Data Preview", "Target Column"] + (["JSON Config"] if is_json else [])
     tabs = st.tabs(tab_names)
-    
+
     with tabs[0]:
         st.dataframe(df.head(10), width="stretch")
     with tabs[1]:
@@ -173,11 +179,16 @@ def render_upload():
     if is_json:
         with tabs[2]:
             render_json_config(col_decisions, raw_df)
-    
+
     # Navigate
     st.markdown("<div style='margin-top:3rem'></div>", unsafe_allow_html=True)
     _, nav_col = st.columns([7.4, 1.4])
     with nav_col:
         if st.button("Next Step", type="primary", width="stretch"):
-            handle_next_step(df, upload_file)
+            if upload_file is not None:
+                handle_next_step(df, upload_file)
+            else:
+                class _FakeFile:
+                    def __init__(self, name): self.name = name
+                handle_next_step(df, _FakeFile(file_name))
     

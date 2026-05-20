@@ -30,8 +30,6 @@ RULES: list[dict] = [
             "ไม่น่าเชื่อถือ เพราะ 'แต่งเติม' ข้อมูลมากกว่าที่มีจริง การ drop column "
             "จึงปลอดภัยกว่าสำหรับ model"
         ),
-        "reference": "Topic 7 — Missing Data: Listwise Deletion",
-        "confidence": 0.95,
     },
     {
         "id": "MIS_002",
@@ -43,8 +41,6 @@ RULES: list[dict] = [
             "ข้อมูล datetime มักเรียงตามเวลา — Forward Fill ใช้ค่าแถวก่อนหน้ามาแทน "
             "ซึ่ง consistent กับธรรมชาติของ time-series data มากกว่าการ impute ด้วย mean"
         ),
-        "reference": "Topic 7 — Missing Data / Topic 10 — Time Series",
-        "confidence": 0.9,
     },
     {
         "id": "MIS_003",
@@ -56,8 +52,6 @@ RULES: list[dict] = [
             "ข้อมูล categorical ไม่มี numerical mean/median — Most Frequent (Mode) "
             "เป็นตัวแทนที่เหมาะสมที่สุด เพราะสะท้อนค่าที่พบบ่อยสุดใน dataset"
         ),
-        "reference": "Topic 7 — Missing Data: Mode Imputation",
-        "confidence": 0.92,
     },
     {
         "id": "MIS_004",
@@ -70,8 +64,6 @@ RULES: list[dict] = [
             "Mean เป็นตัวแทนที่ดีที่สุดสำหรับ symmetric distribution "
             "เพราะ minimize squared error จากทุก data point"
         ),
-        "reference": "Topic 7 — Missing Data: Mean Imputation / Topic 2 — Basic Statistical Description",
-        "confidence": 0.88,
     },
     {
         "id": "MIS_005",
@@ -84,8 +76,6 @@ RULES: list[dict] = [
             "Median ทนทานต่อ outlier ดีกว่า Mean เพราะ Mean ถูกดึงไปทาง tail ที่ยาว "
             "ทำให้ค่าไม่ represent ข้อมูลส่วนใหญ่"
         ),
-        "reference": "Topic 7 — Missing Data: Median Imputation / Topic 8 — Outlier Detection",
-        "confidence": 0.9,
     },
     {
         "id": "MIS_006",
@@ -98,8 +88,6 @@ RULES: list[dict] = [
             "Median (Rounded) รักษา data type เดิมและทนทานต่อ outlier "
             "เหมาะกับข้อมูลเช่น อายุ จำนวนสินค้า คะแนน"
         ),
-        "reference": "Topic 7 — Missing Data: Median Imputation",
-        "confidence": 0.85,
     },
 
     # ══════════════════════════════════════════════════════════════
@@ -117,8 +105,6 @@ RULES: list[dict] = [
             "แต่เป็น natural distribution ของข้อมูลชุดนี้ "
             "แนะนำ Clip (จำกัดค่า) แทน Drop Rows เพื่อไม่สูญเสียข้อมูลมากเกินไป"
         ),
-        "reference": "Topic 8 — Outlier Detection: Handling Strategy",
-        "confidence": 0.75,
     },
     {
         "id": "OUT_002",
@@ -131,8 +117,6 @@ RULES: list[dict] = [
             "ใช้ Z-Score ตรวจจับ outlier (ค่านอกช่วง ±3 SD = 3-sigma rule) "
             "Clip ปรับค่าให้อยู่ในขอบเขตโดยไม่ลบแถว เหมาะเมื่อ outlier อาจเป็นข้อมูลจริง"
         ),
-        "reference": "Topic 8 — Outlier Detection: Z-Score Method / Topic 2 — Normal Distribution",
-        "confidence": 0.88,
     },
     {
         "id": "OUT_003",
@@ -145,8 +129,6 @@ RULES: list[dict] = [
             "ใช้ IQR ตรวจจับ outlier (ค่านอกช่วง Q1−1.5×IQR ถึง Q3+1.5×IQR) "
             "เพราะข้อมูลไม่กระจายแบบ Normal ทำให้ Z-Score ไม่น่าเชื่อถือ"
         ),
-        "reference": "Topic 8 — Outlier Detection: IQR Method",
-        "confidence": 0.9,
     },
 
     # ══════════════════════════════════════════════════════════════
@@ -165,8 +147,6 @@ RULES: list[dict] = [
             "model ไม่สามารถเรียนรู้ pattern ได้ การ One-hot จะสร้างคอลัมน์มหาศาล "
             "ที่ไม่มีประโยชน์"
         ),
-        "reference": "Topic 9 — Data Transformation: Feature Engineering",
-        "confidence": 0.95,
     },
     {
         "id": "ENC_002",
@@ -179,8 +159,6 @@ RULES: list[dict] = [
             "Label Encoding (0/1) เพียงพอและไม่สิ้นเปลืองคอลัมน์ "
             "One-hot สำหรับ binary จะสร้างคอลัมน์ซ้ำซ้อน (dummy variable trap)"
         ),
-        "reference": "Topic 9 — Data Transformation: Label Encoding",
-        "confidence": 0.97,
     },
     {
         "id": "ENC_003",
@@ -194,8 +172,6 @@ RULES: list[dict] = [
             "เช่น Label Encoding ทำให้ 'Bangkok=1, Chiang Mai=2' ซึ่ง model อาจเข้าใจผิดว่า "
             "Chiang Mai 'มากกว่า' Bangkok"
         ),
-        "reference": "Topic 9 — Data Transformation: One-Hot Encoding",
-        "confidence": 0.93,
     },
     {
         "id": "ENC_004",
@@ -208,8 +184,6 @@ RULES: list[dict] = [
             "แต่จะเพิ่มจำนวนคอลัมน์มากขึ้น หากต้องการลด dimensionality "
             "อาจพิจารณา Label Encoding หรือ Target Encoding แทน"
         ),
-        "reference": "Topic 9 — Data Transformation: One-Hot Encoding",
-        "confidence": 0.75,
     },
     {
         "id": "ENC_005",
@@ -223,8 +197,6 @@ RULES: list[dict] = [
             "Label Encoding ลด dimensionality แต่สร้าง ordinal relationship โดยปริยาย "
             "ควรพิจารณาว่า model ที่ใช้ sensitive ต่อ ordinal หรือไม่"
         ),
-        "reference": "Topic 9 — Data Transformation: Encoding High-Cardinality",
-        "confidence": 0.78,
     },
 
     # ══════════════════════════════════════════════════════════════
@@ -238,8 +210,6 @@ RULES: list[dict] = [
         "conditions": {"no_numeric": True},
         "action": "no_scaling",
         "explanation": "ไม่มี numeric feature — ไม่จำเป็นต้องทำ scaling",
-        "reference": "Topic 9 — Data Transformation",
-        "confidence": 1.0,
     },
     {
         "id": "SCL_002",
@@ -252,8 +222,6 @@ RULES: list[dict] = [
             "ทำให้ค่า extreme ไม่ดึง scale ให้เบี้ยว "
             "Standard Scaler จะถูก outlier กดดันทำให้ค่าปกติส่วนใหญ่ถูกบีบให้อยู่ในช่วงแคบ"
         ),
-        "reference": "Topic 9 — Data Transformation: Robust Scaling / Topic 8 — Outlier Detection",
-        "confidence": 0.92,
     },
     {
         "id": "SCL_003",
@@ -266,8 +234,6 @@ RULES: list[dict] = [
             "Log Transform (log1p) ลด skewness ก่อน แล้วตาม Standard Scaler "
             "เหมาะกับข้อมูล long-tail เช่น รายได้ ราคา จำนวน transaction"
         ),
-        "reference": "Topic 9 — Data Transformation: Log Transformation",
-        "confidence": 0.87,
     },
     {
         "id": "SCL_004",
@@ -281,8 +247,6 @@ RULES: list[dict] = [
             "เหมาะกับข้อมูลที่ไม่กระจายแบบ Normal เพราะ Standard Scaler "
             "สมมติ Normal distribution"
         ),
-        "reference": "Topic 9 — Data Transformation: Min-Max Normalization",
-        "confidence": 0.83,
     },
     {
         "id": "SCL_005",
@@ -295,8 +259,6 @@ RULES: list[dict] = [
             "Standard Scaler (Z-score normalization) เหมาะที่สุด "
             "แปลงให้ mean=0, std=1 รักษา relative distance ระหว่าง data points"
         ),
-        "reference": "Topic 9 — Data Transformation: Standardization / Topic 2 — Normal Distribution",
-        "confidence": 0.9,
     },
 
     # ══════════════════════════════════════════════════════════════
@@ -314,8 +276,6 @@ RULES: list[dict] = [
             "เพราะไม่มีข้อมูลเพียงพอให้เรียนรู้ pattern ทั่วไป "
             "Decision Tree หรือ Logistic Regression interpretable กว่าและ generalize ดีกว่า"
         ),
-        "reference": "Topic 2 — Getting to Know Your Data: Sample Size",
-        "confidence": 0.85,
     },
     {
         "id": "MDL_002",
@@ -328,8 +288,6 @@ RULES: list[dict] = [
             "ให้ผลดีที่สุดบน tabular data ขนาดใหญ่ "
             "LightGBM เร็วที่สุดในกลุ่มนี้เพราะใช้ histogram-based algorithm"
         ),
-        "reference": "Topic 2 — Getting to Know Your Data",
-        "confidence": 0.88,
     },
     {
         "id": "MDL_003",
@@ -343,8 +301,6 @@ RULES: list[dict] = [
             "ควรดู F1 (Macro) และ Recall ของ minority class เป็นหลัก "
             "พิจารณาใช้ class_weight='balanced' หรือ SMOTE oversampling"
         ),
-        "reference": "Topic 2 — Getting to Know Your Data: Class Distribution",
-        "confidence": 0.92,
     },
     {
         "id": "MDL_004",
@@ -358,8 +314,6 @@ RULES: list[dict] = [
             "เพราะ built-in feature selection ผ่าน information gain "
             "Logistic Regression กับ Regularization (L1/L2) ก็เหมาะเมื่อต้องการ interpretability"
         ),
-        "reference": "Topic 9 — Data Transformation: Dimensionality",
-        "confidence": 0.82,
     },
     {
         "id": "MDL_005",
@@ -372,7 +326,5 @@ RULES: list[dict] = [
             "R² อธิบายว่า model อธิบาย variance ของ target ได้กี่ % (1.0 = perfect) "
             "RMSE วัด error เฉลี่ยในหน่วยเดียวกับ target"
         ),
-        "reference": "Topic 2 — Getting to Know Your Data: Regression Metrics",
-        "confidence": 0.95,
     },
 ]

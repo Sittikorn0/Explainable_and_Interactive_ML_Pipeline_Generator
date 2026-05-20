@@ -85,7 +85,7 @@ def restore_transformed_df() -> None:
 
 def restore_session() -> None:
     """โหลด state ที่บันทึกไว้กลับเข้า session (รันทุกครั้งที่ rerun)"""
-    # Restore main dataframe
+    # Restore main dataframe (ข้ามถ้าผู้ใช้เพิ่งล้างข้อมูลด้วย X)
     if st.session_state.get("main_df") is None:
         df, filename = load_from_local()
         if df is not None:
@@ -159,7 +159,8 @@ def main():
     # Header
     render_main_header()
 
-    if current_page != upload_page:
+    show_new_dataset = (current_page != upload_page) or (st.session_state.get("main_df") is not None)
+    if show_new_dataset:
         btn_col, _ = st.columns([1.6, 8.4])
         with btn_col:
             st.markdown('<div class="custom-reset-marker"></div>', unsafe_allow_html=True)
