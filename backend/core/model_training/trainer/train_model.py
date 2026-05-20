@@ -62,8 +62,8 @@ def get_model_map() -> dict:
         model_mapping["lightgbm"]           = lambda: LGBMClassifier(n_estimators=50, max_depth=4, learning_rate=0.1, random_state=42, verbose=-1, class_weight="balanced")
         model_mapping["lightgbm_regressor"] = lambda: LGBMRegressor(n_estimators=50, max_depth=4, learning_rate=0.1, random_state=42, verbose=-1)
     if HAS_CATBOOST:
-        model_mapping["catboost"]           = lambda: CatBoostClassifier(iterations=50, depth=4, learning_rate=0.1, random_seed=42, verbose=0, auto_class_weights="Balanced")
-        model_mapping["catboost_regressor"] = lambda: CatBoostRegressor(iterations=50, depth=4, learning_rate=0.1, random_seed=42, verbose=0)
+        model_mapping["catboost"]           = lambda: CatBoostClassifier(iterations=50, depth=4, learning_rate=0.1, random_seed=42, verbose=0, auto_class_weights="Balanced", train_dir="cache/catboost_info")
+        model_mapping["catboost_regressor"] = lambda: CatBoostRegressor(iterations=50, depth=4, learning_rate=0.1, random_seed=42, verbose=0, train_dir="cache/catboost_info")
         
     return model_mapping
 
