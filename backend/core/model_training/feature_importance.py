@@ -12,7 +12,7 @@ def compute_fi(df: pd.DataFrame, target_col: str,
                trans_summary: dict) -> tuple[pd.DataFrame | None, str | None]:
     """
     คำนวณ Feature Importance สำหรับ best model
-    คืน (fi_df, error_msg) — fi_df=None ถ้า model ไม่รองรับหรือเกิด error
+    คืน (fi_df, error_msg)  fi_df=None ถ้า model ไม่รองรับหรือเกิด error
     """
 
     try:

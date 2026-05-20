@@ -97,7 +97,7 @@ def render_target_selection(dataframe: pd.DataFrame):
                 st.rerun()
 
 def generate_previews(data_sample: pd.Series, available_actions: list[str]) -> dict[str, str]:
-    """สร้าง preview text สำหรับแต่ละ action — ใช้แสดงใน UI เท่านั้น"""
+    """สร้าง preview text สำหรับแต่ละ action  ใช้แสดงใน UI เท่านั้น"""
     MAX_LEN = 70
     head_values = data_sample.head(2).tolist()
 
@@ -159,7 +159,7 @@ def render_json_config(col_decisions: list[dict], raw_dataframe: pd.DataFrame | 
             f"- `{item['col']}` → **{action_label(item['action'])}**"
             for item in apply_result
         ]
-        st.success("**Apply สำเร็จ** — actions ที่ถูก apply:\n\n" + "\n".join(result_lines))
+        st.success("**Apply สำเร็จ**  actions ที่ถูก apply:\n\n" + "\n".join(result_lines))
 
     st.markdown("#### จัดการ Nested Fields")
     st.caption("★ = action ที่ระบบแนะนำ หลังจากปรับแล้วสามารถกด Apply")
@@ -204,7 +204,7 @@ def render_json_config(col_decisions: list[dict], raw_dataframe: pd.DataFrame | 
                 )
             with col4:
                 current_choice = st.session_state.get(f"json_choice_{col_name}", default_action)
-                st.caption(previews.get(current_choice, "—"))
+                st.caption(previews.get(current_choice, ""))
 
             if index < len(sorted_decisions) - 1:
                 st.divider()

@@ -99,7 +99,7 @@ def analyze_scaling(dataset: pd.DataFrame, target_column: str) -> dict:
     else:
         recommended_method = "standard_scaler"
         reason     = "ใช้ Standard Scaler เป็น default"
-        reference  = "Topic 9 — Data Transformation"
+        reference  = "Topic 9  Data Transformation"
         confidence = 0.7
         rule_id    = "SCL_FALLBACK"
 

@@ -13,7 +13,7 @@ def get_outlier_bounds(data_series: pd.Series) -> dict:
             "lower": float(data_series.min()),
             "upper": float(data_series.max()),
             "skewness": 0.0,
-            "reason": "ค่าทุกแถวเหมือนกัน — ไม่สามารถตรวจจับ Outlier ได้"
+            "reason": "ค่าทุกแถวเหมือนกัน  ไม่สามารถตรวจจับ Outlier ได้"
         }
         
     # ต้อง dropna() ก่อนคำนวณ skewness เสมอ ไม่เช่นนั้นจะรีเทิร์น NaN ถ้ามีค่าว่าง
@@ -49,7 +49,7 @@ def get_outlier_bounds(data_series: pd.Series) -> dict:
                 "lower": float(quartile_1),
                 "upper": float(quartile_3),
                 "skewness": skewness_value,
-                "reason": "ค่ากระจุกตัวมาก (IQR = 0) — ไม่สามารถตรวจจับ Outlier ด้วย IQR ได้"
+                "reason": "ค่ากระจุกตัวมาก (IQR = 0)  ไม่สามารถตรวจจับ Outlier ด้วย IQR ได้"
             }
             
         direction_text = "ขวา (Right-skewed)" if skewness_value > 0 else "ซ้าย (Left-skewed)"

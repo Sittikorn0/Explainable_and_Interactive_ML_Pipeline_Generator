@@ -12,7 +12,7 @@ def leaderboard_html(competition: dict, best_label: str) -> str:
     rows = ""
     for i, (_, res) in enumerate(ranked):
         is_best = res["label"] == best_label
-        params  = ", ".join(f"{k}={v}" for k, v in res["best_params"].items()) if res["best_params"] else "—"
+        params  = ", ".join(f"{k}={v}" for k, v in res["best_params"].items()) if res["best_params"] else ""
         rank_cls = "rank-top" if i < 3 else "rank-num"
         best_tag = "<span class='best-tag'>best</span>" if is_best else ""
         row_cls  = "row-best" if is_best else ""
@@ -28,7 +28,7 @@ def leaderboard_html(competition: dict, best_label: str) -> str:
     for _, res in errors:
         rows += (
             f'<tr class="row-error">'
-            f'<td><span class="rank-num">—</span></td>'
+            f'<td><span class="rank-num"></span></td>'
             f'<td class="model-name">{res["label"]}</td>'
             f'<td colspan="3" class="error-msg">{res.get("error","")}</td>'
             f'</tr>'
@@ -312,7 +312,7 @@ section{margin-bottom:52px}
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ML Report — {best_label}</title>
+<title>ML Report  {best_label}</title>
 <style>
 {css_styles}
 </style>
@@ -322,7 +322,7 @@ section{margin-bottom:52px}
 <aside class="sidebar">
   <div class="sidebar-brand">ML Report</div>
   <nav>
-    <a href="#overview"><span class="nav-num">—</span>Overview</a>
+    <a href="#overview"><span class="nav-num"></span>Overview</a>
     <a href="#perf"><span class="nav-num">01</span>Performance</a>
     <a href="#leaderboard"><span class="nav-num">02</span>Leaderboard</a>
     {fi_nav}
@@ -358,7 +358,7 @@ section{margin-bottom:52px}
         <div class="mc-grid">{met_cards}</div>
       </div>
       <div class="col-card">
-        <div class="col-card-title">Hyperparameters — {best_label}</div>
+        <div class="col-card-title">Hyperparameters  {best_label}</div>
         {params_tbl}
       </div>
     </div>

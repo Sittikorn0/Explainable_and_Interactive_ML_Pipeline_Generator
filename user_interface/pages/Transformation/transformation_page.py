@@ -22,7 +22,7 @@ def render_transformation():
     
     page_header(
         "Data Transformation",
-        "แปลงข้อมูลให้พร้อมสำหรับ ML — ระบบวิเคราะห์และแนะนำวิธีที่เหมาะสมพร้อมเหตุผล",
+        "แปลงข้อมูลให้พร้อมสำหรับ ML ระบบวิเคราะห์และแนะนำวิธีที่เหมาะสมพร้อมเหตุผล",
     )
     
     if st.session_state.get("main_df") is None:

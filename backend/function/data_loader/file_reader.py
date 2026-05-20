@@ -71,9 +71,9 @@ def process_cached(
     filesize: int,  # ใช้เป็น cache key เท่านั้น
     file_bytes: bytes,
 ) -> tuple[pd.DataFrame | None, list[str], dict]:
-    """Step 1 — อ่านไฟล์ตาม format
-    Step 2 — แก้ dtype ให้ถูกต้อง
-    Return: (DataFrame, warnings, json_metadata)  — cached ตาม filename+size+bytes
+    """Step 1  อ่านไฟล์ตาม format
+    Step 2  แก้ dtype ให้ถูกต้อง
+    Return: (DataFrame, warnings, json_metadata)   cached ตาม filename+size+bytes
     """
     try:
         if filename.endswith(".csv"):
@@ -99,7 +99,7 @@ def process_cached(
     return None, [], {}
 
 def process_data(uploaded_file) -> tuple[pd.DataFrame | None, list[str], dict]:
-    """Entry point หลัก — รับ Streamlit UploadedFile แล้วส่งผ่าน cache"""
+    """Entry point หลัก  รับ Streamlit UploadedFile แล้วส่งผ่าน cache"""
     if uploaded_file is None:
         return None, [], {}
     file_bytes = uploaded_file.getvalue()

@@ -34,7 +34,7 @@ def clean_fit_transform(features_train: pd.DataFrame, features_test: pd.DataFram
                 modes = features_train[column_name].mode()
                 fill_values_dict[column_name] = modes.iloc[0] if not modes.empty else 0
             elif strategy in ("forward fill", "backward fill"):
-                # ffill/bfill ไม่มีความหมายหลัง random split — fallback ใช้ median/mode (fit on train)
+                # ffill/bfill ไม่มีความหมายหลัง random split  fallback ใช้ median/mode (fit on train)
                 if pd.api.types.is_numeric_dtype(features_train[column_name]):
                     fill_values_dict[column_name] = features_train[column_name].median()
                 else:

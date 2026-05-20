@@ -34,7 +34,7 @@ def encode_fit_transform(features_train: pd.DataFrame, features_test: pd.DataFra
                 features_test = features_test.drop(columns=[column_name])
 
             elif method in ("label_encoding", "ordinal_encoding"):
-                # ทั้งสองใช้ LabelEncoder — fit บน train เท่านั้น
+                # ทั้งสองใช้ LabelEncoder  fit บน train เท่านั้น
                 label_encoder = LabelEncoder()
                 label_encoder.fit(features_train[column_name].astype(str))
 

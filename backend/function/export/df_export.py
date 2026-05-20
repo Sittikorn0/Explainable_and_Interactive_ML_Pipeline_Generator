@@ -12,11 +12,11 @@ def build_leaderboard_df(competition: dict) -> pd.DataFrame:
     errors = [(k, v) for k, v in competition.items() if v["cv_score"] is None]
     rows = []
     for i, (_, res) in enumerate(ranked):
-        params = ", ".join(f"{k}={v}" for k, v in res["best_params"].items()) if res["best_params"] else "—"
+        params = ", ".join(f"{k}={v}" for k, v in res["best_params"].items()) if res["best_params"] else ""
         rows.append({"Rank": i + 1, "Model": res["label"],
                      "Cross-Val Score": res["cv_score"], "Cross-Val Std": res["cv_std"], "Hyperparameters": params})
     for _, res in errors:
-        rows.append({"Rank": "—", "Model": res["label"],
+        rows.append({"Rank": "", "Model": res["label"],
                      "Cross-Val Score": None, "Cross-Val Std": None, "Hyperparameters": res.get("error", "")})
     return pd.DataFrame(rows)
 

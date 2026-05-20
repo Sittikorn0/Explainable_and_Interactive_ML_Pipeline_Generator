@@ -86,9 +86,9 @@ def apply_all(dataset: pd.DataFrame, encoding_decisions: dict, scaling_method: s
     Apply transformations ตามลำดับ:
       - Feature Selection (รวม drop_column จาก encoding)
       - Target Sanitization
-      ❌ Encoding — ไม่ทำที่นี่ เพื่อป้องกัน Data Leakage
+      ❌ Encoding  ไม่ทำที่นี่ เพื่อป้องกัน Data Leakage
                     preprocess.py จะ encode หลัง train/test split
-      ❌ Scaling  — ไม่ทำที่นี่ เพื่อป้องกัน Data Leakage
+      ❌ Scaling   ไม่ทำที่นี่ เพื่อป้องกัน Data Leakage
     """
     transformed_dataset = dataset.copy()
 
@@ -105,7 +105,7 @@ def apply_all(dataset: pd.DataFrame, encoding_decisions: dict, scaling_method: s
     if len(non_target_columns) == 0:
         raise ValueError(
             "ไม่สามารถ apply transformation ได้ เพราะ Feature Selection ตัด feature ออกจนหมด "
-            "— ต้องเหลือ feature อย่างน้อย 1 column (นอกจาก target)"
+            " ต้องเหลือ feature อย่างน้อย 1 column (นอกจาก target)"
         )
 
     # Target Sanitization (แก้ชนิดข้อมูลถ้าเป็นตัวเลขที่เก็บเป็น String)
@@ -117,7 +117,7 @@ def apply_all(dataset: pd.DataFrame, encoding_decisions: dict, scaling_method: s
     # Task Detection (ใช้กลางสำหรับระบุประเภทงาน)
     task_type = detect_task(transformed_dataset, target_column)
 
-    # ❌ ไม่ encode ที่นี่ — preprocess.py จะทำหลัง train/test split (ป้องกัน Data Leakage)
+    # ❌ ไม่ encode ที่นี่  preprocess.py จะทำหลัง train/test split (ป้องกัน Data Leakage)
 
     # Target Encoding (เฉพาะ Classification ถ้ายังเป็น categorical)
     if task_type == "classification" and (
@@ -126,7 +126,7 @@ def apply_all(dataset: pd.DataFrame, encoding_decisions: dict, scaling_method: s
         label_encoder = LabelEncoder()
         transformed_dataset[target_column] = label_encoder.fit_transform(transformed_dataset[target_column].astype(str))
 
-    # ❌ ไม่ scale ที่นี่ — preprocess.py จะทำให้หลัง split
+    # ❌ ไม่ scale ที่นี่  preprocess.py จะทำให้หลัง split
 
     # ── ดึง Rule reference จาก analysis เพื่อส่งต่อให้ trace_log ──
     enc_rule_refs = {}

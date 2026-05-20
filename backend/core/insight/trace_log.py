@@ -296,11 +296,11 @@ def log_transformation(summary: dict, enc_decisions: dict, scaling_method: str, 
     for col, method in (enc_decisions.items() if isinstance(enc_decisions, dict) else []):
         enc_by_method.setdefault(method, []).append(col)
     for method, cols in enc_by_method.items():
-        items.append(f"การแปลงข้อความ — {method}: {', '.join(cols)}")
+        items.append(f"การแปลงข้อความ  {method}: {', '.join(cols)}")
 
     explanations = []
 
-    # ทำไมต้องปรับขนาด — ดึง reference จาก rule engine ถ้ามี
+    # ทำไมต้องปรับขนาด  ดึง reference จาก rule engine ถ้ามี
     scaling_ref  = summary.get("scaling_reference", "")
     scaling_conf = summary.get("scaling_confidence", None)
     scaling_rule = summary.get("scaling_rule_id", "")
@@ -317,7 +317,7 @@ def log_transformation(summary: dict, enc_decisions: dict, scaling_method: str, 
             "ปรับขนาดช่วยให้ทุกคอลัมน์มีน้ำหนักเท่าเทียมกัน"
         )
 
-    # ทำไมต้องแปลงข้อความ — ดึง reference จาก enc_rule_refs ถ้ามี
+    # ทำไมต้องแปลงข้อความ  ดึง reference จาก enc_rule_refs ถ้ามี
     enc_rule_refs = summary.get("enc_rule_refs", {})
     for method, cols in enc_by_method.items():
         col_refs = [enc_rule_refs.get(c, {}) for c in cols]

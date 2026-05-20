@@ -25,7 +25,7 @@ def render_drop_columns(working_dataframe: pd.DataFrame, target_column: str):
 
     if not target_column or target_column not in working_dataframe.columns:
         target_column = None
-        st.warning("ไม่พบ Target Column — กรุณากลับไปเลือก Target ที่หน้า Upload ก่อน Drop Columns")
+        st.warning("ไม่พบ Target Column  กรุณากลับไปเลือก Target ที่หน้า Upload ก่อน Drop Columns")
 
     droppable_columns = [col for col in working_dataframe.columns if col != target_column]
 
@@ -193,7 +193,7 @@ def render_missing_values(working_dataframe: pd.DataFrame, missing_columns_dict:
         with checkbox_col:
             st.checkbox("Select", key=f"miss_check_{col_name}", label_visibility="hidden")
         with name_col:
-            st.markdown(f"**{col_name}** — {missing_count:,} ค่า ({missing_percentage:.1f}%)")
+            st.markdown(f"**{col_name}**  {missing_count:,} ค่า ({missing_percentage:.1f}%)")
         with strategy_col:
             available_options = determine_missing_compatible(column_data_type)
             chosen_strategy = st.selectbox("Strategy", available_options, key=f"miss_strategy_{col_name}", label_visibility="collapsed")
@@ -307,7 +307,7 @@ def render_outliers(working_dataframe: pd.DataFrame, outlier_columns_dict: dict,
         with checkbox_col:
             st.checkbox("Select", key=f"out_check_{col_name}", label_visibility="hidden")
         with name_col:
-            st.markdown(f"**{col_name}** — {outlier_count:,} ค่า")
+            st.markdown(f"**{col_name}**  {outlier_count:,} ค่า")
             st.caption(outlier_reason)
             st.caption(f"ขอบเขต: [{lower_bound:,.2f}, {upper_bound:,.2f}]")
         with strategy_col:

@@ -30,7 +30,7 @@ def render_insight():
     
     competition_result = st.session_state.get("ml_result")
     if competition_result is None:
-        st.warning("ไม่พบผล ML — กรุณา Run Model ก่อน")
+        st.warning("ไม่พบผล ML  กรุณา Run Model ก่อน")
         if st.button("กลับ ML Process"):
             navigate("model_process")
         return

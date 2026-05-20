@@ -34,7 +34,7 @@ def get_fitted_model(df, target_col, best_key, best_params, trans_summary,
 
 
 def compute_permutation_importance(model, X_test, y_test, task_type, n_repeats=10):
-    """Returns DataFrame: Feature, Importance, Std — sorted descending"""
+    """Returns DataFrame: Feature, Importance, Std  sorted descending"""
     scoring = "f1_macro" if task_type == "classification" else "r2"
     result = permutation_importance(
         model, X_test, y_test,

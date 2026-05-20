@@ -10,11 +10,11 @@ def render_leakage_check(leakage_items: list) -> list:
     high_risk_items = [item for item in leakage_items if item["severity"] == "high"]
 
     if not high_risk_items:
-        st.markdown("**[ OK ]** ไม่พบ High Risk Leakage — dataset พร้อมสำหรับการเทรน")
+        st.markdown("**[ OK ]** ไม่พบ High Risk Leakage  dataset พร้อมสำหรับการเทรน")
         return []
 
     title_text = "CRITICAL LEAKAGE DETECTED"
-    status_text = f"พบ {len(high_risk_items)} คอลัมน์เสี่ยงสูง — แนะนำตัดออกทันทีเพื่อป้องกันโมเดลจำคำตอบ"
+    status_text = f"พบ {len(high_risk_items)} คอลัมน์เสี่ยงสูง  แนะนำตัดออกทันทีเพื่อป้องกันโมเดลจำคำตอบ"
 
     st.markdown(f"""
 <div style="background-color: rgba(248, 81, 73, 0.05); border: 1px solid rgba(248, 81, 73, 0.3); border-radius: 8px; padding: 20px;">

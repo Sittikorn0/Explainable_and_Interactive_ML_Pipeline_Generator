@@ -126,7 +126,7 @@ def apply_json_overrides(raw_dataframe: pd.DataFrame,column_decisions: list[dict
     """Apply action ที่ผู้ใช้เลือก (หรือ default) กับแต่ละ nested column"""
     df = raw_dataframe.copy()
     to_drop: list[str] = []
-    expansions: dict[str, pd.DataFrame] = {}  # flatten_more — รอแทรก column ทีหลัง
+    expansions: dict[str, pd.DataFrame] = {}  # flatten_more  รอแทรก column ทีหลัง
 
     for decision in column_decisions:
         col = decision["col"]
@@ -179,9 +179,9 @@ def apply_json_overrides(raw_dataframe: pd.DataFrame,column_decisions: list[dict
 # Apply Functions
 def json_normalized(file_bytes: bytes) -> tuple[pd.DataFrame, list[str], dict]:
     """อ่านไฟล์ JSON ครบ pipeline:
-      Step 1 — decode bytes → parse → flatten ด้วย json_normalize
-      Step 2 — วิเคราะห์ column ที่ยังเป็น nested (list / dict)
-      Step 3 — apply default actions อัตโนมัติ
+      Step 1  decode bytes → parse → flatten ด้วย json_normalize
+      Step 2  วิเคราะห์ column ที่ยังเป็น nested (list / dict)
+      Step 3  apply default actions อัตโนมัติ
       Return : (processed_df, joined_col_names, metadata)
     """
     # Step 1: Read & flatten

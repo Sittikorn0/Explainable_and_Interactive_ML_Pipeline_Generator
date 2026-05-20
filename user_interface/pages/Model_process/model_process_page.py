@@ -32,7 +32,7 @@ def render_model_process():
     )
     
     if st.session_state.get("main_df") is None:
-        st.warning("ไม่พบข้อมูล — กรุณากลับไปทำ Data Preparation ก่อน")
+        st.warning("ไม่พบข้อมูล  กรุณากลับไปทำ Data Preparation ก่อน")
         if st.button("กลับไป Upload"):
             navigate("upload")
         return
@@ -150,14 +150,14 @@ def render_model_process():
     # แสดง scaling info และ leakage warnings ที่เก็บไว้ก่อน rerun
     scaling_used = st.session_state.get("_ml_scaling_used")
     if scaling_used:
-        st.caption(f"Scaling: **{scaling_used}** (fit บน Train set เท่านั้น — ป้องกัน Data Leakage)")
+        st.caption(f"Scaling: **{scaling_used}** (fit บน Train set เท่านั้นเพื่อป้องกัน Data Leakage)")
 
     leakage_items = st.session_state.get("_ml_leakage_warnings", [])
     high_risk_items = [item for item in leakage_items if item["severity"] == "high"]
     
     if high_risk_items:
         leakage_color  = "#f85149"
-        leakage_title  = "ตรวจพบความเสี่ยง Data Leakage — ค่า Metric อาจสูงผิดปกติ"
+        leakage_title  = "ตรวจพบความเสี่ยง Data Leakage ค่า Metric อาจสูงผิดปกติ"
 
         rows_html_content = ""
         for item in high_risk_items:

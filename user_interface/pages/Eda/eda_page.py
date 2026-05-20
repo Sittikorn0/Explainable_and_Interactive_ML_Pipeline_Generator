@@ -78,7 +78,7 @@ def render_eda():
     target_column = st.session_state.get("target_col", dataframe.columns[-1])
     if target_column not in dataframe.columns:
         target_column = dataframe.columns[-1]
-        st.warning(f"Target column ที่เลือกไว้ไม่พบใน dataset — ใช้ **{target_column}** แทน")
+        st.warning(f"Target column ที่เลือกไว้ไม่พบใน dataset  ใช้ **{target_column}** แทน")
     render_eda_target_info(dataframe, target_column)
 
     if not pd.api.types.is_numeric_dtype(dataframe[target_column]) and dataframe[target_column].nunique() <= 20:
@@ -89,7 +89,7 @@ def render_eda():
             st.warning(
                 f"**Class Imbalance ตรวจพบใน Target '{target_column}':** "
                 f"ค่าที่พบมากสุดมากกว่าค่าที่พบน้อยสุดถึง **{maximum_count / minimum_count:.1f} เท่า** "
-                "— อาจต้องจัดการก่อนสร้างโมเดล เช่น Oversampling, SMOTE, หรือปรับ class_weight"
+                " อาจต้องจัดการก่อนสร้างโมเดล เช่น Oversampling, SMOTE, หรือปรับ class_weight"
             )
 
     tab_profile, tab_distributions, tab_relationships = st.tabs(

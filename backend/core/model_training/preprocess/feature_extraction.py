@@ -32,7 +32,7 @@ def datetime_fit_transform(features_train: pd.DataFrame, features_test: pd.DataF
                 df[f"{col}_month"]     = df[col].dt.month
                 df[f"{col}_day"]       = df[col].dt.day
                 df[f"{col}_dayofweek"] = df[col].dt.dayofweek
-                # ดึงชั่วโมงมาด้วยถ้า train มีข้อมูลเวลา (ตัดสินใจจาก train เท่านั้น — leak-safe)
+                # ดึงชั่วโมงมาด้วยถ้า train มีข้อมูลเวลา (ตัดสินใจจาก train เท่านั้น  leak-safe)
                 if include_hour:
                     df[f"{col}_hour"] = df[col].dt.hour
             

@@ -86,7 +86,7 @@ def handle_next_step(df: pd.DataFrame, uploaded_file) -> None:
         })
         navigate("cleaning")
     except Exception as e:
-        st.error(f"ไม่สามารถไปขั้นตอนต่อไปได้ — {e}")
+        st.error(f"ไม่สามารถไปขั้นตอนต่อไปได้  {e}")
 
 # Render Page
 def render_upload():

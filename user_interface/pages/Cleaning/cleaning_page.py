@@ -20,7 +20,7 @@ from user_interface.pages.Cleaning.cleaning_components.cleaning_compo import *
 def handle_confirm(df: pd.DataFrame, working_df: pd.DataFrame,
                     dup_before: int, outlier_before: int,
                     missing_now: int, dup_now: int, outlier_now: int) -> None:
-    """Confirm & Save — บันทึก working_df เป็น main_df และ log pipeline"""
+    """Confirm & Save  บันทึก working_df เป็น main_df และ log pipeline"""
 
     snapshot = {
         "before": {

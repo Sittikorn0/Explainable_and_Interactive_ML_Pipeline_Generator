@@ -25,7 +25,7 @@ def get_session_id() -> str:
     if "user_uuid" in st.session_state:
         current_id = st.session_state["user_uuid"]
         if url_uid != current_id:
-            # st.query_params updates the browser URL bar immediately — no rerun needed
+            # st.query_params updates the browser URL bar immediately  no rerun needed
             st.query_params["uid"] = current_id
         return current_id
 

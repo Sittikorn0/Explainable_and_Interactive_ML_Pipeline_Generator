@@ -12,7 +12,7 @@ MODEL_GUIDE_INFO = {
         "weakness": "ตีความยากกว่า Decision Tree เดี่ยว ใช้ memory มากขึ้น",
     },
     "Gradient Boosting": {
-        "simple":   "สร้าง tree ทีละต้น แต่ละต้นพยายามแก้ข้อผิดพลาดของต้นก่อนหน้า — เรียนรู้จากความผิดพลาดไปเรื่อยๆ",
+        "simple":   "สร้าง tree ทีละต้น แต่ละต้นพยายามแก้ข้อผิดพลาดของต้นก่อนหน้า  เรียนรู้จากความผิดพลาดไปเรื่อยๆ",
         "strength": "มักให้ผลแม่นที่สุดกับข้อมูลแบบ tabular",
         "weakness": "ใช้เวลา train นานกว่า ต้องปรับ hyperparameter",
     },
@@ -42,7 +42,7 @@ MODEL_GUIDE_INFO = {
         "weakness": "ช้ากว่า LightGBM ใช้ memory มาก",
     },
     "Linear Regression": {
-        "simple":   "หาสูตรเส้นตรงที่ fit ข้อมูลได้ดีที่สุด — y = w₁×x₁ + w₂×x₂ + ... + c",
+        "simple":   "หาสูตรเส้นตรงที่ fit ข้อมูลได้ดีที่สุด  y = w₁×x₁ + w₂×x₂ + ... + c",
         "strength": "ตีความง่ายที่สุด เร็วมาก เห็น coefficient ของแต่ละ feature ทันที",
         "weakness": "จับ pattern โค้งหรือซับซ้อนไม่ได้",
     },
@@ -52,7 +52,7 @@ MODEL_GUIDE_INFO = {
         "weakness": "จับ pattern ที่ไม่เป็นเส้นตรงไม่ได้ ต้องการ feature scaling",
     },
     "kNN": {
-        "simple":   "ทำนายโดยดูจาก k ตัวอย่างที่ใกล้เคียงที่สุด — ถ้าเพื่อนบ้าน k คนส่วนใหญ่เป็น class A ก็ทำนายว่าเป็น class A",
+        "simple":   "ทำนายโดยดูจาก k ตัวอย่างที่ใกล้เคียงที่สุด  ถ้าเพื่อนบ้าน k คนส่วนใหญ่เป็น class A ก็ทำนายว่าเป็น class A",
         "strength": "ง่ายมาก ไม่ต้อง train",
         "weakness": "ช้ากับข้อมูลใหญ่ ต้องการ scaling",
     },
@@ -65,15 +65,15 @@ MODEL_GUIDE_INFO = {
 
 METRIC_EXPLAIN_INFO = {
     "classification": [
-        ("Accuracy",        "#7AA2F7", "% ที่ทำนายถูกจากทั้งหมด — ใช้ได้ดีเมื่อ class ไม่เสียสมดุล", r"\text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}"),
-        ("F1(Mac)",         "#9ECE6A", "ค่าเฉลี่ยของ F1 ทุก class — เหมาะกับ class ที่ไม่สมดุล", r"F1 = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}"),
-        ("Precision(Mac)",  "#E0AF68", "บรรดาที่ทำนายว่าเป็น class X — มีกี่ % ที่ถูกจริง", r"\text{Precision} = \frac{TP}{TP + FP}"),
-        ("Recall(Mac)",     "#BB9AF7", "บรรดาที่เป็น class X จริงๆ — model ตรวจพบได้กี่ %", r"\text{Recall} = \frac{TP}{TP + FN}"),
+        ("Accuracy",        "#7AA2F7", "% ที่ทำนายถูกจากทั้งหมด  ใช้ได้ดีเมื่อ class ไม่เสียสมดุล", r"\text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}"),
+        ("F1(Mac)",         "#9ECE6A", "ค่าเฉลี่ยของ F1 ทุก class  เหมาะกับ class ที่ไม่สมดุล", r"F1 = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}"),
+        ("Precision(Mac)",  "#E0AF68", "บรรดาที่ทำนายว่าเป็น class X  มีกี่ % ที่ถูกจริง", r"\text{Precision} = \frac{TP}{TP + FP}"),
+        ("Recall(Mac)",     "#BB9AF7", "บรรดาที่เป็น class X จริงๆ  model ตรวจพบได้กี่ %", r"\text{Recall} = \frac{TP}{TP + FN}"),
     ],
     "regression": [
         ("R² Score", "#7AA2F7", "model อธิบาย variance ของข้อมูลได้กี่ % (1.0 = perfect)", r"R^2 = 1 - \frac{\sum_{i} (y_i - \hat{y}_i)^2}{\sum_{i} (y_i - \bar{y})^2}"),
-        ("RMSE",     "#9ECE6A", "error เฉลี่ยในหน่วยเดียวกับ target — ยิ่งต่ำยิ่งดี", r"\text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2}"),
-        ("MSE",      "#E0AF68", "เหมือน RMSE แต่ยกกำลัง 2 — error ใหญ่ถูก penalize มากกว่า", r"\text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2"),
+        ("RMSE",     "#9ECE6A", "error เฉลี่ยในหน่วยเดียวกับ target  ยิ่งต่ำยิ่งดี", r"\text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2}"),
+        ("MSE",      "#E0AF68", "เหมือน RMSE แต่ยกกำลัง 2  error ใหญ่ถูก penalize มากกว่า", r"\text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2"),
     ],
 }
 
@@ -114,12 +114,12 @@ def render_guide(best_model_label: str, task_type: str, metrics_dict: dict):
     metric_rows_info = METRIC_EXPLAIN_INFO.get(task_type, [])
     render_section_header(
         "ผลลัพธ์บน Test Set",
-        "ข้อมูลที่ model ไม่เคยเห็นตอน train — สะท้อนประสิทธิภาพจริง",
+        "ข้อมูลที่ model ไม่เคยเห็นตอน train  สะท้อนประสิทธิภาพจริง",
     )
 
     value_columns = st.columns(len(metric_rows_info))
     for col, (name, color, *_) in zip(value_columns, metric_rows_info):
-        metric_value = metrics_dict.get(name, "—")
+        metric_value = metrics_dict.get(name, "")
         with col:
             st.markdown(
                 f'<div style="background:{BACKGROUND_COLOR};border:1px solid {BORDER_COLOR};'

@@ -79,7 +79,7 @@ def render_eda_profile_tab(dataframe: pd.DataFrame, target_column: str, outlier_
             "| **Categorical/Nominal** | ข้อมูลเชิงหมวดหมู่ ไม่มีลำดับ | สีผม, เพศ, จังหวัด | Mode เท่านั้น |\n"
             "| **Numeric/Discrete** | ตัวเลขจำนวนเต็ม นับได้ | จำนวนสินค้า, อายุ | Mean, Median, Mode |\n"
             "| **Numeric/Continuous** | ตัวเลขทศนิยม วัดได้ | น้ำหนัก, อุณหภูมิ | Mean, Median |\n"
-            "| **Datetime** | วันที่/เวลา | 2024-01-01 | — |\n\n"
+            "| **Datetime** | วันที่/เวลา | 2024-01-01 |  |\n\n"
             "**Target** คือคอลัมน์ที่ต้องการทำนาย ซึ่งเลือกไว้ในขั้นตอน Upload"
         )
 
@@ -224,7 +224,7 @@ def render_eda_distributions_tab(dataframe: pd.DataFrame, target_column: str):
             maximum_date = datetime_series.max().strftime("%Y-%m-%d")
             st.info(
                 f"**{selected_distribution_column}:** ช่วงข้อมูลตั้งแต่ **{minimum_date}** ถึง **{maximum_date}** "
-                f"— มีข้อมูลทั้งหมด **{len(datetime_series):,}** แถว"
+                f" มีข้อมูลทั้งหมด **{len(datetime_series):,}** แถว"
             )
 
     else:
@@ -494,7 +494,7 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
                     height=max(300, 40 * len(feature_numeric_columns)),
                 )
                 st.plotly_chart(class_mean_bar_figure, width="stretch")
-                st.caption("ค่าเฉลี่ยของแต่ละ Feature แยกตาม Target Class — ถ้า class ต่างกันมาก แปลว่า feature นั้นช่วยแยก class ได้ดี")
+                st.caption("ค่าเฉลี่ยของแต่ละ Feature แยกตาม Target Class  ถ้า class ต่างกันมาก แปลว่า feature นั้นช่วยแยก class ได้ดี")
             else:
                 st.info("ไม่สามารถแสดง Feature-Target Correlation สำหรับข้อมูลประเภทนี้ได้")
 
@@ -504,7 +504,7 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
         if all_numeric_dataframe.shape[1] > 1:
             number_of_numeric_columns = all_numeric_dataframe.shape[1]
             heatmap_calculated_height = max(400, min(800, 30 * number_of_numeric_columns))
-            show_heatmap_text = ".2f" if number_of_numeric_columns <= 15 else False
+            show_heatmap_text = ".2f" if number_of_numeric_columns <= 20 else False
             correlation_matrix = all_numeric_dataframe.corr()
             heatmap_figure = px.imshow(
                 correlation_matrix,
@@ -515,7 +515,7 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
             )
             heatmap_figure.update_layout(template="plotly_dark", height=heatmap_calculated_height)
             if number_of_numeric_columns > 15:
-                st.caption(f"มี {number_of_numeric_columns} numeric columns — ซ่อนตัวเลขในตาราง hover เพื่ออ่านค่า")
+                st.caption(f"มี {number_of_numeric_columns} numeric columns ซ่อนตัวเลขในตาราง hover เพื่ออ่านค่า")
             st.plotly_chart(heatmap_figure, width="stretch")
 
             # Detect High Correlation

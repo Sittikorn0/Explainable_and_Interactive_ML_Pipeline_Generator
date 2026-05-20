@@ -46,8 +46,8 @@ def analyze_encoding(dataset: pd.DataFrame, target_column: str) -> list[dict]:
             rule_id     = rule_result["rule_id"]
         else:
             recommended_method = "label_encoding"
-            reason      = f"มี {num_unique_values} categories — ใช้ Label Encoding เป็น default"
-            reference   = "Topic 9 — Data Transformation"
+            reason      = f"มี {num_unique_values} categories  ใช้ Label Encoding เป็น default"
+            reference   = "Topic 9  Data Transformation"
             confidence  = 0.6
             rule_id     = "ENC_FALLBACK"
 

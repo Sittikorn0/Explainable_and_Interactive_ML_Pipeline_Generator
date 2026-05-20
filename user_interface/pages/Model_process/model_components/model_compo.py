@@ -65,7 +65,7 @@ def render_best_model_card(result: dict, best_label: str):
     ranked = sorted([(k, v) for k, v in result["competition"].items() if v["cv_score"]],
                     key=lambda x: x[1]["cv_score"], reverse=True)
     if not ranked:
-        st.warning("ไม่มีโมเดลที่ผ่าน cross-validation — ไม่สามารถแสดง Best Model ได้")
+        st.warning("ไม่มีโมเดลที่ผ่าน cross-validation  ไม่สามารถแสดง Best Model ได้")
         return
     best_cv, best_std = ranked[0][1]["cv_score"], ranked[0][1]["cv_std"]
     avg_std = sum(v["cv_std"] for _, v in ranked) / len(ranked)
@@ -121,7 +121,7 @@ def render_metrics_explain(metrics: dict, task_type: str):
 </div>"""
 
     st.markdown(f"""<div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 24px 28px; margin: 24px 0">
-<div style="font-size: 0.85rem; color: #94A3B8; font-weight: bold; font-family: monospace; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 20px;">Metric Glossary — คำอธิบายตัวชี้วัด</div>
+<div style="font-size: 0.85rem; color: #94A3B8; font-weight: bold; font-family: monospace; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 20px;">Metric Glossary  คำอธิบายตัวชี้วัด</div>
 <div style="display:flex; flex-direction:column">
 {rows_html}
 </div>
@@ -160,7 +160,7 @@ def render_scatter_explain():
 padding: 16px 20px; margin: 12px 0; font-size: 0.9rem; color: #94A3B8; line-height: 1.8">
   <b style="color: #E2E8F0;">วิธีอ่าน Actual vs Predicted</b><br>
   • <b style="color: #7AA2F7;">แกน X</b> = ค่าจริง, <b style="color: #7AA2F7;">แกน Y</b> = ค่าที่ทำนาย<br>
-  • <b style="color: #10B981;">เส้นประแดง</b> = Perfect line — จุดที่ดีควรอยู่บนหรือใกล้เส้นนี้<br>
+  • <b style="color: #10B981;">เส้นประแดง</b> = Perfect line  จุดที่ดีควรอยู่บนหรือใกล้เส้นนี้<br>
   • จุดที่กระจายสม่ำเสมอรอบเส้น = model ไม่มี systematic bias
 </div>""", unsafe_allow_html=True)
     

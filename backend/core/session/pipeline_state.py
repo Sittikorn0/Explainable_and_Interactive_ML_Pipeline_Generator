@@ -118,7 +118,7 @@ def commit_step(step: str, summary: dict):
 
 
 def rollback_to(step: str):
-    """ย้อนกลับไปแก้ไข step ที่ระบุ — ลบ downstream state ทั้งหมด"""
+    """ย้อนกลับไปแก้ไข step ที่ระบุ  ลบ downstream state ทั้งหมด"""
     pipeline = get_pipeline()
     step_idx = STEP_ORDER.index(step)
 

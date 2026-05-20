@@ -44,7 +44,7 @@ def render_section_header(title: str, subtitle: str = "") -> None:
 def render_importance(model, X_test, y_test, task_type):
     render_section_header(
         "Feature ไหนสำคัญที่สุด?",
-        "ระบบสลับค่าของแต่ละ feature แล้วดูว่า model แย่ลงแค่ไหน — แท่งยาว = สำคัญมาก",
+        "ระบบสลับค่าของแต่ละ feature แล้วดูว่า model แย่ลงแค่ไหน  แท่งยาว = สำคัญมาก",
     )
 
     cache_key = f"_xai_perm_{id(model)}"
@@ -78,7 +78,7 @@ def render_importance(model, X_test, y_test, task_type):
 
     positive_importance_features = permutation_dataframe[permutation_dataframe["Importance"] > 0]
     if len(positive_importance_features) == 0:
-        st.warning("ทุก feature มีความสำคัญน้อยมาก — ลองตรวจสอบ dataset อีกครั้ง")
+        st.warning("ทุก feature มีความสำคัญน้อยมาก  ลองตรวจสอบ dataset อีกครั้ง")
         return
 
     render_section_header("3 Feature สำคัญที่สุด")
@@ -121,12 +121,12 @@ def render_importance(model, X_test, y_test, task_type):
 def render_trace():
     render_section_header(
         "บันทึกการตัดสินใจตลอด Pipeline",
-        "เจาะลึกทุกร่องรอยการประมวลผล — ตั้งแต่ข้อมูลดิบจนถึงโมเดลที่แม่นยำที่สุด",
+        "เจาะลึกทุกร่องรอยการประมวลผล  ตั้งแต่ข้อมูลดิบจนถึงโมเดลที่แม่นยำที่สุด",
     )
 
     pipeline_log = get_log()
     if not pipeline_log:
-        st.info("ยังไม่มีข้อมูล — ระบบจะเริ่มบันทึกเมื่อคุณดำเนินการผ่านแต่ละขั้นตอน")
+        st.info("ยังไม่มีข้อมูล  ระบบจะเริ่มบันทึกเมื่อคุณดำเนินการผ่านแต่ละขั้นตอน")
         return
 
     # CSS for Timeline
@@ -172,7 +172,7 @@ def render_trace():
                 if exp.startswith("ทำไม"):
                     items_content += f'<div style="font-weight: 700; color: #58a6ff; font-size: 0.95rem; margin-bottom: 4px;">{display_text}</div>'
                 elif exp.startswith("  →"):
-                    items_content += f'<div style="color: #c9d1d9; font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px;">{exp.strip().replace("→", "—")}</div>'
+                    items_content += f'<div style="color: #c9d1d9; font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px;">{exp.strip().replace("→", "")}</div>'
                 elif "✓" in exp or "⚠" in exp or "ℹ" in exp:
                     items_content += f'<div style="font-size: 0.88rem; color: #8b949e; margin: 4px 0;">{exp}</div>'
                 else:
@@ -236,8 +236,8 @@ def render_comparison():
         
         diff_rows_html = []
         for key in all_keys_list:
-            value_previous = flat_previous.get(key, "—")
-            value_current = flat_current.get(key, "—")
+            value_previous = flat_previous.get(key, "")
+            value_current = flat_current.get(key, "")
             is_changed = str(value_previous) != str(value_current)
             
             left_background  = "background:rgba(248, 81, 73, 0.12);" if is_changed else "background:transparent;"

@@ -115,7 +115,7 @@ def render_summary(working_dataframe: pd.DataFrame, original_dataframe: pd.DataF
         .format({
             "Before": "{:,}",
             "After": "{:,}",
-            "Changed": lambda value: "—" if value == 0 else f"+{value:,}" if value > 0 else f"{value:,}"
+            "Changed": lambda value: "" if value == 0 else f"+{value:,}" if value > 0 else f"{value:,}"
         })
     )
     st.dataframe(styled_summary, width="stretch", hide_index=True)
