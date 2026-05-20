@@ -77,7 +77,7 @@ def show_leaderboard(model_competition_results: dict):
         params = result["best_params"] or {}
         # Prettify keys: learning_rate -> Learning Rate
         param_list = [f"{k.replace('_', ' ').title()}: {v}" for k, v in params.items()]
-        parameters_text = ", ".join(param_list) if param_list else "—"
+        parameters_text = ", ".join(param_list) if param_list else ""
         leaderboard_rows.append({
             "Rank": medals[index] if index < 3 else str(index + 1),
             "Model": result["label"],
@@ -173,5 +173,5 @@ def show_pred_vs_actual(actual_values, predicted_values):
         type="line", x0=min_value, y0=min_value, x1=max_value, y1=max_value,
         line=dict(color="#EF4444", dash="dash", width=1.5)
     )
-    figure.update_layout(template="plotly_dark", height=420, margin=dict(t=20, b=20))
+    figure.update_layout(template="plotly_dark", height=400, margin=dict(t=20, b=20))
     st.plotly_chart(figure, width="stretch")
