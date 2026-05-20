@@ -19,5 +19,6 @@ cache/dataset/
 cache/log/
 cache/model/
 cache/transformation/
+AutogluonModels/
 
 catboost_info/
