@@ -54,9 +54,13 @@ def read_csv_with_fallback(file_bytes: bytes) -> pd.DataFrame:
             last_error = e
     raise last_error
 
-def read_excel(file_bytes: bytes) -> tuple[pd.DataFrame, list[str]]:
-    """โหลด sheet แรก พร้อม warning ถ้ามีหลาย sheet"""
-    excel = pd.ExcelFile(io.BytesIO(file_bytes))
+def read_excel(file_bytes: bytes, filename: str = "") -> tuple[pd.DataFrame, list[str]]:
+    """โหลด sheet แรก พร้อม warning ถ้ามีหลาย sheet
+    .xls (Excel 97-2003) ต้องใช้ engine='xlrd'
+    .xlsx ใช้ engine='openpyxl'
+    """
+    engine = "xlrd" if filename.lower().endswith(".xls") else "openpyxl"
+    excel = pd.ExcelFile(io.BytesIO(file_bytes), engine=engine)
     df = excel.parse(excel.sheet_names[0])
     warnings = (
         [f"__excel_sheets__:{','.join(str(s) for s in excel.sheet_names)}"]
@@ -81,7 +85,7 @@ def process_cached(
             return df, [], {}
 
         elif filename.endswith((".xlsx", ".xls")):
-            df, warnings = read_excel(file_bytes)
+            df, warnings = read_excel(file_bytes, filename)
             return normalize_dtypes(df), warnings, {}
 
         elif filename.endswith(".json"):
