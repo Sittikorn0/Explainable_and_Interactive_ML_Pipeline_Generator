@@ -195,8 +195,8 @@ def run_autogluon_pipeline(X_train_raw, X_test_raw, y_train_raw, y_test_raw, tar
         
         predictor.fit(
             train_data=train_data_ag,
-            time_limit=60,
-            presets='medium_quality_faster_train'
+            time_limit=600,
+            presets='good_quality'
         )
         fit_time_ag = time.time() - start_time
         print(f"[SUCCESS] การเทรน AutoGluon เสร็จสมบูรณ์ (ใช้เวลา {fit_time_ag:.2f} วินาที)")
