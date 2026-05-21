@@ -51,8 +51,12 @@ def render_target_selection(dataframe: pd.DataFrame):
             options=list(dataframe.columns),
             key="target_col",
             label_visibility="collapsed",
-            on_change=lambda: save_target_col(st.session_state["target_col"]),
         )
+        # Sync ไปยัง non-widget key เมื่อค่าเปลี่ยน
+        # (non-widget key ไม่ถูก Streamlit ล้างตอน navigate ข้ามหน้า)
+        if st.session_state.get("_target_col_persistent") != selected_target:
+            st.session_state["_target_col_persistent"] = selected_target
+            save_target_col(selected_target)
         
         # --- Metadata Badges ---
         dtype = str(dataframe[selected_target].dtype)

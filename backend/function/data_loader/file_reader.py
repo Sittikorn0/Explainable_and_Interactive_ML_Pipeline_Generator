@@ -49,7 +49,7 @@ def read_csv_with_fallback(file_bytes: bytes) -> pd.DataFrame:
     last_error = None
     for encoding in SUPPORTED_ENCODINGS:
         try:
-            return pd.read_csv(io.BytesIO(file_bytes), encoding=encoding, engine="c")
+            return pd.read_csv(io.BytesIO(file_bytes), encoding=encoding, sep=None, engine="python")
         except UnicodeDecodeError as e:
             last_error = e
     raise last_error

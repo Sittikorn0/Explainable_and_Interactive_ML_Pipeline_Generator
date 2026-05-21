@@ -137,17 +137,17 @@ def log_upload(df, file_name: str, target_col: str, task_hint: str,
 
 # ── Cleaning ──────────────────────────────────────────────────────────────────
 
-def track_cleaning(action_type: str, col: str, detail: str):
+def track_cleaning(action_type: str, col: str, detail: str, explanation: str = ""):
     ensure_restored()
     actions = st.session_state.setdefault(ACTIONS_KEY, [])
     actions = [a for a in actions if not (a["col"] == col and a["type"] == action_type)]
-    actions.append({"type": action_type, "col": col, "detail": detail})
+    actions.append({"type": action_type, "col": col, "detail": detail, "explanation": explanation})
     st.session_state[ACTIONS_KEY] = actions
     persist_log()
 
-def track_cleaning_bulk(action_type: str, cols: list, detail: str):
+def track_cleaning_bulk(action_type: str, cols: list, detail: str, explanation: str = ""):
     for col in cols:
-        track_cleaning(action_type, col, detail)
+        track_cleaning(action_type, col, detail, explanation)
     persist_log()
 
 
@@ -183,67 +183,43 @@ def commit_cleaning(df_before, df_after):
     explanations = []
 
     for a in by_type.get("missing", []):
-        d = a["detail"].lower()
-        if "median" in d:
-            explanations.append(
-                f"ทำไมเติมค่ากลาง (Median) ให้ '{a['col']}'? "
-                "เพราะค่ากลางไม่ถูกดึงไปตามค่าที่สูงหรือต่ำผิดปกติ "
-                "ต่างจากค่าเฉลี่ยที่จะเอียงไปหาค่าสุดโต่ง"
-            )
-        elif "mean" in d:
-            explanations.append(
-                f"ทำไมเติมค่าเฉลี่ย (Mean) ให้ '{a['col']}'? "
-                "เพราะข้อมูลกระจายตัวสม่ำเสมอ ค่าเฉลี่ยจึงเป็นตัวแทนที่ดี"
-            )
-        elif "mode" in d:
-            explanations.append(
-                f"ทำไมเติมค่าที่พบบ่อยสุด (Mode) ให้ '{a['col']}'? "
-                "เพราะเป็นข้อมูลข้อความ ใช้ค่าเฉลี่ยไม่ได้ "
-                "จึงเติมด้วยคำตอบที่เจอบ่อยที่สุดแทน"
-            )
-        elif "drop" in d:
-            explanations.append(
-                f"ทำไมลบแถวที่ข้อมูลขาดหายของ '{a['col']}'? "
-                "เพราะมีจำนวนน้อย ลบออกแล้วไม่กระทบภาพรวม"
-            )
+        if a.get("explanation"):
+            explanations.append(f"[{a['col']}] {a['explanation']}")
+        else:
+            d = a["detail"].lower()
+            if "median" in d:
+                explanations.append(f"ทำไมเติมค่ากลาง (Median) ให้ '{a['col']}'? เพราะค่ากลางไม่ถูกดึงไปตามค่าที่สูงหรือต่ำผิดปกติ")
+            elif "mean" in d:
+                explanations.append(f"ทำไมเติมค่าเฉลี่ย (Mean) ให้ '{a['col']}'? เพราะข้อมูลกระจายตัวสม่ำเสมอ ค่าเฉลี่ยจึงเป็นตัวแทนที่ดี")
+            elif "mode" in d or "frequent" in d:
+                explanations.append(f"ทำไมเติมค่าที่พบบ่อยสุด (Mode) ให้ '{a['col']}'? เพราะเป็นข้อมูลข้อความ ใช้ค่าเฉลี่ยไม่ได้")
+            elif "drop" in d:
+                explanations.append(f"ทำไมลบแถวที่ข้อมูลขาดหายของ '{a['col']}'? เพราะมีจำนวนน้อย ลบออกแล้วไม่กระทบภาพรวม")
 
     for a in by_type.get("outlier", []):
-        d = a["detail"].lower()
-        if "clip" in d:
-            explanations.append(
-                f"ทำไมตัดค่าผิดปกติของ '{a['col']}' ให้อยู่ในขอบเขต? "
-                "เพราะค่าที่สูงหรือต่ำเกินไปจะทำให้โมเดลสับสน "
-                "การตัดให้อยู่ในขอบเขตช่วยลดผลกระทบโดยไม่สูญเสียแถวข้อมูล"
-            )
-        elif "drop" in d or "remove" in d:
-            explanations.append(
-                f"ทำไมลบค่าผิดปกติของ '{a['col']}'? "
-                "เพราะค่านั้นอาจเกิดจากความผิดพลาดในการบันทึก "
-                "ลบออกเพื่อไม่ให้โมเดลเรียนรู้จากข้อมูลที่ผิด"
-            )
+        if a.get("explanation"):
+            explanations.append(f"[{a['col']}] {a['explanation']}")
+        else:
+            d = a["detail"].lower()
+            if "clip" in d:
+                explanations.append(f"ทำไมตัดค่าผิดปกติของ '{a['col']}' ให้อยู่ในขอบเขต? เพราะค่าที่สูงหรือต่ำเกินไปจะทำให้โมเดลสับสน")
+            elif "drop" in d or "remove" in d:
+                explanations.append(f"ทำไมลบค่าผิดปกติของ '{a['col']}'? เพราะค่านั้นอาจเกิดจากความผิดพลาดในการบันทึก")
 
     if "drop_dup" in by_type:
-        explanations.append(
-            "ทำไมลบแถวที่ซ้ำกัน? เพราะข้อมูลซ้ำทำให้โมเดลให้ความสำคัญ "
-            "กับข้อมูลนั้นมากเกินจริง อาจทำให้ผลไม่แม่นยำ"
-        )
+        explanations.append("ทำไมลบแถวที่ซ้ำกัน? เพราะข้อมูลซ้ำทำให้โมเดลให้ความสำคัญกับข้อมูลนั้นมากเกินจริง อาจทำให้ผลไม่แม่นยำ")
 
     if by_type.get("drop_col"):
-        cols_str = ", ".join(a["col"] for a in by_type["drop_col"])
-        explanations.append(
-            f"ทำไมลบคอลัมน์ ({cols_str})? เพราะคอลัมน์เหล่านี้ "
-            "ไม่มีข้อมูลที่เป็นประโยชน์ เก็บไว้จะเป็นสัญญาณรบกวนให้โมเดล"
-        )
+        for a in by_type["drop_col"]:
+            if a.get("explanation"):
+                explanations.append(f"[{a['col']}] {a['explanation']}")
+            else:
+                explanations.append(f"ทำไมลบคอลัมน์ '{a['col']}'? เพราะไม่มีข้อมูลที่เป็นประโยชน์ เก็บไว้จะเป็นสัญญาณรบกวนให้โมเดล")
 
     if not actions:
-        explanations.append(
-            "ไม่ต้องทำความสะอาด เพราะข้อมูลอยู่ในสภาพดีอยู่แล้ว"
-        )
+        explanations.append("ไม่ต้องทำความสะอาด เพราะข้อมูลอยู่ในสภาพดีอยู่แล้ว")
     else:
-        explanations.append(
-            "หลักการ: ต้องทำความสะอาดข้อมูลก่อนสร้างโมเดลเสมอ "
-            "เพราะข้อมูลที่สะอาดจะช่วยให้โมเดลเรียนรู้ได้แม่นยำขึ้น"
-        )
+        explanations.append("หลักการ: ต้องทำความสะอาดข้อมูลก่อนสร้างโมเดลเสมอ เพราะข้อมูลที่สะอาดจะช่วยให้โมเดลเรียนรู้ได้แม่นยำขึ้น")
 
     append({"step": "Data Cleaning", "items": items, "explanations": explanations})
     st.session_state[ACTIONS_KEY] = []
@@ -282,7 +258,12 @@ ENCODING_REASONS = {
 }
 
 
-def log_transformation(summary: dict, enc_decisions: dict, scaling_method: str, drop_cols: list):
+def log_transformation(summary: dict, enc_decisions: dict, scaling_method: str, drop_cols: list,
+                       scaling_reason: str = "", enc_reasons: dict = None):
+    """
+    enc_reasons: {col: reason_string} จาก rule engine (optional)
+    scaling_reason: explanation string จาก rule engine (optional)
+    """
     items = [
         f"คอลัมน์เริ่มต้น: {summary.get('original_cols', '?')}",
         f"คอลัมน์ที่ลบ: {summary.get('dropped_cols', 0)}",
@@ -300,9 +281,9 @@ def log_transformation(summary: dict, enc_decisions: dict, scaling_method: str, 
 
     explanations = []
 
-    # ทำไมต้องปรับขนาด
-    reason = SCALING_REASONS.get(scaling_method, f"ใช้ {scaling_method}")
-    explanations.append(f"ทำไมปรับขนาดด้วย {scaling_method}? เหตุผลคือ {reason}")
+    # Scaling reason — ใช้จาก rule engine ถ้ามี ไม่งั้น fallback hardcode
+    scl_reason = scaling_reason or SCALING_REASONS.get(scaling_method, f"ใช้ {scaling_method}")
+    explanations.append(f"ทำไมปรับขนาดด้วย {scaling_method}? เหตุผลคือ {scl_reason}")
 
     if scaling_method != "no_scaling":
         explanations.append(
@@ -311,9 +292,12 @@ def log_transformation(summary: dict, enc_decisions: dict, scaling_method: str, 
             "ปรับขนาดช่วยให้ทุกคอลัมน์มีน้ำหนักเท่าเทียมกัน"
         )
 
-    # ทำไมต้องแปลงข้อความ
+    # Encoding reasons — ใช้จาก rule engine รายคอลัมน์ถ้ามี
+    enc_reasons = enc_reasons or {}
     for method, cols in enc_by_method.items():
-        reason = ENCODING_REASONS.get(method, f"ใช้ {method}")
+        # ดึง reason จาก rule engine (ใช้ reason ของ col แรกในกลุ่มเป็นตัวแทน)
+        rule_reason = next((enc_reasons[c] for c in cols if c in enc_reasons), "")
+        reason = rule_reason or ENCODING_REASONS.get(method, f"ใช้ {method}")
         cols_str = ", ".join(cols[:3])
         if len(cols) > 3:
             cols_str += f" อีก {len(cols)-3} ตัว"
@@ -376,7 +360,6 @@ def log_model_process(result: dict, metrics: dict):
         if diff < 0.01:
             explanations.append(
                 "⚠ คะแนนห่างกันน้อยมากอาจเลือกโมเดลที่อธิบายได้ง่ายกว่าแทน "
-                "เช่น Decision Tree ที่เห็นเหตุผลชัดเจน"
             )
 
     # ทำไมใช้ Cross-Validation

@@ -16,123 +16,211 @@ Priority: ตัวเลขน้อย = เช็คก่อน (override ru
 RULES: list[dict] = [
 
     # ══════════════════════════════════════════════════════════════
-    # Domain: missing_value  (อ้างอิง Topic 7  Missing Data)
+    # Domain: missing_value
     # ══════════════════════════════════════════════════════════════
 
     {
         "id": "MIS_001",
         "domain": "missing_value",
-        "priority": 1,
-        "conditions": {"missing_pct": {"min": 0.5}},
-        "action": "drop_column",
-        "explanation": (
-            "คอลัมน์นี้ขาดข้อมูลมากกว่า 50%  ข้อมูลที่หายไปมากขนาดนี้ทำให้ imputation "
-            "ไม่น่าเชื่อถือ เพราะ 'แต่งเติม' ข้อมูลมากกว่าที่มีจริง การ drop column "
-            "จึงปลอดภัยกว่าสำหรับ model"
-        ),
+        "priority": 5,
+        "conditions": {"missing_ratio": {"max": 0.0}},
+        "action": "no_action",
+        "explanation": "ไม่มีค่าที่หายไปในคอลัมน์นี้  ไม่จำเป็นต้องทำ imputation",
     },
     {
         "id": "MIS_002",
         "domain": "missing_value",
-        "priority": 5,
-        "conditions": {"dtype": ["datetime"]},
-        "action": "forward_fill",
+        "priority": 10,
+        "conditions": {"missing_ratio": {"min": 0.5}},
+        "action": "drop_column",
         "explanation": (
-            "ข้อมูล datetime มักเรียงตามเวลา  Forward Fill ใช้ค่าแถวก่อนหน้ามาแทน "
-            "ซึ่ง consistent กับธรรมชาติของ time-series data มากกว่าการ impute ด้วย mean"
+            "คอลัมน์นี้มีค่าหายไปมากกว่า 50%  การ impute จะสร้างข้อมูลสังเคราะห์มากเกินไป "
+            "ซึ่งอาจบิดเบือน pattern จริงในข้อมูล การลบคอลัมน์ทิ้งปลอดภัยกว่า"
         ),
     },
     {
         "id": "MIS_003",
         "domain": "missing_value",
-        "priority": 10,
-        "conditions": {"dtype": ["string", "bool", "category"]},
-        "action": "most_frequent",
+        "priority": 20,
+        "conditions": {"dtype": ["numeric"], "has_outliers": True},
+        "action": "median_impute",
         "explanation": (
-            "ข้อมูล categorical ไม่มี numerical mean/median  Most Frequent (Mode) "
-            "เป็นตัวแทนที่เหมาะสมที่สุด เพราะสะท้อนค่าที่พบบ่อยสุดใน dataset"
+            "คอลัมน์ตัวเลขนี้มี outlier  Median ทนต่อ outlier ดีกว่า Mean "
+            "เพราะ outlier จะดึง Mean ให้เบี้ยว ทำให้ค่าที่ใช้ impute ไม่ represent ข้อมูลส่วนใหญ่"
         ),
     },
     {
         "id": "MIS_004",
         "domain": "missing_value",
-        "priority": 20,
-        "conditions": {"dtype": ["float"], "skewness_abs": {"max": 0.5}},
-        "action": "mean",
+        "priority": 30,
+        "conditions": {"dtype": ["numeric"], "has_outliers": False, "is_skewed": False},
+        "action": "mean_impute",
         "explanation": (
-            "ข้อมูล continuous กระจายใกล้ Normal (|skewness| ≤ 0.5)  "
-            "Mean เป็นตัวแทนที่ดีที่สุดสำหรับ symmetric distribution "
-            "เพราะ minimize squared error จากทุก data point"
+            "คอลัมน์ตัวเลขนี้ไม่มี outlier และกระจายใกล้ Normal  "
+            "Mean Imputation เหมาะที่สุดเพราะรักษา distribution ของข้อมูล "
+            "และ Mean เป็นตัวแทนที่ดีเมื่อข้อมูลไม่มี extreme values"
         ),
     },
     {
         "id": "MIS_005",
         "domain": "missing_value",
-        "priority": 25,
-        "conditions": {"dtype": ["float"], "skewness_abs": {"min": 0.5}},
-        "action": "median",
+        "priority": 35,
+        "conditions": {"dtype": ["numeric"], "has_outliers": False, "is_skewed": True},
+        "action": "median_impute",
         "explanation": (
-            "ข้อมูล continuous มี skewness สูง (|skewness| > 0.5)  "
-            "Median ทนทานต่อ outlier ดีกว่า Mean เพราะ Mean ถูกดึงไปทาง tail ที่ยาว "
-            "ทำให้ค่าไม่ represent ข้อมูลส่วนใหญ่"
+            "คอลัมน์ตัวเลขนี้มี skewness สูงแต่ไม่มี outlier  "
+            "Median ดีกว่า Mean สำหรับข้อมูล skewed เพราะ Median ไม่ถูกดึงโดย tail "
+            "ทำให้ค่าที่ impute อยู่ใกล้กับ 'กลาง' ของข้อมูลจริงๆ"
         ),
     },
     {
         "id": "MIS_006",
         "domain": "missing_value",
-        "priority": 30,
-        "conditions": {"dtype": ["int"]},
-        "action": "median (rounded)",
+        "priority": 40,
+        "conditions": {"dtype": ["categorical"]},
+        "action": "mode_impute",
         "explanation": (
-            "ข้อมูล integer ต้องการค่าที่เป็นจำนวนเต็มเท่านั้น  "
-            "Median (Rounded) รักษา data type เดิมและทนทานต่อ outlier "
-            "เหมาะกับข้อมูลเช่น อายุ จำนวนสินค้า คะแนน"
+            "คอลัมน์ categorical นี้ไม่สามารถใช้ Mean/Median ได้  "
+            "Mode (ค่าที่พบบ่อยที่สุด) เป็นตัวเลือกที่สมเหตุสมผลที่สุด "
+            "เพราะแทนค่าด้วยสิ่งที่มีโอกาสเกิดขึ้นมากที่สุดในข้อมูล"
         ),
     },
 
     # ══════════════════════════════════════════════════════════════
-    # Domain: outlier  (อ้างอิง Topic 8  Outlier Detection)
+    # Domain: outlier  (treatment strategy: clip vs drop rows)
     # ══════════════════════════════════════════════════════════════
 
     {
         "id": "OUT_001",
         "domain": "outlier",
         "priority": 5,
-        "conditions": {"outlier_pct": {"min": 20.0}},
-        "action": "clip",
-        "explanation": (
-            "พบ outlier มากกว่า 20% ของข้อมูล  อาจไม่ใช่ข้อผิดพลาด "
-            "แต่เป็น natural distribution ของข้อมูลชุดนี้ "
-            "แนะนำ Clip (จำกัดค่า) แทน Drop Rows เพื่อไม่สูญเสียข้อมูลมากเกินไป"
-        ),
+        "conditions": {"outlier_ratio": {"max": 0.0}},
+        "action": "no_action",
+        "explanation": "ไม่พบ outlier ในคอลัมน์นี้  ไม่จำเป็นต้องทำการจัดการ",
     },
     {
         "id": "OUT_002",
         "domain": "outlier",
         "priority": 10,
-        "conditions": {"skewness_abs": {"max": 0.5}},
+        "conditions": {"outlier_ratio": {"min": 0.001, "max": 0.01}},
         "action": "clip",
         "explanation": (
-            "ข้อมูลกระจายใกล้ Normal (|skewness| ≤ 0.5)  "
-            "ใช้ Z-Score ตรวจจับ outlier (ค่านอกช่วง ±3 SD = 3-sigma rule) "
-            "Clip ปรับค่าให้อยู่ในขอบเขตโดยไม่ลบแถว เหมาะเมื่อ outlier อาจเป็นข้อมูลจริง"
+            "พบ outlier น้อยมาก (< 1% ของข้อมูล)  จำนวนน้อยเกินไปที่จะ drop โดยไม่เสียใจ "
+            "Clipping ปรับค่าให้อยู่ในขอบเขตโดยไม่สูญเสียแถวข้อมูล"
         ),
     },
     {
         "id": "OUT_003",
         "domain": "outlier",
-        "priority": 15,
-        "conditions": {"skewness_abs": {"min": 0.5}},
+        "priority": 20,
+        "conditions": {"outlier_ratio": {"min": 0.01, "max": 0.05}},
+        "action": "drop rows",
+        "explanation": (
+            "พบ outlier น้อย (1–5% ของข้อมูล)  มักเป็นข้อมูลที่บันทึกผิดพลาดหรือ noise "
+            "การลบแถวเหล่านี้ทิ้งสูญเสียข้อมูลน้อยมากและทำให้ dataset สะอาดขึ้น"
+        ),
+    },
+    {
+        "id": "OUT_004",
+        "domain": "outlier",
+        "priority": 30,
+        "conditions": {"outlier_ratio": {"min": 0.05}},
         "action": "clip",
         "explanation": (
-            "ข้อมูลมี skewness สูง (|skewness| > 0.5)  "
-            "ใช้ IQR ตรวจจับ outlier (ค่านอกช่วง Q1−1.5×IQR ถึง Q3+1.5×IQR) "
-            "เพราะข้อมูลไม่กระจายแบบ Normal ทำให้ Z-Score ไม่น่าเชื่อถือ"
+            "พบ outlier มาก (> 5% ของข้อมูล)  การลบแถวจะสูญเสียข้อมูลมากเกินไป "
+            "Clipping บีบค่าที่เกินขอบเขตให้อยู่ในเกณฑ์ รักษาจำนวนแถวไว้ครบ "
+            "และยังคงสะท้อน pattern จริงของข้อมูล"
         ),
     },
 
     # ══════════════════════════════════════════════════════════════
-    # Domain: encoding  (อ้างอิง Topic 9  Data Transformation)
+    # Domain: outlier_detection  (วิธีตรวจจับ: Z-Score vs IQR)
+    # ══════════════════════════════════════════════════════════════
+
+    {
+        "id": "ODT_001",
+        "domain": "outlier_detection",
+        "priority": 5,
+        "conditions": {"skewness_abs": {"min": 0.5}},
+        "action": "iqr",
+        "explanation": (
+            "ข้อมูลเบ้ (|Skew| ≥ 0.5)  ใช้ IQR Method (Q1 - 1.5×IQR, Q3 + 1.5×IQR) "
+            "เพราะ IQR อิงค่า Median และ Quartile ซึ่งไม่ถูกรบกวนโดย tail ที่ยาว "
+            "Z-Score ใช้ Mean/Std ซึ่งถูกดึงโดย skewness ทำให้ขอบเขตคลาดเคลื่อน"
+        ),
+    },
+    {
+        "id": "ODT_002",
+        "domain": "outlier_detection",
+        "priority": 10,
+        "conditions": {"skewness_abs": {"max": 0.5}},
+        "action": "zscore",
+        "explanation": (
+            "ข้อมูลกระจายสมมาตร (|Skew| < 0.5)  ใช้ Z-Score Method (mean ± 3σ) "
+            "เพราะข้อมูลใกล้ Normal Distribution ทำให้ Mean และ Std เป็นตัวแทนที่ดี "
+            "ค่าที่ห่างจาก mean เกิน 3 standard deviation ถือเป็น outlier"
+        ),
+    },
+
+    # ══════════════════════════════════════════════════════════════
+    # Domain: column_drop  (Drop Column suggestion ในหน้า Cleaning)
+    # ══════════════════════════════════════════════════════════════
+
+    {
+        "id": "CDR_001",
+        "domain": "column_drop",
+        "priority": 5,
+        "conditions": {"is_constant": True},
+        "action": "drop",
+        "explanation": (
+            "คอลัมน์นี้มีค่าเดียวตลอด (Constant Column)  "
+            "โมเดลไม่สามารถเรียนรู้ Pattern ใดได้จากข้อมูลที่ไม่มีความแตกต่างกันเลย "
+            "การเก็บคอลัมน์นี้ไว้จะสิ้นเปลืองหน่วยความจำโดยไม่มีประโยชน์"
+        ),
+    },
+    {
+        "id": "CDR_002",
+        "domain": "column_drop",
+        "priority": 10,
+        "conditions": {"missing_ratio": {"min": 0.8}},
+        "action": "drop",
+        "explanation": (
+            "คอลัมน์นี้มีค่าว่างมากกว่า 80%  การเติมค่า (Imputation) จะสร้างข้อมูลสังเคราะห์ "
+            "มากเกินไปซึ่งอาจบิดเบือน Pattern จริง การตัดคอลัมน์ทิ้งปลอดภัยกว่า"
+        ),
+    },
+
+    # ══════════════════════════════════════════════════════════════
+    # Domain: feature_selection
+    # ══════════════════════════════════════════════════════════════
+
+    {
+        "id": "FSL_001",
+        "domain": "feature_selection",
+        "priority": 10,
+        "conditions": {"corr_value": {"min": 0.85}},
+        "action": "drop_high_correlation",
+        "explanation": (
+            "คอลัมน์คู่นี้มี Correlation ≥ 0.85 (Multicollinearity)  "
+            "ทั้งสองคอลัมน์มีข้อมูลซ้ำซ้อนกันมาก การเก็บทั้งคู่ไว้จะทำให้โมเดลให้น้ำหนัก "
+            "เกินความเป็นจริงและแปลผลได้ยาก แนะนำตัดคอลัมน์ที่สองออก"
+        ),
+    },
+    {
+        "id": "FSL_002",
+        "domain": "feature_selection",
+        "priority": 20,
+        "conditions": {"cv_abs": {"max": 0.01}},
+        "action": "drop_low_variance",
+        "explanation": (
+            "คอลัมน์นี้มี Coefficient of Variation < 1%  "
+            "ค่าเกือบทั้งหมดเหมือนกัน โมเดลไม่สามารถเรียนรู้ Pattern ได้ "
+            "จากข้อมูลที่แทบไม่มีความแตกต่างกัน"
+        ),
+    },
+
+    # ══════════════════════════════════════════════════════════════
+    # Domain: encoding
     # ══════════════════════════════════════════════════════════════
 
     {
@@ -163,6 +251,32 @@ RULES: list[dict] = [
     {
         "id": "ENC_003",
         "domain": "encoding",
+        "priority": 15,
+        "conditions": {"looks_ordinal": True, "cardinality": {"min": 3, "max": 10}},
+        "action": "ordinal_encoding",
+        "explanation": (
+            "ค่าของคอลัมน์นี้ตรงกับ pattern ที่มีลำดับที่ทราบได้ เช่น Low/Medium/High, "
+            "Small/Medium/Large หรือ rating ที่ชัดเจน  "
+            "Ordinal Encoding รักษา ordinal relationship ไว้ให้ model ใช้งานได้ถูกต้อง "
+            "กรุณายืนยันว่า order ที่ระบบเรียงให้ตรงกับความเป็นจริง"
+        ),
+    },
+    {
+        "id": "ENC_004",
+        "domain": "encoding",
+        "priority": 16,
+        "conditions": {"looks_ordinal": True, "cardinality": {"min": 11, "max": 20}},
+        "action": "ordinal_encoding",
+        "explanation": (
+            "ค่าของคอลัมน์นี้ดูมีลำดับชัดเจน และมี 11–20 categories  "
+            "Ordinal Encoding เหมาะกว่า One-hot เพราะไม่ทำให้ dimensionality สูงเกินไป "
+            "และยังรักษา ordinal relationship ไว้ได้  "
+            "กรุณายืนยัน order ที่ถูกต้องก่อนใช้งาน"
+        ),
+    },
+    {
+        "id": "ENC_005",
+        "domain": "encoding",
         "priority": 20,
         "conditions": {"cardinality": {"min": 3, "max": 10}},
         "action": "one_hot_encoding",
@@ -174,7 +288,7 @@ RULES: list[dict] = [
         ),
     },
     {
-        "id": "ENC_004",
+        "id": "ENC_006",
         "domain": "encoding",
         "priority": 30,
         "conditions": {"cardinality": {"min": 11, "max": 20}},
@@ -186,7 +300,7 @@ RULES: list[dict] = [
         ),
     },
     {
-        "id": "ENC_005",
+        "id": "ENC_007",
         "domain": "encoding",
         "priority": 40,
         "conditions": {"cardinality": {"min": 21}},
@@ -200,7 +314,7 @@ RULES: list[dict] = [
     },
 
     # ══════════════════════════════════════════════════════════════
-    # Domain: scaling  (อ้างอิง Topic 9  Data Transformation)
+    # Domain: scaling
     # ══════════════════════════════════════════════════════════════
 
     {
@@ -261,70 +375,4 @@ RULES: list[dict] = [
         ),
     },
 
-    # ══════════════════════════════════════════════════════════════
-    # Domain: model_selection
-    # ══════════════════════════════════════════════════════════════
-
-    {
-        "id": "MDL_001",
-        "domain": "model_selection",
-        "priority": 5,
-        "conditions": {"n_samples": {"max": 500}},
-        "action": "prefer_simple",
-        "explanation": (
-            "Dataset เล็กมาก (< 500 rows)  model ซับซ้อน (Ensemble, XGBoost) เสี่ยง overfit "
-            "เพราะไม่มีข้อมูลเพียงพอให้เรียนรู้ pattern ทั่วไป "
-            "Decision Tree หรือ Logistic Regression interpretable กว่าและ generalize ดีกว่า"
-        ),
-    },
-    {
-        "id": "MDL_002",
-        "domain": "model_selection",
-        "priority": 10,
-        "conditions": {"n_samples": {"min": 10000}},
-        "action": "prefer_boosting",
-        "explanation": (
-            "Dataset ใหญ่ (≥ 10,000 rows)  Gradient Boosting / LightGBM / XGBoost "
-            "ให้ผลดีที่สุดบน tabular data ขนาดใหญ่ "
-            "LightGBM เร็วที่สุดในกลุ่มนี้เพราะใช้ histogram-based algorithm"
-        ),
-    },
-    {
-        "id": "MDL_003",
-        "domain": "model_selection",
-        "priority": 15,
-        "conditions": {"class_imbalance_ratio": {"min": 3.0}, "task_type": ["classification"]},
-        "action": "warn_imbalance",
-        "explanation": (
-            "พบ class imbalance สูง (ratio ≥ 3:1)  "
-            "Accuracy จะสูงเทียมโดยที่ model แค่ทำนาย majority class เสมอ "
-            "ควรดู F1 (Macro) และ Recall ของ minority class เป็นหลัก "
-            "พิจารณาใช้ class_weight='balanced' หรือ SMOTE oversampling"
-        ),
-    },
-    {
-        "id": "MDL_004",
-        "domain": "model_selection",
-        "priority": 20,
-        "conditions": {"n_features": {"min": 50}},
-        "action": "prefer_regularized",
-        "explanation": (
-            "Dataset มี feature จำนวนมาก (≥ 50)  "
-            "Random Forest และ Gradient Boosting จัดการ high-dimensional data ได้ดี "
-            "เพราะ built-in feature selection ผ่าน information gain "
-            "Logistic Regression กับ Regularization (L1/L2) ก็เหมาะเมื่อต้องการ interpretability"
-        ),
-    },
-    {
-        "id": "MDL_005",
-        "domain": "model_selection",
-        "priority": 30,
-        "conditions": {"task_type": ["regression"]},
-        "action": "use_r2_rmse",
-        "explanation": (
-            "Task เป็น Regression  วัดผลด้วย R² Score และ RMSE "
-            "R² อธิบายว่า model อธิบาย variance ของ target ได้กี่ % (1.0 = perfect) "
-            "RMSE วัด error เฉลี่ยในหน่วยเดียวกับ target"
-        ),
-    },
 ]

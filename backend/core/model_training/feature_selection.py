@@ -100,9 +100,11 @@ def render_ml_feature_selection(dataframe: pd.DataFrame, target_column: str,
 
     # High Correlation
     if drop_high_correlation:
+        corr_rule_id = feature_selection_analysis.get("corr_rule_id", "")
+        rule_badge = f' <span style="background:#F59E0B22;color:#F59E0B;font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:4px;font-family:monospace">{corr_rule_id}</span>' if corr_rule_id else ""
         st.markdown(f"""
 <div style="background-color: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 20px; margin-bottom: 16px;">
-<div style="color: #F59E0B; font-weight: bold; font-family: monospace; font-size: 1.05rem; margin-bottom: 8px;">HIGH CORRELATION DETECTED</div>
+<div style="color: #F59E0B; font-weight: bold; font-family: monospace; font-size: 1.05rem; margin-bottom: 8px;">HIGH CORRELATION DETECTED{rule_badge}</div>
 <div style="color: #E2E8F0; font-size: 1rem; line-height: 1.6;">{feature_selection_analysis['reason_corr']}</div>
 </div>
 """, unsafe_allow_html=True)
@@ -135,9 +137,11 @@ def render_ml_feature_selection(dataframe: pd.DataFrame, target_column: str,
 
     # Low Variance
     if drop_low_variance:
+        var_rule_id = feature_selection_analysis.get("var_rule_id", "")
+        rule_badge = f' <span style="background:#F59E0B22;color:#F59E0B;font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:4px;font-family:monospace">{var_rule_id}</span>' if var_rule_id else ""
         st.markdown(f"""
 <div style="background-color: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 20px; margin-bottom: 16px;">
-<div style="color: #F59E0B; font-weight: bold; font-family: monospace; font-size: 1.05rem; margin-bottom: 8px;">LOW VAR DETECTED</div>
+<div style="color: #F59E0B; font-weight: bold; font-family: monospace; font-size: 1.05rem; margin-bottom: 8px;">LOW VAR DETECTED{rule_badge}</div>
 <div style="color: #E2E8F0; font-size: 1rem; line-height: 1.6;">{feature_selection_analysis['reason_var']}</div>
 </div>
 """, unsafe_allow_html=True)

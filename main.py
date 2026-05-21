@@ -118,13 +118,18 @@ def restore_session() -> None:
 
     # Restore target column
     if "target_col" not in st.session_state and st.session_state.get("main_df") is not None:
-        saved = load_target_col()
         cols = list(st.session_state["main_df"].columns)
-        if saved and saved in cols:
-            st.session_state["target_col"] = saved
+        # ใช้ non-widget key ก่อน (ไม่ถูก Streamlit ล้างตอน navigate)
+        persistent = st.session_state.get("_target_col_persistent")
+        if persistent and persistent in cols:
+            st.session_state["target_col"] = persistent
         else:
-            suggested, _ = suggest_target(st.session_state["main_df"])
-            st.session_state["target_col"] = suggested
+            saved = load_target_col()
+            if saved and saved in cols:
+                st.session_state["target_col"] = saved
+            else:
+                suggested, _ = suggest_target(st.session_state["main_df"])
+                st.session_state["target_col"] = suggested
 
 # Main
 def main():

@@ -58,13 +58,14 @@ def render_ml_scaling(dataframe: pd.DataFrame, target_column: str,
 
     # Recommendation
     rec_label  = SCALING_LABELS.get(scaling_analysis["recommended"], scaling_analysis["recommended"]).upper()
-    reference  = scaling_analysis.get("reference", "")
-    confidence = scaling_analysis.get("confidence", None)
     rule_id    = scaling_analysis.get("rule_id", "")
 
     st.markdown(f"""
 <div style="background-color: rgba(122, 162, 247, 0.05); border: 1px solid rgba(122, 162, 247, 0.2); border-radius: 8px; padding: 20px; margin-bottom: 24px;">
-<div style="color: #7AA2F7; font-weight: bold; font-family: monospace; font-size: 1.05rem; margin-bottom: 8px; border-bottom: 1px solid rgba(122, 162, 247, 0.1); padding-bottom: 8px;">RECOMMENDED METHOD: {rec_label}</div>
+<div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid rgba(122, 162, 247, 0.1); padding-bottom: 8px; margin-bottom: 8px;">
+<div style="color: #7AA2F7; font-weight: bold; font-family: monospace; font-size: 1.05rem;">RECOMMENDED METHOD: {rec_label}</div>
+{f'<span style="background:rgba(122,162,247,0.15);color:#7AA2F7;font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:4px;font-family:monospace">{rule_id}</span>' if rule_id else ''}
+</div>
 <div style="color: #E2E8F0; font-size: 1rem; line-height: 1.6;">{scaling_analysis['reason']}</div>
 </div>
 """, unsafe_allow_html=True)

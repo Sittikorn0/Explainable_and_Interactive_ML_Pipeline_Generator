@@ -128,15 +128,13 @@ def apply_all(dataset: pd.DataFrame, encoding_decisions: dict, scaling_method: s
 
     # ❌ ไม่ scale ที่นี่  preprocess.py จะทำให้หลัง split
 
-    # ── ดึง Rule reference จาก analysis เพื่อส่งต่อให้ trace_log ──
+    # ── ดึง Rule จาก analysis เพื่อส่งต่อให้ trace_log ──
     enc_rule_refs = {}
     if encoding_analysis:
         for info in encoding_analysis:
             col = info.get("col")
             if col and col in encoding_decisions:
                 enc_rule_refs[col] = {
-                    "reference":  info.get("reference", ""),
-                    "confidence": info.get("confidence"),
                     "rule_id":    info.get("rule_id", ""),
                 }
 
@@ -150,8 +148,6 @@ def apply_all(dataset: pd.DataFrame, encoding_decisions: dict, scaling_method: s
         "task_type":          task_type,
         "encoding_decisions": encoding_decisions,
         # ── rule engine metadata ──
-        "scaling_reference":  scaling_analysis.get("reference", "")  if scaling_analysis else "",
-        "scaling_confidence": scaling_analysis.get("confidence")      if scaling_analysis else None,
         "scaling_rule_id":    scaling_analysis.get("rule_id", "")    if scaling_analysis else "",
         "enc_rule_refs":      enc_rule_refs,
     }

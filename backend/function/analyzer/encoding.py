@@ -4,6 +4,33 @@ import pandas as pd
 # Logic Import
 from backend.core.insight.reasoning_engine.engine import *
 
+# Known ordinal pattern sets (lowercase) — if ALL unique values of a column fall in one set,
+# the column is considered ordinal
+_ORDINAL_PATTERNS: list[set[str]] = [
+    {"low", "medium", "high"},
+    {"low", "mid", "high"},
+    {"low", "medium", "high", "very high"},
+    {"very low", "low", "medium", "high", "very high"},
+    {"small", "medium", "large"},
+    {"small", "medium", "large", "extra large"},
+    {"xs", "s", "m", "l", "xl"},
+    {"xs", "s", "m", "l", "xl", "xxl"},
+    {"none", "low", "medium", "high"},
+    {"none", "mild", "moderate", "severe"},
+    {"poor", "fair", "good", "very good", "excellent"},
+    {"strongly disagree", "disagree", "neutral", "agree", "strongly agree"},
+    {"never", "rarely", "sometimes", "often", "always"},
+    {"beginner", "intermediate", "advanced", "expert"},
+    {"junior", "mid", "senior"},
+    {"junior", "middle", "senior"},
+    {"bronze", "silver", "gold", "platinum"},
+]
+
+def _looks_ordinal(unique_values: list) -> bool:
+    """ตรวจว่า unique values ทั้งหมดตรงกับ ordinal pattern ที่รู้จักหรือไม่"""
+    lower_values = {str(v).strip().lower() for v in unique_values}
+    return any(lower_values == pattern for pattern in _ORDINAL_PATTERNS)
+
 # Functions
 def analyze_encoding(dataset: pd.DataFrame, target_column: str) -> list[dict]:
     """
@@ -24,31 +51,31 @@ def analyze_encoding(dataset: pd.DataFrame, target_column: str) -> list[dict]:
     for column_name in categorical_columns:
         num_unique_values = dataset[column_name].nunique()
         unique_to_row_ratio = num_unique_values / total_rows
+        all_unique_values = list(dataset[column_name].dropna().unique())
+        is_ordinal = _looks_ordinal(all_unique_values)
 
         # ── ใช้ Rule Engine แนะนำ Encoding Method ──
         facts = {
             "cardinality":       num_unique_values,
             "cardinality_ratio": unique_to_row_ratio,
+            "looks_ordinal":     is_ordinal,
         }
         rule_result = suggest("encoding", facts)
 
         # Map rule action → encoding key
         _enc_action_map = {
-            "one_hot_encoding": "one_hot_encoding",
-            "label_encoding":   "label_encoding",
-            "drop_column":      "drop_column",
+            "one_hot_encoding":  "one_hot_encoding",
+            "label_encoding":    "label_encoding",
+            "ordinal_encoding":  "ordinal_encoding",
+            "drop_column":       "drop_column",
         }
         if rule_result:
             recommended_method = _enc_action_map.get(rule_result["action"], "label_encoding")
             reason      = rule_result["explanation"]
-            reference   = rule_result["reference"]
-            confidence  = rule_result.get("confidence", 0.8)
             rule_id     = rule_result["rule_id"]
         else:
             recommended_method = "label_encoding"
             reason      = f"มี {num_unique_values} categories  ใช้ Label Encoding เป็น default"
-            reference   = "Topic 9  Data Transformation"
-            confidence  = 0.6
             rule_id     = "ENC_FALLBACK"
 
         warning_message = None
@@ -65,8 +92,6 @@ def analyze_encoding(dataset: pd.DataFrame, target_column: str) -> list[dict]:
             "recommended": recommended_method,
             "options":     ["one_hot_encoding", "label_encoding", "ordinal_encoding", "drop_column"],
             "reason":      reason,
-            "reference":   reference,
-            "confidence":  confidence,
             "rule_id":     rule_id,
             "warning":     warning_message,
             "sample_values": list(dataset[column_name].dropna().unique()[:5]),

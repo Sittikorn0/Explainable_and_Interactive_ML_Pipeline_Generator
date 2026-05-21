@@ -93,22 +93,16 @@ def analyze_scaling(dataset: pd.DataFrame, target_column: str) -> dict:
     if rule_result:
         recommended_method = _scl_action_map.get(rule_result["action"], "standard_scaler")
         reason     = rule_result["explanation"]
-        reference  = rule_result["reference"]
-        confidence = rule_result.get("confidence", 0.8)
         rule_id    = rule_result["rule_id"]
     else:
         recommended_method = "standard_scaler"
         reason     = "ใช้ Standard Scaler เป็น default"
-        reference  = "Topic 9  Data Transformation"
-        confidence = 0.7
         rule_id    = "SCL_FALLBACK"
 
     return {
         "recommended":    recommended_method,
         "options":        ["log_transform", "standard_scaler", "minmax_scaler", "robust_scaler", "no_scaling"],
         "reason":         reason,
-        "reference":      reference,
-        "confidence":     confidence,
         "rule_id":        rule_id,
         "column_stats":   column_statistics,
         "has_outliers":   has_outliers,

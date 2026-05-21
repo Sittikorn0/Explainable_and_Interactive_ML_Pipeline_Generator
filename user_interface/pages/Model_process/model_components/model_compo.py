@@ -61,6 +61,7 @@ def render_model_cards(avail: dict, model_desc: dict):
         with (col_a if i % 2 == 0 else col_b):
             st.markdown(card, unsafe_allow_html=True)
 
+
 def render_best_model_card(result: dict, best_label: str):
     ranked = sorted([(k, v) for k, v in result["competition"].items() if v["cv_score"]],
                     key=lambda x: x[1]["cv_score"], reverse=True)

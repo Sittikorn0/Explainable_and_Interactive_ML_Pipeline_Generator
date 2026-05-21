@@ -26,15 +26,29 @@ def detect_task(dataset: pd.DataFrame, target_column: str) -> str:
         
     num_unique_values = target_series.nunique()
     
-    if num_unique_values <= 15:
+    if num_unique_values <= 2:
         return "classification"
     if num_unique_values > 100:
         return "regression"
-    
-    # กรณี 16-100 unique values: ดูสัดส่วนเมื่อเทียบกับจำนวนแถวทั้งหมด
+
+    clean_vals = target_series.dropna()
+    val_range = clean_vals.max() - clean_vals.min()
+    # near-integer: ยอมให้ค่าเบี่ยงได้ ±0.5 เผื่อ outlier treatment แปลงค่าไป
+    is_near_integer = (np.abs(clean_vals - clean_vals.round()) < 0.5).all()
+
+    # 3–15 unique values: ตรวจว่าเป็น ordinal/count scale → regression
+    # ไม่ต้องตรวจ near-integer เพราะ cleaning อาจแปลงค่าขอบเป็น float (IQR bounds)
+    if num_unique_values <= 15:
+        if num_unique_values >= 5 and val_range >= 4.5:
+            return "regression"
+        return "classification"
+
+    # 16–100 unique values: integer + range넓 → ordinal regression (เช่น Rings 1–29)
+    if is_near_integer and val_range >= 10:
+        return "regression"
+
+    # กรณีอื่น: ดูสัดส่วนเมื่อเทียบกับจำนวนแถวทั้งหมด
     unique_to_row_ratio = num_unique_values / len(target_series)
-    
     if unique_to_row_ratio >= 0.05:
         return "regression"
-    else:
-        return "classification"
+    return "classification"

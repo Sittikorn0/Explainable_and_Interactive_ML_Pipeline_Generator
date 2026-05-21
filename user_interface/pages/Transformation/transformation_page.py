@@ -108,7 +108,12 @@ def render_transformation():
                 for key_to_remove in ["ml_result", "ml_metrics", "_fi_data", "ml_task_type"]:
                     st.session_state.pop(key_to_remove, None)
         
-                log_transformation(transformation_summary, encoding_decisions, final_scaling_method, dropped_columns)
+                enc_reasons = {info["col"]: info["reason"] for info in encoding_analysis}
+                log_transformation(
+                    transformation_summary, encoding_decisions, final_scaling_method, dropped_columns,
+                    scaling_reason=scaling_analysis.get("reason", ""),
+                    enc_reasons=enc_reasons,
+                )
                 
                 commit_step("transformation", transformation_summary)
                 

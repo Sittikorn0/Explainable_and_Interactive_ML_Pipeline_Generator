@@ -61,8 +61,6 @@ class RuleEngine:
             "domain":      rule["domain"],
             "priority":    rule["priority"],
             "explanation": rule["explanation"],
-            "reference":   rule.get("reference", ""),
-            "confidence":  rule.get("confidence", 0.8),
             "facts_used":  {k: facts.get(k) for k in rule["conditions"]},
         }
 

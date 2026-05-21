@@ -56,7 +56,8 @@ def render_model_process():
             help="เลือก column ที่ต้องการทำนาย"
         )
 
-    task_preview = detect_task(dataframe, target_column)
+    raw_df_for_task = st.session_state.get("main_df", dataframe)
+    task_preview = detect_task(raw_df_for_task, target_column)
     render_target_info(target_column, task_preview, dataframe[target_column].nunique())
 
     # 2. Data Splitting

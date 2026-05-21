@@ -55,7 +55,10 @@ def render_ml_encoding(dataframe: pd.DataFrame, target_column: str,
 </div>
 </div>
 <div style="background-color: rgba(187, 154, 247, 0.05); border: 1px solid rgba(187, 154, 247, 0.2); border-radius: 8px; padding: 20px;">
-<div style="color: #BB9AF7; font-weight: bold; font-family: monospace; font-size: 1.05rem; margin-bottom: 8px; border-bottom: 1px solid rgba(187, 154, 247, 0.1); padding-bottom: 8px;">RECOMMENDED METHOD: {ENCODING_LABELS.get(recommended_method, recommended_method).upper()}</div>
+<div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid rgba(187, 154, 247, 0.1); padding-bottom: 8px; margin-bottom: 8px;">
+<div style="color: #BB9AF7; font-weight: bold; font-family: monospace; font-size: 1.05rem;">RECOMMENDED METHOD: {ENCODING_LABELS.get(recommended_method, recommended_method).upper()}</div>
+<span style="background:rgba(187,154,247,0.15);color:#BB9AF7;font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:4px;font-family:monospace">{info['rule_id']}</span>
+</div>
 <div style="color: #E2E8F0; font-size: 1rem; line-height: 1.6;">{info['reason']}</div>
 {meta_html}
 </div>

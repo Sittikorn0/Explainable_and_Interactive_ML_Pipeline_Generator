@@ -2,12 +2,13 @@
 import pandas as pd
 
 # Logic Import
+from backend.core.insight.reasoning_engine.engine import suggest
 
 # Functions
 def analyze_feature_selection(dataset: pd.DataFrame, target_column: str) -> dict:
     """
     วิเคราะห์ความซ้ำซ้อนและการกระจายตัวของข้อมูล เพื่อแนะนำ Feature ที่ควรตัดออก
-    เช่น ข้อมูลที่แปรปรวนต่ำมาก (Low Variance) หรือมีความสัมพันธ์กันเองสูงมาก (High Correlation)
+    ใช้ Rule Engine (FSL_001, FSL_002) ตัดสินใจแทน hardcode threshold
     """
     numeric_columns = [
         column_name for column_name in dataset.columns
@@ -16,50 +17,60 @@ def analyze_feature_selection(dataset: pd.DataFrame, target_column: str) -> dict
 
     columns_to_drop_corr = []
     columns_to_drop_var = []
+    corr_rule_id = ""
+    var_rule_id = ""
 
-    # ตรวจสอบ High Correlation (Multicollinearity)
+    # ตรวจสอบ High Correlation (Multicollinearity) ผ่าน Rule Engine
     if len(numeric_columns) >= 2:
         correlation_matrix = dataset[numeric_columns].corr().abs()
         processed_pairs = set()
-        
+
         for i, column_a in enumerate(numeric_columns):
             for column_b in numeric_columns[i+1:]:
                 pair = tuple(sorted([column_a, column_b]))
                 if pair in processed_pairs:
                     continue
                 processed_pairs.add(pair)
-                
-                corr_value = correlation_matrix.loc[column_a, column_b]
-                if corr_value >= 0.85:
-                    columns_to_drop_corr.append({
-                        "col_a": column_a,
-                        "col_b": column_b,
-                        "corr":  round(float(corr_value), 3),
-                        "drop":  column_b,   # แนะนำให้ตัดคอลัมน์ที่สองทิ้ง
-                    })
 
-    # ตรวจสอบ Low Variance (ไม่มีการเปลี่ยนแปลงข้อมูล)
+                corr_value = float(correlation_matrix.loc[column_a, column_b])
+                rule_result = suggest("feature_selection", {"corr_value": corr_value})
+                if rule_result and rule_result["action"] == "drop_high_correlation":
+                    columns_to_drop_corr.append({
+                        "col_a":   column_a,
+                        "col_b":   column_b,
+                        "corr":    round(corr_value, 3),
+                        "drop":    column_b,
+                        "rule_id": rule_result["rule_id"],
+                    })
+                    corr_rule_id = rule_result["rule_id"]
+
+    # ตรวจสอบ Low Variance ผ่าน Rule Engine
     for column_name in numeric_columns:
         feature_series = dataset[column_name].dropna()
         if len(feature_series) == 0:
             continue
-            
-        coefficient_of_variation = feature_series.std() / (feature_series.mean() + 1e-9)
-        if abs(coefficient_of_variation) < 0.01:
-            columns_to_drop_var.append({
-                "col": column_name,
-                "std": round(float(feature_series.std()), 6),
-                "cv":  round(float(coefficient_of_variation), 6),
-            })
 
-    reason_for_corr_drop = (
-        "คอลัมน์ที่มี Correlation ≥ 0.85 เมื่อเทียบกับคอลัมน์อื่น "
-        "ถือว่ามีข้อมูลซ้ำซ้อนกันมาก (Multicollinearity) การเก็บทั้งคู่ไว้จะทำให้โมเดล "
-        "ให้น้ำหนักเกินความเป็นจริง และแปลผลได้ยาก"
+        coefficient_of_variation = feature_series.std() / (feature_series.mean() + 1e-9)
+        cv_abs = abs(float(coefficient_of_variation))
+        rule_result = suggest("feature_selection", {"cv_abs": cv_abs})
+        if rule_result and rule_result["action"] == "drop_low_variance":
+            columns_to_drop_var.append({
+                "col":     column_name,
+                "std":     round(float(feature_series.std()), 6),
+                "cv":      round(float(coefficient_of_variation), 6),
+                "rule_id": rule_result["rule_id"],
+            })
+            var_rule_id = rule_result["rule_id"]
+
+    # ดึง explanation จาก Rule Engine สำหรับ reason text ใน UI
+    corr_rule = suggest("feature_selection", {"corr_value": 1.0})
+    var_rule  = suggest("feature_selection", {"cv_abs": 0.0})
+
+    reason_for_corr_drop = corr_rule["explanation"] if corr_rule else (
+        "คอลัมน์ที่มี Correlation สูงถือว่ามีข้อมูลซ้ำซ้อนกัน (Multicollinearity)"
     )
-    reason_for_var_drop = (
-        "คอลัมน์ที่มี Variance ต่ำมาก (Coefficient of Variation < 1%) ถือว่าไม่มีข้อมูลที่เป็นประโยชน์ "
-        "เพราะค่าเกือบทั้งหมดเหมือนกัน โมเดลไม่สามารถเรียนรู้ Pattern จากข้อมูลที่ไม่มีความแตกต่างกันได้"
+    reason_for_var_drop = var_rule["explanation"] if var_rule else (
+        "คอลัมน์ที่มี Variance ต่ำมากไม่มีข้อมูลที่เป็นประโยชน์ต่อโมเดล"
     )
 
     return {
@@ -67,4 +78,6 @@ def analyze_feature_selection(dataset: pd.DataFrame, target_column: str) -> dict
         "drop_low_var":   columns_to_drop_var,
         "reason_corr":    reason_for_corr_drop,
         "reason_var":     reason_for_var_drop,
+        "corr_rule_id":   corr_rule_id,
+        "var_rule_id":    var_rule_id,
     }

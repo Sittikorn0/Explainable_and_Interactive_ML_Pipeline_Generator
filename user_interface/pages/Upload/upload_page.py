@@ -56,6 +56,7 @@ def save_new_file(df: pd.DataFrame, filename: str, warnings: list, json_metadata
     st.session_state["json_raw_df"] = json_metadata.get("raw_df")
     st.session_state["json_col_decisions"] = json_metadata.get("col_decisions", [])
     st.session_state.pop("target_col", None)
+    st.session_state.pop("_target_col_persistent", None)
 
     for key in _KEYS_TO_CLEAR:
         st.session_state.pop(key, None)

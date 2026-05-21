@@ -14,6 +14,8 @@ from user_interface.pages.Model_process.model_components.model_compo import rend
 # Function
 def get_metrics(actual_values, predicted_values, task_type: str) -> dict:
     if task_type == "classification":
+        actual_values = pd.Series(actual_values).astype(str)
+        predicted_values = pd.Series(predicted_values).astype(str)
         # macro: ค่าเฉลี่ยแบบไม่ถ่วงน้ำหนัก ให้ทุก class มีความสำคัญเท่ากัน
         # หมายเหตุ: weighted recall = accuracy เสมอ (ทางคณิตศาสตร์)
         #           จึงใช้ macro เพื่อให้ค่าทั้ง 4 แสดงผลที่แตกต่างและมีความหมาย
@@ -66,7 +68,7 @@ def show_error_dist(actual_values, predicted_values):
 def show_leaderboard(model_competition_results: dict):
     ranked_models = sorted(
         [(model_name, result) for model_name, result in model_competition_results.items() if result["cv_score"] is not None],
-        key=lambda item: item[1]["cv_score"], reverse=True
+        key=lambda item: item[1].get("cv_score_raw", item[1]["cv_score"]), reverse=True
     )
     failed_models = [(model_name, result) for model_name, result in model_competition_results.items() if result["cv_score"] is None]
 

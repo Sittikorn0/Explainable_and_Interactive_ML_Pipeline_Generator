@@ -1,6 +1,7 @@
 # Libraries
 import streamlit as st
 import pandas as pd
+from scipy.stats import skew as _scipy_skew
 
 # Logic Import
 from backend.function.data_type.dtype_detection import actual_type
@@ -9,6 +10,66 @@ from backend.core.cleaning.data_distribution import *
 from backend.core.cleaning.statistic import *
 from backend.core.cleaning.main_logic import *
 from backend.core.session.state import load_outlier_bounds, save_outlier_bounds, save_cleaned_data
+from backend.core.insight.reasoning_engine.engine import suggest as _rule_suggest
+
+# ── Rule-based default suggestion helpers ─────────────────────────────────────
+
+def _suggest_missing_strategy(df: pd.DataFrame, col: str, missing_count: int) -> tuple[str | None, str, str]:
+    """คืน (strategy, rule_id, explanation) ที่ Rule Engine แนะนำสำหรับ missing value imputation"""
+    col_dtype = actual_type(df[col])
+    is_numeric = col_dtype in ("float", "int")
+    missing_ratio = missing_count / max(len(df), 1)
+
+    if is_numeric:
+        vals = df[col].dropna()
+        skewness_abs = abs(float(_scipy_skew(vals))) if len(vals) > 1 else 0.0
+        is_skewed = skewness_abs > 1.0
+        has_outliers = False
+        dist = st.session_state.get("dist_result")
+        if dist:
+            _, outlier_details = dist
+            outlier_map = {item["Column"]: item["Outliers"] for item in outlier_details}
+            has_outliers = outlier_map.get(col, 0) > 0
+        facts = {
+            "missing_ratio": missing_ratio,
+            "dtype": "numeric",
+            "has_outliers": has_outliers,
+            "is_skewed": is_skewed,
+        }
+    else:
+        facts = {
+            "missing_ratio": missing_ratio,
+            "dtype": "categorical",
+            "has_outliers": False,
+            "is_skewed": False,
+        }
+
+    result = _rule_suggest("missing_value", facts)
+    if not result:
+        return None, "", ""
+
+    action_map = {
+        "no_action":     None,
+        "drop_column":   "drop rows",
+        "median_impute": "median (rounded)" if col_dtype == "int" else "median",
+        "mean_impute":   "mean",
+        "mode_impute":   "most frequent",
+    }
+    return action_map.get(result["action"]), result.get("rule_id", ""), result.get("explanation", "")
+
+
+def _suggest_outlier_strategy(outlier_count: int, df_len: int) -> tuple[str, str, str]:
+    """คืน (strategy, rule_id, explanation) ที่ Rule Engine แนะนำสำหรับ outlier treatment"""
+    outlier_ratio = outlier_count / max(df_len, 1)
+    result = _rule_suggest("outlier", {"outlier_ratio": outlier_ratio})
+    if not result:
+        return "clip", "", ""
+    action_map = {
+        "no_action": "clip",
+        "clip":      "clip",
+        "drop rows": "drop rows",
+    }
+    return action_map.get(result["action"], "clip"), result.get("rule_id", ""), result.get("explanation", "")
 
 
 def render_drop_columns(working_dataframe: pd.DataFrame, target_column: str):
@@ -52,10 +113,16 @@ def render_drop_columns(working_dataframe: pd.DataFrame, target_column: str):
                 track_cleaning_bulk("drop_col", columns_to_drop, "dropped manually")
                 st.rerun()
     with column_drop2:
-        suggested_drops_list = [
-            col for col in droppable_columns
-            if (working_dataframe[col].isnull().mean() > 0.8) or (working_dataframe[col].nunique() <= 1)
-        ]
+        suggested_drops_list = []
+        suggested_drop_reasons = {}
+        for col in droppable_columns:
+            missing_ratio = float(working_dataframe[col].isnull().mean())
+            is_constant = working_dataframe[col].nunique() <= 1
+            result = _rule_suggest("column_drop", {"missing_ratio": missing_ratio, "is_constant": is_constant})
+            if result:
+                suggested_drops_list.append(col)
+                suggested_drop_reasons[col] = result["rule_id"]
+
         if suggested_drops_list and st.button("Drop แนะนำ", key="drop_cols_suggested", disabled=target_column is None):
             remaining_columns = [col for col in working_dataframe.columns if col not in suggested_drops_list]
             if len(remaining_columns) < 2:
@@ -65,11 +132,12 @@ def render_drop_columns(working_dataframe: pd.DataFrame, target_column: str):
                     working_dataframe.drop(columns=suggested_drops_list).reset_index(drop=True)
                 )
                 st.session_state["cleaning_confirmed"] = False
-                track_cleaning_bulk("drop_col", suggested_drops_list, "dropped (missing>80% or single unique)")
+                track_cleaning_bulk("drop_col", suggested_drops_list, "dropped by rule engine (CDR_001/CDR_002)")
                 st.rerun()
 
     if suggested_drops_list:
-        st.caption(f"แนะนำให้ลบ: {', '.join(suggested_drops_list)} (missing > 80% หรือมีค่าเดียว)")
+        rule_tags = ", ".join(f"`{suggested_drop_reasons.get(c, '')}`" for c in suggested_drops_list)
+        st.caption(f"แนะนำให้ลบ: {', '.join(suggested_drops_list)} — {rule_tags}")
 
 def render_duplicates(working_dataframe: pd.DataFrame, duplicate_count: int):
     st.subheader("Duplicates")
@@ -189,20 +257,24 @@ def render_missing_values(working_dataframe: pd.DataFrame, missing_columns_dict:
         missing_percentage = missing_count / len(working_dataframe) * 100
         column_data_type = actual_type(working_dataframe[col_name])
 
+        suggested_strategy, suggested_rule_id, suggested_explanation = _suggest_missing_strategy(working_dataframe, col_name, missing_count)
+
         checkbox_col, name_col, strategy_col, apply_col, _ = st.columns([0.4, 2.8, 2, 0.8, 0.5], vertical_alignment="center")
         with checkbox_col:
             st.checkbox("Select", key=f"miss_check_{col_name}", label_visibility="hidden")
         with name_col:
-            st.markdown(f"**{col_name}**  {missing_count:,} ค่า ({missing_percentage:.1f}%)")
+            rule_badge = f" `{suggested_rule_id}`" if suggested_rule_id else ""
+            st.markdown(f"**{col_name}**  {missing_count:,} ค่า ({missing_percentage:.1f}%){rule_badge}")
         with strategy_col:
             available_options = determine_missing_compatible(column_data_type)
-            chosen_strategy = st.selectbox("Strategy", available_options, key=f"miss_strategy_{col_name}", label_visibility="collapsed")
+            default_idx = available_options.index(suggested_strategy) if suggested_strategy in available_options else 0
+            chosen_strategy = st.selectbox("Strategy", available_options, index=default_idx, key=f"miss_strategy_{col_name}", label_visibility="collapsed")
         with apply_col:
             if st.button("Apply", key=f"miss_apply_{col_name}"):
                 dataframe_work = use_missing_strategy(st.session_state["working_df"], col_name, chosen_strategy)
                 st.session_state["working_df"] = dataframe_work
                 st.session_state["cleaning_confirmed"] = False
-                track_cleaning("missing", col_name, chosen_strategy)
+                track_cleaning("missing", col_name, chosen_strategy, suggested_explanation)
                 st.session_state.setdefault("missing_rules", {})[col_name] = chosen_strategy
                 st.rerun()
 
@@ -303,22 +375,27 @@ def render_outliers(working_dataframe: pd.DataFrame, outlier_columns_dict: dict,
         lower_bound = outlier_bounds["Lower"]
         upper_bound = outlier_bounds["Upper"]
 
+        suggested_out_strategy, suggested_out_rule_id, suggested_out_explanation = _suggest_outlier_strategy(outlier_count, len(working_dataframe))
+        out_options = ["clip", "drop rows"]
+        out_default_idx = out_options.index(suggested_out_strategy) if suggested_out_strategy in out_options else 0
+
         checkbox_col, name_col, strategy_col, apply_col, _ = st.columns([0.4, 2.8, 2, 0.8, 0.5], vertical_alignment="center")
         with checkbox_col:
             st.checkbox("Select", key=f"out_check_{col_name}", label_visibility="hidden")
         with name_col:
-            st.markdown(f"**{col_name}**  {outlier_count:,} ค่า")
+            rule_badge = f" `{suggested_out_rule_id}`" if suggested_out_rule_id else ""
+            st.markdown(f"**{col_name}**  {outlier_count:,} ค่า{rule_badge}")
             st.caption(outlier_reason)
             st.caption(f"ขอบเขต: [{lower_bound:,.2f}, {upper_bound:,.2f}]")
         with strategy_col:
-            chosen_strategy = st.selectbox("Strategy", ["clip", "drop rows"], key=f"out_strategy_{col_name}", label_visibility="collapsed")
+            chosen_strategy = st.selectbox("Strategy", out_options, index=out_default_idx, key=f"out_strategy_{col_name}", label_visibility="collapsed")
         with apply_col:
             if st.button("Apply", key=f"out_apply_{col_name}"):
                 dataframe_work = use_outlier_strategy(st.session_state["working_df"], col_name, chosen_strategy, lower_bound, upper_bound)
                 st.session_state["working_df"] = dataframe_work
                 st.session_state["cleaning_confirmed"] = False
                 st.session_state.setdefault("treated_outlier_cols", {})[col_name] = chosen_strategy
-                track_cleaning("outlier", col_name, chosen_strategy)
+                track_cleaning("outlier", col_name, chosen_strategy, suggested_out_explanation)
                 st.session_state.setdefault("outlier_rules", {})[col_name] = {"strategy": chosen_strategy, "lower": lower_bound, "upper": upper_bound}
                 st.rerun()
 

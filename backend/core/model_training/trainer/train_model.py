@@ -166,10 +166,11 @@ def run_competition(features_train, features_test, target_train, target_test,
                 model_instance.fit(features_train, target_train, **fit_keywords)
 
             competition_results[model_key] = {
-                "label": model_label, 
+                "label": model_label,
                 "cv_score": round(cv_mean_score, 4),
-                "cv_std": round(cv_std_score, 4), 
-                "best_params": best_parameters, 
+                "cv_score_raw": cv_mean_score,
+                "cv_std": round(cv_std_score, 4),
+                "best_params": best_parameters,
                 "error": None
             }
             
