@@ -6,12 +6,8 @@ from backend.core.cleaning.statistic import get_outlier_bounds
 from backend.core.insight.reasoning_engine.engine import suggest
 
 # Functions
+# วิเคราะห์ numeric columns เพื่อแนะนำ scaling method ผ่าน Rule Engine คืน dict ใช้ใน analyze_all และ transformation_page
 def analyze_scaling(dataset: pd.DataFrame, target_column: str) -> dict:
-    """
-    วิเคราะห์คอลัมน์ที่เป็นตัวเลข (Numeric) เพื่อหาวิธี Scaling ที่เหมาะสม
-
-    Returns: dictionary ที่ประกอบด้วยวิธีแนะนำ เหตุผล สถิติของแต่ละคอลัมน์
-    """
     numeric_columns = [
         column_name for column_name in dataset.columns
         if column_name != target_column and pd.api.types.is_numeric_dtype(dataset[column_name])

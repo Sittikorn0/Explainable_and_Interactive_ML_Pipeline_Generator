@@ -10,6 +10,7 @@ ENCODING_LABELS = {
     "drop_column":       "Drop (ตัดออก)",
 }
 
+# render UI encoding section พร้อม radio selector สำหรับแต่ละ categorical column คืน decisions dict ใช้ใน transformation_page
 def render_ml_encoding(dataframe: pd.DataFrame, target_column: str,
                      encoding_analysis: list) -> dict:
     st.markdown('<div class="section-header">ENCODING</div>', unsafe_allow_html=True)

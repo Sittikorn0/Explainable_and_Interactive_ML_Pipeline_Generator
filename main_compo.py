@@ -8,8 +8,8 @@ from user_interface.pages.Upload.upload_components.upload_compo import suggest_t
 SANS_FONT = "'DM Sans','Sarabun',sans-serif"
 
 # Page Header
+# render page header (title + subtitle) สำหรับทุกหน้าใน pipeline ใช้ใน render_* ทุกหน้า
 def page_header(title: str, subtitle: str = "") -> None:
-    """Render page header"""
     st.markdown(
         f'<div style="margin-bottom:2rem; margin-top:0.5rem;">'
         f'<h2 style="font-family:{SANS_FONT};font-size:1.6rem;font-weight:700;'
@@ -23,6 +23,7 @@ def page_header(title: str, subtitle: str = "") -> None:
         unsafe_allow_html=True,
     )
     
+# สร้าง HTML badge inline ตามสี (blue/green/orange/red/gray) ใช้ใน upload_compo และ cleaning_compo
 def badge(text: str, color: str = "blue") -> str:
     colors = {
         "blue":   ("#1a3a5c", "#58a6ff"),
@@ -38,8 +39,8 @@ def badge(text: str, color: str = "blue") -> str:
     )
 
 
+# render กล่อง recommendation (title + reason + optional warning) ใช้ใน encoding/scaling section
 def recommendation_box(title: str, reason: str, warning: str = None):
-    """กล่องแสดง recommendation พร้อมเหตุผล"""
     warning_html = ""
     if warning:
         warning_html = (
@@ -58,8 +59,8 @@ border-radius:0 8px 8px 0;padding:12px 16px;margin:8px 0">
 </div>
 """, unsafe_allow_html=True)
 
+# render metrics cards แถว flex-wrap (label + value) ใช้ใน cleaning_page และ eda_page
 def render_metrics_row(metrics: list[tuple[str, str]]):
-    """เรนเดอร์ Metrics Card แบบยืดหยุ่นด้วย HTML/CSS Flexbox ไม่ให้ข้อความโดนตัด"""
     cards_html = ""
     for label, value in metrics:
         cards_html += f"""<div style="flex: 1; min-width: 160px; background: #1E293B; border: 1px solid #334155; border-radius: 10px; padding: 16px 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);">
@@ -68,7 +69,7 @@ def render_metrics_row(metrics: list[tuple[str, str]]):
 </div>"""
     st.markdown(f'<div style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 1rem;">{cards_html}</div>', unsafe_allow_html=True)
 
+# โหลด transformed_df จาก disk กลับเข้า session_state หรือ fallback เป็น main_df ใช้ตอน refresh
 def restore_transformed_df() -> None:
-    """โหลด transformed_df จาก disk หรือ fallback เป็น main_df"""
     recovered = load_transformed_df()
     st.session_state["transformed_df"] = recovered if recovered is not None else st.session_state.get("main_df")

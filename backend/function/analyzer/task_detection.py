@@ -7,18 +7,8 @@ from scipy.stats import skew
 from backend.core.cleaning.statistic import get_outlier_bounds
 
 # Functions
+# ตัดสินใจว่า target column เป็น classification หรือ regression โดยดูจาก dtype/nunique/range/ratio ใช้ใน preprocess และ analyze_all
 def detect_task(dataset: pd.DataFrame, target_column: str) -> str:
-    """
-    ตรวจสอบและตัดสินใจว่าข้อมูลนี้เป็นปัญหา Classification หรือ Regression
-
-    เกณฑ์การตัดสินใจ:
-    - ถ้าเป็น string/category จะเป็น Classification เสมอ
-    - ถ้าเป็นตัวเลข และมีค่าไม่ซ้ำ ≤ 15 ค่า จะเป็น Classification (มองเป็นคลาสแยกส่วน)
-    - ถ้าเป็นตัวเลข และมีค่าไม่ซ้ำ > 100 ค่า จะเป็น Regression เสมอ (มองเป็นค่าต่อเนื่อง)
-    - ถ้าเป็นตัวเลข มีค่าไม่ซ้ำระหว่าง 16-100 ค่า จะตรวจสอบสัดส่วน (Ratio):
-        - ถ้า Ratio ≥ 5% ของจำนวนข้อมูลทั้งหมด จะเป็น Regression
-        - ถ้า Ratio < 5% จะเป็น Classification
-    """
     target_series = dataset[target_column]
     
     if not pd.api.types.is_numeric_dtype(target_series):

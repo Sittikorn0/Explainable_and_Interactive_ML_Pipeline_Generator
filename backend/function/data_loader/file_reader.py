@@ -8,8 +8,8 @@ SUPPORTED_ENCODINGS = ["utf-8", "utf-8-sig", "cp874", "cp1252", "latin1"]
 from backend.function.data_loader.json_parser import json_normalized
 
 # Functions
+# แปลง object Series ให้เป็น numeric หรือ string ที่ถูกต้อง ใช้ภายใน normalize_dtypes
 def fix_column_dtype(series: pd.Series) -> pd.Series:
-    """แปลง object Series ให้เป็น dtype ที่ถูกต้อง"""
     non_null = series.dropna()
     if non_null.size == 0:
         return series
@@ -26,16 +26,15 @@ def fix_column_dtype(series: pd.Series) -> pd.Series:
 
     return series
 
+# แก้ dtype ทุก object column ในทั้ง DataFrame ใช้หลัง read_csv/read_excel/json_normalized
 def normalize_dtypes(df: pd.DataFrame) -> pd.DataFrame:
-    """แก้ dtype ทุก object column ให้ถูกต้องก่อนนำไปใช้งาน"""
     df = df.copy()
     for col in df.select_dtypes(include="object").columns:
         df[col] = fix_column_dtype(df[col])
     return df
 
+# แปลง mixed-type object columns เป็น string ป้องกัน error ตอน save parquet ใช้ใน state.py
 def sanitize_for_parquet(df: pd.DataFrame) -> pd.DataFrame:
-    """แปลง object column ที่มีค่า mixed types เป็น string
-    เพื่อป้องกัน error ตอน save parquet"""
     df = df.copy()
     for col in df.select_dtypes(include="object").columns:
         non_null = df[col].dropna()
@@ -44,8 +43,8 @@ def sanitize_for_parquet(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 # Read Files
+# อ่าน CSV ลอง encoding หลายแบบจนสำเร็จ รองรับไฟล์ภาษาไทย ใช้ใน process_cached
 def read_csv_with_fallback(file_bytes: bytes) -> pd.DataFrame:
-    """ลอง encoding ตาม SUPPORTED_ENCODINGS จนสำเร็จ (รองรับไฟล์ภาษาไทย)"""
     last_error = None
     for encoding in SUPPORTED_ENCODINGS:
         try:
@@ -54,11 +53,8 @@ def read_csv_with_fallback(file_bytes: bytes) -> pd.DataFrame:
             last_error = e
     raise last_error
 
+# อ่าน Excel sheet แรก (xlrd สำหรับ .xls, openpyxl สำหรับ .xlsx) พร้อม warning ถ้ามีหลาย sheet ใช้ใน process_cached
 def read_excel(file_bytes: bytes, filename: str = "") -> tuple[pd.DataFrame, list[str]]:
-    """โหลด sheet แรก พร้อม warning ถ้ามีหลาย sheet
-    .xls (Excel 97-2003) ต้องใช้ engine='xlrd'
-    .xlsx ใช้ engine='openpyxl'
-    """
     engine = "xlrd" if filename.lower().endswith(".xls") else "openpyxl"
     excel = pd.ExcelFile(io.BytesIO(file_bytes), engine=engine)
     df = excel.parse(excel.sheet_names[0])
@@ -69,16 +65,13 @@ def read_excel(file_bytes: bytes, filename: str = "") -> tuple[pd.DataFrame, lis
     return df, warnings
 
 # Cache & Process Data
+# อ่านไฟล์ตาม format (csv/xlsx/json) และ normalize dtypes cached ด้วย st.cache_data ใช้โดย process_data
 @st.cache_data(show_spinner="Loading data...", ttl=3600, max_entries=5)
 def process_cached(
     filename: str,
     filesize: int,  # ใช้เป็น cache key เท่านั้น
     file_bytes: bytes,
 ) -> tuple[pd.DataFrame | None, list[str], dict]:
-    """Step 1  อ่านไฟล์ตาม format
-    Step 2  แก้ dtype ให้ถูกต้อง
-    Return: (DataFrame, warnings, json_metadata)   cached ตาม filename+size+bytes
-    """
     try:
         if filename.endswith(".csv"):
             df = normalize_dtypes(read_csv_with_fallback(file_bytes))
@@ -102,8 +95,8 @@ def process_cached(
 
     return None, [], {}
 
+# entry point หลัก รับ Streamlit UploadedFile แล้วส่งผ่าน process_cached ใช้ใน upload_page
 def process_data(uploaded_file) -> tuple[pd.DataFrame | None, list[str], dict]:
-    """Entry point หลัก  รับ Streamlit UploadedFile แล้วส่งผ่าน cache"""
     if uploaded_file is None:
         return None, [], {}
     file_bytes = uploaded_file.getvalue()

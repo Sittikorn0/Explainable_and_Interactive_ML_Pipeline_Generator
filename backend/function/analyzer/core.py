@@ -10,10 +10,8 @@ from backend.function.analyzer.scaling import analyze_scaling
 from backend.function.analyzer.feature_selection import analyze_feature_selection
 
 # Functions
+# รัน Analysis ทั้งหมด (Encoding/Scaling/Feature Selection/Leakage) คืน dict ใช้ใน suggestion_engine และ data_overview_page
 def analyze_all(dataset: pd.DataFrame, target_column: str) -> dict:
-    """
-    รัน Analysis ทั้งหมด (Encoding, Scaling, Feature Selection, Leakage)
-    """
     return {
         "encoding":          analyze_encoding(dataset, target_column),
         "scaling":           analyze_scaling(dataset, target_column),

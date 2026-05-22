@@ -7,6 +7,7 @@ from backend.function.analyzer.task_detection import detect_task
 from backend.core.model_training.scaling import SCALING_LABELS
 
 # Function
+# render สรุปผลการ transform (cols before/after/dropped/scaling method) ใช้ใน render_transformation
 def render_summary_view(dataframe: pd.DataFrame, transformed_dataframe: pd.DataFrame,
                     summary_dict: dict, target_column: str):
     st.markdown('<div class="section-header">รายงานสรุปการแปลงข้อมูล (SUMMARY REPORT)</div>', unsafe_allow_html=True)
@@ -42,11 +43,8 @@ def render_summary_view(dataframe: pd.DataFrame, transformed_dataframe: pd.DataF
     # Success message minimal style
     st.success(f"**[ READY ]** การแปลงข้อมูลเสร็จสมบูรณ์ ระบบพร้อมนำไปสอนโมเดลในขั้นตอนถัดไปโดยใช้เทคนิค **{method_label}**")
 
+# apply encoding decisions (one_hot/label/ordinal/drop) เพื่อ preview ใน UI เท่านั้น (ไม่ใช่ training) ใช้ใน apply_all
 def apply_encoding(dataset: pd.DataFrame, encoding_decisions: dict, target_column: str) -> pd.DataFrame:
-    """
-    Apply encoding ตาม decisions dict
-    decisions format: {"col_name": "one_hot_encoding" | "label_encoding" | "ordinal_encoding" | "drop_column"}
-    """
     transformed_dataset = dataset.copy()
 
     for column_name, method in encoding_decisions.items():
@@ -72,24 +70,17 @@ def apply_encoding(dataset: pd.DataFrame, encoding_decisions: dict, target_colum
     return transformed_dataset
 
 
+# drop columns ที่ user เลือก ป้องกันตัด target column ใช้ใน apply_all
 def apply_feature_selection(dataset: pd.DataFrame, columns_to_drop: list, target_column: str) -> pd.DataFrame:
-    """ตัด columns ที่ user เลือก ป้องกันตัด target โดยไม่ตั้งใจ"""
     safe_columns_to_drop = [column for column in columns_to_drop if column != target_column and column in dataset.columns]
     return dataset.drop(columns=safe_columns_to_drop)
 
 
+# apply feature_selection เพื่อ preview (encoding/scaling จริงทำใน preprocess.py หลัง split) ใช้ใน render_transformation
 def apply_all(dataset: pd.DataFrame, encoding_decisions: dict, scaling_method: str,
               columns_to_drop: list, target_column: str,
               scaling_analysis: dict | None = None,
               encoding_analysis: list | None = None) -> tuple:
-    """
-    Apply transformations ตามลำดับ:
-      - Feature Selection (รวม drop_column จาก encoding)
-      - Target Sanitization
-      ❌ Encoding  ไม่ทำที่นี่ เพื่อป้องกัน Data Leakage
-                    preprocess.py จะ encode หลัง train/test split
-      ❌ Scaling   ไม่ทำที่นี่ เพื่อป้องกัน Data Leakage
-    """
     transformed_dataset = dataset.copy()
 
     # Feature Selection: รวม columns_to_drop + คอลัมน์ที่ user เลือก drop จาก encoding

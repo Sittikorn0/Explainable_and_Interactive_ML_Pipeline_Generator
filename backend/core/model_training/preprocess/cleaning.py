@@ -2,23 +2,17 @@
 import numpy as np
 import pandas as pd
 
-# Missing Value Handling (Cleaning)
+# เติม missing values fit บน train เท่านั้น แปลง bool→int และล้าง inf ใช้ใน preprocess
 def clean_fit_transform(features_train: pd.DataFrame, features_test: pd.DataFrame, missing_rules: dict = None) -> tuple:
-    """
-    เติมค่าว่าง (Missing Value) ป้องกัน Data Leakage โดยคำนวณค่าสถิติจาก features_train เท่านั้น
-    และใช้กฎจากหน้า UI Data Cleaning (missing_rules)
-    """
     if missing_rules is None:
         missing_rules = {}
-        
-    # จัดการข้อมูลประเภท Boolean และ Infinity
+
     for dataset_split in [features_train, features_test]:
         boolean_columns = dataset_split.select_dtypes(include="bool").columns
         for col in boolean_columns:
             dataset_split[col] = dataset_split[col].astype(int)
         dataset_split.replace([np.inf, -np.inf], 0, inplace=True)
 
-    # คำนวณค่าจาก features_train ตาม rules
     fill_values_dict = {}
     for column_name in features_train.columns:
         if features_train[column_name].isna().any() or features_test[column_name].isna().any():
@@ -51,18 +45,14 @@ def clean_fit_transform(features_train: pd.DataFrame, features_test: pd.DataFram
             if pd.isna(fill_values_dict.get(column_name, 0)):
                 fill_values_dict[column_name] = 0
 
-    # เติมค่าว่างให้ทั้ง Train และ Test
     if fill_values_dict:
         features_train = features_train.fillna(fill_values_dict)
         features_test  = features_test.fillna(fill_values_dict)
 
     return features_train, features_test
 
-# Outlier Handling (Clipping)
+# clip outliers ตาม rules ที่ user ตั้งไว้ใน UI fit บน train เท่านั้น ใช้ใน preprocess
 def outlier_fit_transform(features_train: pd.DataFrame, features_test: pd.DataFrame, outlier_rules: dict = None) -> tuple:
-    """
-    คลิป Outliers โดยใช้ขอบเขตที่ได้จากกฎหน้า UI (ซึ่งตั้งอยู่บนโครงสร้างข้อมูลดั้งเดิม แต่ตัดที่ Train/Test แบบแยกกัน)
-    """
     if outlier_rules is None:
         outlier_rules = {}
         

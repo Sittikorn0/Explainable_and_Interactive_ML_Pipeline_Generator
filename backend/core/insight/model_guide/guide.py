@@ -83,6 +83,7 @@ CARD_COLUMNS_INFO = [
     ("#F7768E", "จุดอ่อน",  "weakness"),
 ]
 
+# render Model Guide tab (หลักการ/จุดแข็ง/จุดอ่อน ของ best model + metric cards + formula expander) ใช้ใน insight_page
 def render_guide(best_model_label: str, task_type: str, metrics_dict: dict):
     model_guide = None
     for key, val in MODEL_GUIDE_INFO.items():

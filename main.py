@@ -39,12 +39,14 @@ pages_map = {
 }
 
 # Style
+# โหลดไฟล์ CSS เข้า Streamlit ใช้ครั้งเดียวตอน startup
 def load_css(path: str) -> None:
     with open(path) as file:
         st.markdown(f"<style>{file.read()}</style>", unsafe_allow_html=True)
 
 load_css("user_interface/styles/main.css")
 
+# แสดง header หลักพร้อมชื่อแอปและคำอธิบาย ใช้ใน main()
 def render_main_header() -> None:
     st.markdown("""
         <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:24px;">
@@ -61,30 +63,30 @@ def render_main_header() -> None:
     """, unsafe_allow_html=True)
 
 # Navigate
+# เปลี่ยนหน้าโดยเซต session_state["step"] แล้ว rerun ใช้จากทุกหน้าเพื่อ navigate
 def navigate(step_name: str):
-    """เปลี่ยนหน้าด้วย session_state + rerun"""
     st.session_state["step"] = step_name
     if "user_uuid" in st.session_state:
         st.query_params["uid"] = st.session_state["user_uuid"]
     st.rerun()
 
 
+# ล้าง session state + ไฟล์ cache ทั้งหมด แล้วกลับหน้า Upload ใช้จากปุ่ม New Dataset
 def reset_session_state():
-    """ล้าง state ทั้งหมดและกลับหน้า upload"""
     delete_local()
     for key in list(st.session_state.keys()):
         del st.session_state[key]
     navigate("upload")
 
 # Session
+# โหลด transformed_df จาก disk กลับเข้า session หรือ fallback ใช้ main_df แทน ใช้ใน restore_session
 def restore_transformed_df() -> None:
-    """โหลด transformed_df จาก disk หรือ fallback เป็น main_df"""
     recovered = load_transformed_df()
     st.session_state["transformed_df"] = recovered if recovered is not None else st.session_state.get("main_df")
 
 
+# คืน df/ml_result/trans_summary/target_col จาก disk กลับเข้า session ทุกครั้งที่ rerun ใช้ใน main()
 def restore_session() -> None:
-    """โหลด state ที่บันทึกไว้กลับเข้า session (รันทุกครั้งที่ rerun)"""
     # Restore main dataframe (ข้ามถ้าผู้ใช้เพิ่งล้างข้อมูลด้วย X)
     if st.session_state.get("main_df") is None:
         df, filename = load_from_local()
@@ -132,6 +134,7 @@ def restore_session() -> None:
                 st.session_state["target_col"] = suggested
 
 # Main
+# entry point หลัก: setup page config, session, navigation, header, step indicator แล้วรัน page ปัจจุบัน
 def main():
     st.set_page_config(
         page_title="Explainable ML Pipeline",

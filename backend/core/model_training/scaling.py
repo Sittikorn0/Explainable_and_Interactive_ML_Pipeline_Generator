@@ -17,6 +17,7 @@ SCALING_WHEN = {
     "no_scaling":      "เมื่อใช้ tree-based model ล้วนๆ",
 }
 
+# render UI scaling section พร้อม stats/visualization/radio selector คืน chosen scaling method ใช้ใน transformation_page
 def render_ml_scaling(dataframe: pd.DataFrame, target_column: str,
                     scaling_analysis: dict) -> str:
     st.markdown('<div class="section-header">SCALING</div>', unsafe_allow_html=True)

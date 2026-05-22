@@ -23,8 +23,8 @@ HORIZONTAL_RULE_HTML = (
 
 ACTION_BAR_COLUMNS = [0.9, 1.1, 0.2, 2, 1.1, 0.9]
 
+# เติมค่าว่างในคอลัมน์เดียวตาม strategy (mean/median/mode/ffill/drop) ใช้ใน render_missing_values และ use_missing_strategy_bulk
 def use_missing_strategy(dataset: pd.DataFrame, column_name: str, missing_strategy: str, modify_inplace: bool = False) -> pd.DataFrame:
-    """แก้ Missing Values ในคอลัมน์เดียว"""
     if not modify_inplace:
         dataset = dataset.copy()
         
@@ -48,8 +48,8 @@ def use_missing_strategy(dataset: pd.DataFrame, column_name: str, missing_strate
     return dataset
 
 
+# เติมค่าว่างหลายคอลัมน์พร้อมกันในรอบเดียว ใช้กับปุ่ม Apply All / Apply Selected ใน cleaning page
 def use_missing_strategy_bulk(dataset: pd.DataFrame, column_strategies: dict) -> pd.DataFrame:
-    """แก้ Missing Values หลายคอลัมน์ในครั้งเดียวเพื่อลดการสร้าง DataFrame ซ้ำซ้อน (Performance optimization)"""
     dataset = dataset.copy()
     columns_to_drop = []
     
@@ -65,10 +65,10 @@ def use_missing_strategy_bulk(dataset: pd.DataFrame, column_strategies: dict) ->
     return dataset
 
 
+# จัดการ outlier ในคอลัมน์เดียวด้วย clip หรือ drop rows ใช้ใน render_outliers และ use_outlier_strategy_bulk
 def use_outlier_strategy(
     dataset: pd.DataFrame, column_name: str, outlier_strategy: str, lower_bound: float, upper_bound: float, modify_inplace: bool = False
 ) -> pd.DataFrame:
-    """จัดการ Outliers ในคอลัมน์ด้วย Vectorized Operations (ทำงานรอบเดียว ไม่วนลูปซ้ำ)"""
     if not modify_inplace:
         dataset = dataset.copy()
 
@@ -82,12 +82,10 @@ def use_outlier_strategy(
     return dataset
 
 
+# จัดการ outlier หลายคอลัมน์พร้อมกัน รวม drop mask ก่อนตัดแถวครั้งเดียว ใช้กับปุ่ม Apply All / Apply Selected
 def use_outlier_strategy_bulk(
     dataset: pd.DataFrame, column_strategies: dict
 ) -> pd.DataFrame:
-    """จัดการ Outliers หลายคอลัมน์ในครั้งเดียว (Performance optimization)
-    column_strategies = { "col_name": {"strategy": "clip", "lower": -1.0, "upper": 1.0} }
-    """
     dataset = dataset.copy()
     global_outlier_mask = None
     
@@ -112,12 +110,14 @@ def use_outlier_strategy_bulk(
         
     return dataset
 
+# แปลงตัวเลขเป็น "n (x.x%)" ใช้แสดงสถิติใน cleaning table
 def format_percentage(count: int, percentage: float) -> str:
     if count == 0:
         return "0 (0.0%)"
     percentage_string = f"{percentage:.1f}%" if percentage >= 0.1 else "< 0.1%"
     return f"{count:,} ({percentage_string})"
 
+# คืน CSS color list สำหรับ Streamlit dataframe styler แสดงการเพิ่ม/ลดของข้อมูล ใช้ใน metric table
 def color_changed(column):
     style_list = []
     for index, value in enumerate(column):

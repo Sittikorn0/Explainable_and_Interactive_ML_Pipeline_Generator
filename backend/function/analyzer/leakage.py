@@ -3,9 +3,9 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
 # Function
+# คำนวณ normalized mutual information ระหว่าง feature กับ target ใช้ภายใน analyze_leakage
 def mutual_info_score(col_vals: np.ndarray, y_vals: np.ndarray,
                        is_classif: bool) -> float:
-    """คำนวณ normalized mutual information ระหว่าง feature กับ target"""
     try:
         if is_classif:
             from sklearn.feature_selection import mutual_info_classif
@@ -25,10 +25,8 @@ def mutual_info_score(col_vals: np.ndarray, y_vals: np.ndarray,
     except Exception:
         return 0.0
 
+# ตรวจหา column ที่อาจทำให้เกิด Data Leakage (Pearson/Spearman/MI/Bijective) คืน list[dict] ใช้ใน analyze_all
 def analyze_leakage(df: pd.DataFrame, target_col: str) -> list[dict]:
-    """
-    ตรวจหา column ที่อาจทำให้เกิด Data Leakage แบบครบวงจร (Pearson, Spearman, PPS)
-    """
     results: list[dict] = []
     y        = df[target_col]
     is_classif = not pd.api.types.is_numeric_dtype(y) or y.nunique() <= 20
@@ -118,8 +116,8 @@ def analyze_leakage(df: pd.DataFrame, target_col: str) -> list[dict]:
     return results
 
 
+# wrapper ของ analyze_leakage คืน list[str] formatted สำหรับแสดงใน UI ใช้ใน transformation_page
 def detect_leakage(df: pd.DataFrame, target_col: str) -> list[str]:
-    """ตรวจหา column ที่อาจทำให้เกิด Data Leakage  คืน list[str] สำหรับแสดงใน UI"""
     return [
         f"**{item['col']}**  " + ", ".join(item["reasons"])
         for item in analyze_leakage(df, target_col)

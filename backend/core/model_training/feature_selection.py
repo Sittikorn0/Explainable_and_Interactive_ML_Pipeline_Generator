@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
+# render UI leakage check พร้อม checkbox สำหรับ drop high-risk columns คืน list ของ columns ที่จะ drop ใช้ใน transformation_page
 def render_leakage_check(leakage_items: list) -> list:
-    """แสดง leakage warning และให้ user เลือก drop column ที่น่าสงสัย (เฉพาะ High Risk)"""
     st.markdown('<div class="section-header" style="color: #f85149; border-bottom-color: rgba(248, 81, 73, 0.2);">LEAKAGE CHECK</div>', unsafe_allow_html=True)
 
     # กรองเอาเฉพาะ High Risk ตามที่ผู้ใช้ต้องการ
@@ -80,6 +80,7 @@ def render_leakage_check(leakage_items: list) -> list:
     return columns_to_drop
 
 
+# render UI feature selection section (high corr + low var) พร้อม heatmap คืน list columns ที่จะ drop ใช้ใน transformation_page
 def render_ml_feature_selection(dataframe: pd.DataFrame, target_column: str,
                                 feature_selection_analysis: dict) -> list:
     st.markdown('<div class="section-header">FEATURE SELECTION</div>', unsafe_allow_html=True)

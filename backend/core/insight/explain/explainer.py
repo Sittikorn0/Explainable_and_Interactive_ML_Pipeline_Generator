@@ -11,9 +11,9 @@ from backend.core.model_training.trainer.train_model import get_model_map
 # Functions
 _N_JOBS = min(4, os.cpu_count() or 1)
 
+# Retrain best model ด้วย params ที่ดีที่สุด คืน (model, X_train, X_test, y_train, y_test, task_type) ใช้ใน insight_page
 def get_fitted_model(df, target_col, best_key, best_params, trans_summary,
                      missing_rules=None, outlier_rules=None):
-    """Retrain best model → (model, X_train, X_test, y_train, y_test, task_type)"""
     scaling_method     = trans_summary.get("scaling_method", "standard_scaler")
     encoding_decisions = trans_summary.get("encoding_decisions") or None
     X_train, X_test, y_train, y_test, task_type = preprocess(
@@ -33,8 +33,8 @@ def get_fitted_model(df, target_col, best_key, best_params, trans_summary,
     return m, X_train, X_test, y_train, y_test, task_type
 
 
+# คำนวณ Permutation Importance คืน DataFrame (Feature/Importance/Std) เรียงลำดับ ใช้ใน Feature Importance tab
 def compute_permutation_importance(model, X_test, y_test, task_type, n_repeats=10):
-    """Returns DataFrame: Feature, Importance, Std  sorted descending"""
     scoring = "f1_macro" if task_type == "classification" else "r2"
     result = permutation_importance(
         model, X_test, y_test,
@@ -47,8 +47,8 @@ def compute_permutation_importance(model, X_test, y_test, task_type, n_repeats=1
     }).sort_values("Importance", ascending=False).reset_index(drop=True))
 
 
+# คำนวณ Partial Dependence สำหรับ feature เดียว คืน (x_vals, y_avg, error|None) ใช้ใน Data Visualization tab
 def compute_pdp(model, X_train, feature_col, task_type, n_points=30):
-    """Partial dependence for one numeric feature → (x_vals, y_avg, error_str|None)"""
     try:
         result = partial_dependence(
             model, X_train, features=[feature_col],
@@ -66,8 +66,8 @@ def compute_pdp(model, X_train, feature_col, task_type, n_points=30):
         return None, None, str(e)
 
 
+# คืน scalar score (max proba สำหรับ clf หรือ predicted value สำหรับ reg) ใช้ภายใน explain_single_row
 def _safe_score(model, X, task_type):
-    """Return scalar: max class probability (clf) or predicted value (reg)"""
     if task_type == "classification":
         try:
             return float(model.predict_proba(X)[0].max())
@@ -76,13 +76,8 @@ def _safe_score(model, X, task_type):
     return float(model.predict(X)[0])
 
 
+# Perturbation-based local explanation คืน (contrib_df, base_score, row_score) ใช้ใน Feature Importance tab แถว single row
 def explain_single_row(model, X_train, row: pd.Series, task_type: str, max_features: int = 15):
-    """
-    Perturbation-based local explanation.
-    For each feature: measure how much score drops when we replace it with its mean.
-    Returns (contrib_df, base_score, row_score)
-    contrib_df columns: Feature, Value, BaseValue, Contribution, Direction
-    """
     baseline   = X_train.mean()
     base_input = baseline.to_frame().T.reset_index(drop=True)
     row_input  = row.to_frame().T.reset_index(drop=True)

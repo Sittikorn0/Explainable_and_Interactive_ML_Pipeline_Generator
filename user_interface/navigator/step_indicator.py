@@ -1,7 +1,7 @@
 import streamlit as st
 
+# render step indicator ใน sidebar แสดงสถานะ done/active/locked ของแต่ละขั้นตอน ใช้ใน main.py
 def render_step_indicator(current_page, pages_map, step_status, STEP_ORDER, STEP_LABELS):
-    """เรนเดอร์แถบแสดงขั้นตอนการทำงานใน Sidebar (Minimal Style)"""
     
     # 1. CSS สำหรับ Minimal List (No Boxes)
     css_rules = ""

@@ -25,8 +25,8 @@ ACTION_BASE_LABELS: dict[str, str] = {
 }
 
 # Functions
+# render section เลือก Target Column พร้อม suggest + describe ใช้ใน render_upload
 def render_target_selection(dataframe: pd.DataFrame):
-    """แสดงส่วนการเลือก Target Column และบทวิเคราะห์ที่เกี่ยวข้อง"""
     suggested_column, suggested_reasons = suggest_target(dataframe)
 
     if "target_col" not in st.session_state:
@@ -100,8 +100,8 @@ def render_target_selection(dataframe: pd.DataFrame):
                 st.session_state["_revert_target"] = True
                 st.rerun()
 
+# สร้าง preview text สำหรับแต่ละ JSON action ใช้แสดงผลใน render_json_config
 def generate_previews(data_sample: pd.Series, available_actions: list[str]) -> dict[str, str]:
-    """สร้าง preview text สำหรับแต่ละ action  ใช้แสดงใน UI เท่านั้น"""
     MAX_LEN = 70
     head_values = data_sample.head(2).tolist()
 
@@ -139,19 +139,21 @@ def generate_previews(data_sample: pd.Series, available_actions: list[str]) -> d
     return previews
 
 
+# แปลง action key เป็น label ที่อ่านง่าย ใช้ใน render_json_config
 def action_label(action: str) -> str:
     if action.startswith("extract_field:"):
         return f"ดึง field: {action.removeprefix('extract_field:')}"
     return ACTION_BASE_LABELS.get(action, action)
 
+# สร้าง HTML badge สี label ใช้ใน render_json_config แสดง type badge
 def badge_html(label: str, color: str) -> str:
     return (
         f"<span style='background:{color};color:#fff;padding:2px 8px;"
         f"border-radius:10px;font-size:0.72rem;font-weight:600'>{label}</span>"
     )
 
+# render JSON config UI สำหรับ Nested Columns ให้ user เลือก action ต่อแต่ละ column ใช้ใน render_upload
 def render_json_config(col_decisions: list[dict], raw_dataframe: pd.DataFrame | None) -> None:
-    """ส่วนการตั้งค่า JSON สำหรับ Nested Fields"""
     if not col_decisions:
         st.success("ไม่พบ Nested Columns มีโครงสร้าง JSON ตรงไปตรงมา ไม่ต้องปรับแต่งเพิ่มเติม")
         return

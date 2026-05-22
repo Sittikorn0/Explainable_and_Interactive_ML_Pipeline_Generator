@@ -10,8 +10,8 @@ from backend.core.session.session_manager import trace_log_path
 LOG_KEY     = "trace_log"
 ACTIONS_KEY = "cleaning_actions"
 
+# บันทึก trace_log และ cleaning_actions ลงดิสก์ (JSON) ใช้หลังทุก append/clear
 def persist_log():
-    """Helper to save the trace log and actions to disk."""
     path = trace_log_path()
     data = {
         "log": st.session_state.get(LOG_KEY, []),
@@ -23,8 +23,8 @@ def persist_log():
     except Exception as e:
         print(f"Error persisting trace log: {e}")
 
+# โหลด trace_log จากดิสก์กลับเข้า session_state ใช้ตอน session ใหม่แต่ไฟล์ยังอยู่
 def restore_log():
-    """Helper to restore the trace log from disk."""
     path = trace_log_path()
     if not os.path.exists(path):
         return
@@ -36,13 +36,12 @@ def restore_log():
     except Exception as e:
         print(f"Error restoring trace log: {e}")
 
-# ── Core ──────────────────────────────────────────────────────────────────────
-
+# restore_log ถ้า session ว่างแต่ไฟล์ดิสก์มีข้อมูล ใช้ก่อน append และ get_log
 def ensure_restored():
-    """Ensures session state is synced with disk before any modification."""
     if not st.session_state.get(LOG_KEY) and os.path.exists(trace_log_path()):
         restore_log()
 
+# เพิ่มหรืออัปเดต trace entry ตาม step name แล้ว persist ใช้โดย log_upload/commit_cleaning/log_transformation/log_model_process
 def append(entry: dict):
     ensure_restored()
     log = st.session_state.setdefault(LOG_KEY, [])
@@ -54,28 +53,28 @@ def append(entry: dict):
         log.append(entry)
     persist_log()
 
+# คืน trace_log list (restore จากดิสก์ถ้า session ว่าง) ใช้ใน Pipeline Trace tab
 def get_log() -> list[dict]:
     # If session is fresh but disk has log, restore it
     if not st.session_state.get(LOG_KEY) and os.path.exists(trace_log_path()):
         restore_log()
     return st.session_state.get(LOG_KEY, [])
 
+# ล้าง trace_log และ cleaning_actions ทั้งหมด เรียกเมื่อ upload ไฟล์ใหม่
 def clear():
-    """เรียกเมื่อ upload ไฟล์ใหม่"""
     st.session_state[LOG_KEY]     = []
     st.session_state[ACTIONS_KEY] = []
     persist_log()
 
+# ลบ trace entries ของ step ที่ระบุ ใช้ตอน rollback ใน pipeline_state
 def remove_steps_from(step_names: list[str]):
-    """ลบ trace entries ของ step ที่ระบุ (ใช้ตอน rollback)"""
     ensure_restored()
     log = st.session_state.get(LOG_KEY, [])
     st.session_state[LOG_KEY] = [e for e in log if e.get("step") not in step_names]
     persist_log()
 
 
-# ── Upload ────────────────────────────────────────────────────────────────────
-
+# บันทึก trace step "Upload" พร้อม explanation เหตุผลการเลือก target และ task type ใช้ใน upload_page
 def log_upload(df, file_name: str, target_col: str, task_hint: str,
                target_reasons: list = None):
     n_numeric = df.select_dtypes(include="number").shape[1]
@@ -135,8 +134,7 @@ def log_upload(df, file_name: str, target_col: str, task_hint: str,
     append({"step": "Upload", "items": items, "explanations": explanations})
 
 
-# ── Cleaning ──────────────────────────────────────────────────────────────────
-
+# บันทึก cleaning action รายคอลัมน์ไว้ใน session (ยังไม่ commit) ใช้ใน cleaning_page
 def track_cleaning(action_type: str, col: str, detail: str, explanation: str = ""):
     ensure_restored()
     actions = st.session_state.setdefault(ACTIONS_KEY, [])
@@ -145,12 +143,14 @@ def track_cleaning(action_type: str, col: str, detail: str, explanation: str = "
     st.session_state[ACTIONS_KEY] = actions
     persist_log()
 
+# บันทึก cleaning action หลายคอลัมน์พร้อมกัน ใช้กับ Apply All / Apply Selected ใน cleaning_page
 def track_cleaning_bulk(action_type: str, cols: list, detail: str, explanation: str = ""):
     for col in cols:
         track_cleaning(action_type, col, detail, explanation)
     persist_log()
 
 
+# commit cleaning actions เป็น trace step "Data Cleaning" พร้อม diff สรุปและ explanation ใช้ใน cleaning_page
 def commit_cleaning(df_before, df_after):
     actions   = st.session_state.get(ACTIONS_KEY, [])
     row_delta = df_after.shape[0] - df_before.shape[0]
@@ -225,8 +225,6 @@ def commit_cleaning(df_before, df_after):
     st.session_state[ACTIONS_KEY] = []
 
 
-# ── Transformation ────────────────────────────────────────────────────────────
-
 SCALING_REASONS = {
     "standard_scaler": (
         "ปรับให้ข้อมูลมีค่าเฉลี่ยเป็น 0 และกระจายตัวเท่ากัน "
@@ -258,12 +256,9 @@ ENCODING_REASONS = {
 }
 
 
+# บันทึก trace step "Data Transformation" (scaling/encoding/drop_cols) พร้อม explanation ใช้ใน transformation_page
 def log_transformation(summary: dict, enc_decisions: dict, scaling_method: str, drop_cols: list,
                        scaling_reason: str = "", enc_reasons: dict = None):
-    """
-    enc_reasons: {col: reason_string} จาก rule engine (optional)
-    scaling_reason: explanation string จาก rule engine (optional)
-    """
     items = [
         f"คอลัมน์เริ่มต้น: {summary.get('original_cols', '?')}",
         f"คอลัมน์ที่ลบ: {summary.get('dropped_cols', 0)}",
@@ -319,8 +314,7 @@ def log_transformation(summary: dict, enc_decisions: dict, scaling_method: str, 
     append({"step": "Data Transformation", "items": items, "explanations": explanations})
 
 
-# ── Model Process ─────────────────────────────────────────────────────────────
-
+# บันทึก trace step "Model Process" (leaderboard/metrics/explanation) ใช้ใน model_process_page
 def log_model_process(result: dict, metrics: dict):
     task_type   = result["task_type"]
     best_label  = result["best_label"]

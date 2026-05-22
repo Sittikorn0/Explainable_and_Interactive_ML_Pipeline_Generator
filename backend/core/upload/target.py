@@ -5,11 +5,8 @@ import pandas as pd
 from backend.function.data_type.dtype_detection import actual_type
 from backend.core.upload.column import score_column
 
+# แนะนำ target column โดยใช้ scoring heuristic คืน (column_name, [เหตุผล]) ใช้ใน upload_page
 def suggest_target(dataset: pd.DataFrame) -> tuple[str, list[str]]:
-    """
-    แนะนำ target column โดยใช้ scoring heuristic จากลักษณะข้อมูล
-    คืนค่า (column_name, [เหตุผล])
-    """
     best_column_name = dataset.columns[-1]
     best_column_score = float("-inf")
     best_reason_list: list[str] = []
@@ -24,8 +21,8 @@ def suggest_target(dataset: pd.DataFrame) -> tuple[str, list[str]]:
     return best_column_name, best_reason_list
 
 
+# อธิบาย target column ที่ user เลือก (dtype/task/missing) เป็น markdown string ใช้ใน upload_page
 def describe_target(dataset: pd.DataFrame, column_name: str) -> str:
-    """อธิบาย column ที่ผู้ใช้เลือกเป็น target"""
     data_series = dataset[column_name]
     actual_data_type = actual_type(data_series)
     unique_count = data_series.nunique()

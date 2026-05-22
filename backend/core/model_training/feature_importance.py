@@ -7,13 +7,10 @@ from backend.core.model_training.preprocess.pipeline import preprocess
 from backend.core.model_training.trainer.train_model import get_model_map
 
 # Functions
+# คำนวณ Feature Importance จาก feature_importances_ หรือ coef_ ของ best model คืน (fi_df, error_msg) ใช้ใน model_process_page
 def compute_fi(df: pd.DataFrame, target_col: str,
                best_key: str, best_params: dict,
                trans_summary: dict) -> tuple[pd.DataFrame | None, str | None]:
-    """
-    คำนวณ Feature Importance สำหรับ best model
-    คืน (fi_df, error_msg)  fi_df=None ถ้า model ไม่รองรับหรือเกิด error
-    """
 
     try:
         scaling_method     = trans_summary.get("scaling_method", "no_scaling")

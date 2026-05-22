@@ -12,12 +12,9 @@ from backend.core.model_training.preprocess.encoding import *
 from backend.core.model_training.preprocess.scaling import *
 
 # Function
+# สุ่มลดขนาด dataset ถ้าเกิน MAX_ROWS_TRAIN ใช้ stratified sampling สำหรับ classification ใช้ใน preprocess
 def sample_data(features: pd.DataFrame, target: pd.Series, max_sample_rows: int,
                 task_type: str = "regression") -> tuple:
-    """
-    ลดขนาดข้อมูลโดยการสุ่ม (Sampling) หากข้อมูลมีขนาดใหญ่เกินไป
-    เพื่อลดเวลาในการ Train โมเดล
-    """
     if len(features) <= max_sample_rows:
         return features, target
 
@@ -38,16 +35,10 @@ def sample_data(features: pd.DataFrame, target: pd.Series, max_sample_rows: int,
     sampled_target = target.iloc[sampled_indices].reset_index(drop=True)
     return sampled_features, sampled_target
 
+# pipeline หลัก: split → clean → datetime → outlier → encode → scale ป้องกัน Data Leakage ครบ ใช้ใน run_competition และ get_fitted_model
 def preprocess(dataset: pd.DataFrame, target_column: str, scaling_method: str = "standard_scaler",
                missing_rules: dict = None, outlier_rules: dict = None,
                encoding_decisions: dict | None = None) -> tuple:
-    """
-    ท่อส่งข้อมูลหลัก (Pipeline) สำหรับเตรียมข้อมูลก่อนเข้าโมเดล
-    ออกแบบให้ปราศจาก Data Leakage อย่างสมบูรณ์
-
-    encoding_decisions: dict จาก Transform step  ถ้าให้มา encode จะทำหลัง split (leak-safe)
-                        ถ้าไม่ให้มา → fallback cardinality อัตโนมัติ
-    """
     task_type = detect_task(dataset, target_column)
     
     features = dataset.drop(columns=[target_column]).copy()

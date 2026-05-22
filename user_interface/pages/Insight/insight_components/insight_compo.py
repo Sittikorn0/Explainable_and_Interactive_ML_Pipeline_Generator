@@ -29,6 +29,7 @@ STEP_COLORS_INFO = {
 }
 PIPELINE_STEP_ORDER = ["Upload", "Data Cleaning", "Data Transformation", "Model Process"]
 
+# render section header (title + optional subtitle) สำหรับแต่ละ section ใน Insight tabs
 def render_section_header(title: str, subtitle: str = "") -> None:
     subtitle_html = (
         f'<div style="color:{TEXT_DIM_COLOR};font-size:0.95rem;margin-top:4px;font-weight:400;line-height:1.6">{subtitle}</div>'
@@ -41,6 +42,7 @@ def render_section_header(title: str, subtitle: str = "") -> None:
         unsafe_allow_html=True,
     )
     
+# render Feature Importance tab (permutation importance bar chart + top-3 cards + zero-importance warning) ใช้ใน insight_page
 def render_importance(model, X_test, y_test, task_type):
     render_section_header(
         "Feature ไหนสำคัญที่สุด?",
@@ -118,6 +120,7 @@ def render_importance(model, X_test, y_test, task_type):
             + (" ..." if len(useless_features) > 5 else "")
         )
 
+# render Pipeline Trace tab แสดง timeline card ทุก step (Upload/Cleaning/Transformation/Model) ใช้ใน insight_page
 def render_trace():
     render_section_header(
         "บันทึกการตัดสินใจตลอด Pipeline",
@@ -185,6 +188,7 @@ def render_trace():
 
     st.markdown('</div>', unsafe_allow_html=True)
 
+# render Diff Views tab เปรียบเทียบ config เดิม vs ใหม่ (GitHub diff style) หลัง rollback ใช้ใน insight_page
 def render_comparison():
     comparison_data = get_comparison()
     if not comparison_data:

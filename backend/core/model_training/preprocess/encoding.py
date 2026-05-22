@@ -3,16 +3,9 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
 
+# encode categorical columns fit บน train เท่านั้น รองรับ one_hot/label/ordinal encoding หรือ auto fallback ใช้ใน preprocess
 def encode_fit_transform(features_train: pd.DataFrame, features_test: pd.DataFrame,
                          encoding_decisions: dict | None = None) -> tuple:
-    """
-    แปลงข้อมูลตัวอักษร (Categorical) เป็นตัวเลข:
-    - ป้องกัน Data Leakage โดยการสร้างกฎ (Fit) จาก features_train เท่านั้น
-    - นำกฎนั้นไปประยุกต์ใช้ (Transform) กับทั้ง Train และ Test
-
-    encoding_decisions: dict จาก Transform step {"col": "one_hot_encoding"|"label_encoding"|"ordinal_encoding"}
-                        ถ้าเป็น None → fallback ใช้ cardinality อัตโนมัติ
-    """
     if encoding_decisions:
         # ใช้ decisions ที่ user เลือกไว้ใน Transform step
         for column_name, method in encoding_decisions.items():

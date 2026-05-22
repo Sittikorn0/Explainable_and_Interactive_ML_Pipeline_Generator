@@ -6,8 +6,8 @@ from scipy.stats import skew
 from backend.core.insight.reasoning_engine.engine import suggest
 
 # Functions
+# คำนวณขอบเขต outlier (lower/upper) ด้วย Z-Score หรือ IQR ตาม skewness ผ่าน Rule Engine ใช้ใน data_distribution และ metric.py
 def get_outlier_bounds(data_series: pd.Series) -> dict:
-    """คำนวณขอบเขตของ Outlier โดยพิจารณาจาก Skewness ผ่าน Rule Engine"""
     clean_series = data_series.dropna()
 
     if len(clean_series) == 0 or clean_series.nunique() <= 1 or clean_series.std() == 0:

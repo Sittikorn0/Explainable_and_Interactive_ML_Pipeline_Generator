@@ -5,11 +5,8 @@ import pandas as pd
 from backend.function.data_type.dtype_detection import actual_type
 
 
+# คำนวณ heuristic score ว่า column น่าจะเป็น target แค่ไหน คืน (score, [เหตุผล]) ใช้ใน suggest_target
 def score_column(dataset: pd.DataFrame, column_name: str, column_index: int) -> tuple[float, list[str]]:
-    """
-    คำนวณ score ว่า column นี้น่าจะเป็น target แค่ไหน
-    คืนค่า (score, [เหตุผล])
-    """
     data_series = dataset[column_name]
     total_rows = len(data_series)
     unique_count = data_series.nunique()
@@ -56,8 +53,8 @@ def score_column(dataset: pd.DataFrame, column_name: str, column_index: int) -> 
     return column_score, reason_list
 
 
+# คืน reasons ของ column ที่ระบุ ใช้เมื่อ user เลือก target เอง ใน upload_page
 def get_column_reasons(dataset: pd.DataFrame, column_name: str) -> list[str]:
-    """คืน reasons ของ column ที่ระบุ (ใช้แสดงผลเมื่อผู้ใช้เลือก column เอง)"""
     column_index = list(dataset.columns).index(column_name)
     _, reason_list = score_column(dataset, column_name, column_index)
     return reason_list

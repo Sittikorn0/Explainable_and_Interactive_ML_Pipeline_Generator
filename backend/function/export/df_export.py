@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 # Functions
+# สร้าง leaderboard DataFrame จาก competition dict สำหรับ download CSV ใช้ใน model_process_page
 def build_leaderboard_df(competition: dict) -> pd.DataFrame:
     ranked = sorted(
         [(k, v) for k, v in competition.items() if v["cv_score"] is not None],
@@ -20,6 +21,7 @@ def build_leaderboard_df(competition: dict) -> pd.DataFrame:
                      "Cross-Val Score": None, "Cross-Val Std": None, "Hyperparameters": res.get("error", "")})
     return pd.DataFrame(rows)
 
+# สร้าง predictions DataFrame (Actual/Predicted/Correct หรือ Error) สำหรับ download CSV ใช้ใน model_process_page
 def build_predictions_df(y_test, y_pred, task_type: str) -> pd.DataFrame:
     y_test = np.array(y_test).flatten()
     y_pred = np.array(y_pred).flatten()

@@ -14,6 +14,7 @@ from user_interface.pages.Eda.eda_components.eda_compo import *
 
 
 # Render Page
+# render หน้า EDA (profile/distributions/relationships tabs) ใช้ใน main.py
 def render_eda():
     from main_compo import page_header
     

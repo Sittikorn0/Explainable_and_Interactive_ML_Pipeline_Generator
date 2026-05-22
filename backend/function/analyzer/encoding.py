@@ -26,21 +26,14 @@ _ORDINAL_PATTERNS: list[set[str]] = [
     {"bronze", "silver", "gold", "platinum"},
 ]
 
+# ตรวจว่า unique values ตรงกับ pattern ordinal ที่รู้จัก ใช้ภายใน analyze_encoding
 def _looks_ordinal(unique_values: list) -> bool:
-    """ตรวจว่า unique values ทั้งหมดตรงกับ ordinal pattern ที่รู้จักหรือไม่"""
     lower_values = {str(v).strip().lower() for v in unique_values}
     return any(lower_values == pattern for pattern in _ORDINAL_PATTERNS)
 
-# Functions
+# วิเคราะห์ categorical columns ทั้งหมด แนะนำวิธี encoding ผ่าน Rule Engine คืน list[dict] ใช้ใน analyze_all และ transformation_page
 def analyze_encoding(dataset: pd.DataFrame, target_column: str) -> list[dict]:
-    """
-    วิเคราะห์คอลัมน์ที่เป็น Categorical (หมวดหมู่) เพื่อหา Encoding Method ที่เหมาะสมที่สุด
-
-    Returns: list of dictionary ที่บรรจุรายละเอียดและคำแนะนำสำหรับแต่ละคอลัมน์
-    """
     analysis_results = []
-    
-    # หาคอลัมน์ที่เป็นข้อความและไม่ใช่ target
     categorical_columns = [
         column_name for column_name in dataset.columns
         if column_name != target_column and dataset[column_name].dtype == object
@@ -54,7 +47,6 @@ def analyze_encoding(dataset: pd.DataFrame, target_column: str) -> list[dict]:
         all_unique_values = list(dataset[column_name].dropna().unique())
         is_ordinal = _looks_ordinal(all_unique_values)
 
-        # ── ใช้ Rule Engine แนะนำ Encoding Method ──
         facts = {
             "cardinality":       num_unique_values,
             "cardinality_ratio": unique_to_row_ratio,
@@ -62,7 +54,6 @@ def analyze_encoding(dataset: pd.DataFrame, target_column: str) -> list[dict]:
         }
         rule_result = suggest("encoding", facts)
 
-        # Map rule action → encoding key
         _enc_action_map = {
             "one_hot_encoding":  "one_hot_encoding",
             "label_encoding":    "label_encoding",

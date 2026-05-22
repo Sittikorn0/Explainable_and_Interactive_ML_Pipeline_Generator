@@ -23,6 +23,7 @@ from user_interface.pages.Model_process.model_components.model_compo import *
 
 
 # Render Page
+# render หน้า Model Process (train/competition/evaluation/export) ใช้ใน main.py
 def render_model_process():
     from main_compo import page_header
     

@@ -17,6 +17,7 @@ from user_interface.pages.Transformation.transformation_components.transformatio
 # Function
 
 # Render Page
+# render หน้า Transformation (encoding/scaling/feature selection/leakage/confirm) ใช้ใน main.py
 def render_transformation():
     from main_compo import page_header
     

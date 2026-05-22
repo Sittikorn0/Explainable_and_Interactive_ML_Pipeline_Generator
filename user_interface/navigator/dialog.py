@@ -2,8 +2,8 @@ import streamlit as st
 from backend.core.session.pipeline_state import STEP_LABELS, rollback_to
 
 @st.dialog("ยืนยันการย้อนกลับ?")
+# dialog ยืนยันการ rollback ไปยัง step ที่ระบุ พร้อมล้าง downstream ใช้ใน diff view
 def confirm_rollback(target_step_name: str):
-    """หน้าต่างยืนยันการย้อนกลับไปขั้นตอนก่อนหน้า"""
     from main import navigate
     st.warning(f"หากคุณย้อนกลับไปที่ขั้นตอน **{STEP_LABELS[target_step_name]}** ข้อมูลและการตัดสินใจในขั้นตอนหลังจากนี้จะถูกล้างออกทั้งหมด")
     st.markdown("คุณต้องการดำเนินการต่อหรือไม่?")
@@ -17,8 +17,8 @@ def confirm_rollback(target_step_name: str):
             st.rerun()
 
 @st.dialog("เริ่มต้นใหม่?")
+# dialog ยืนยัน reset session ทั้งหมดเพื่อ upload ไฟล์ใหม่ ใช้ใน main.py และ sidebar
 def confirm_reset_dialog():
-    """หน้าต่างยืนยันการล้างข้อมูลทั้งหมดเพื่อเริ่มใหม่"""
     from main import reset_session_state
     current_filename = st.session_state.get("last_uploaded_file", "")
     st.markdown(

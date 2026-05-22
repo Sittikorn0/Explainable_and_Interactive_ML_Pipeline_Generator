@@ -1,7 +1,7 @@
 from backend.core.cleaning.statistic import get_outlier_bounds
 
+# สแกน outlier ทุก numeric column คืน (total_count, detail_list) ใช้ใน cleaning page และ metric.py
 def data_distribution(dataset, fixed_bounds=None):
-    """ตรวจจับ Outlier ในคอลัมน์ตัวเลข โดยใช้ statistics helper"""
     numeric_columns = dataset.select_dtypes(include=["number"]).columns
     total_outliers_count = 0
     outlier_details = []

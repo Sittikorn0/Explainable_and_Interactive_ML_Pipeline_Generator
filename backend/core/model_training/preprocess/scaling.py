@@ -3,10 +3,8 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 
+# ปรับขนาดข้อมูล fit บน train เท่านั้น (ป้องกัน leakage) รองรับ standard/minmax/robust/log+standard/no_scaling ใช้ใน preprocess
 def scale_data(features_train: pd.DataFrame, features_test: pd.DataFrame, scaling_method: str) -> tuple:
-    """
-    ปรับขนาดข้อมูล (Scaling) ป้องกัน Data Leakage โดยการ Fit บน features_train เท่านั้น
-    """
     if scaling_method == "no_scaling":
         return features_train, features_test
 

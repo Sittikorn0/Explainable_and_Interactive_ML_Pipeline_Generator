@@ -10,8 +10,8 @@ from backend.function.data_type.dtype_detection import actual_type, ml_category
 from backend.function.analyzer.task_detection import detect_task
 
 
+# render ข้อมูล Target Column (dtype/task/class distribution) ใช้ใน render_eda
 def render_eda_target_info(dataframe: pd.DataFrame, target_column: str):
-    """แสดงข้อมูล Target Column ในหน้า EDA แบบ Minimalist"""
     dtype = str(actual_type(dataframe[target_column]))
     unique_count = dataframe[target_column].nunique()
     task_type = detect_task(dataframe, target_column)
@@ -34,6 +34,7 @@ def render_eda_target_info(dataframe: pd.DataFrame, target_column: str):
         </div>
     """, unsafe_allow_html=True)
     
+# render tab Profile แสดง Data Types/ML Category/Missing/Outliers/Unique ใช้ใน render_eda
 def render_eda_profile_tab(dataframe: pd.DataFrame, target_column: str, outlier_details: list):
     st.subheader("Data Profile")
 
@@ -83,8 +84,8 @@ def render_eda_profile_tab(dataframe: pd.DataFrame, target_column: str, outlier_
             "**Target** คือคอลัมน์ที่ต้องการทำนาย ซึ่งเลือกไว้ในขั้นตอน Upload"
         )
 
+# สร้างข้อความอธิบาย skewness ของ column ใช้ใน render_eda_distributions_tab
 def skew_insight(column_skew: float) -> str:
-    """สร้างข้อความอธิบาย skewness"""
     absolute_skew = abs(column_skew)
     if absolute_skew < 0.5:
         shape_description = "ใกล้สมมาตร (Normal-like)"
@@ -101,6 +102,7 @@ def skew_insight(column_skew: float) -> str:
 
     return f"**Skewness = {column_skew:.2f}** ({shape_description}{direction_description})"
 
+# render tab Distributions (histogram/boxplot/skew) สำหรับทุก numeric column ใช้ใน render_eda
 def render_eda_distributions_tab(dataframe: pd.DataFrame, target_column: str):
     st.subheader("Data Distributions")
 
@@ -266,6 +268,7 @@ def render_eda_distributions_tab(dataframe: pd.DataFrame, target_column: str):
         
 MODERN_PALETTE = ["#7AA2F7", "#BB9AF7", "#7DCFFF", "#F7768E", "#9ECE6A", "#E0AF68", "#FF9E64", "#2AC3DE"]
 
+# render tab Relationships (correlation heatmap/scatter/target correlation) ใช้ใน render_eda
 def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
     st.subheader("Relationships & Redundancy")
 

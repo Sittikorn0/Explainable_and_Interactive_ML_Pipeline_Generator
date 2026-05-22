@@ -5,11 +5,8 @@ import pandas as pd
 from backend.core.insight.reasoning_engine.engine import suggest
 
 # Functions
+# วิเคราะห์ high-correlation และ low-variance features ผ่าน Rule Engine คืน dict ใช้ใน analyze_all และ transformation_page
 def analyze_feature_selection(dataset: pd.DataFrame, target_column: str) -> dict:
-    """
-    วิเคราะห์ความซ้ำซ้อนและการกระจายตัวของข้อมูล เพื่อแนะนำ Feature ที่ควรตัดออก
-    ใช้ Rule Engine (FSL_001, FSL_002) ตัดสินใจแทน hardcode threshold
-    """
     numeric_columns = [
         column_name for column_name in dataset.columns
         if column_name != target_column and pd.api.types.is_numeric_dtype(dataset[column_name])
@@ -20,7 +17,6 @@ def analyze_feature_selection(dataset: pd.DataFrame, target_column: str) -> dict
     corr_rule_id = ""
     var_rule_id = ""
 
-    # ตรวจสอบ High Correlation (Multicollinearity) ผ่าน Rule Engine
     if len(numeric_columns) >= 2:
         correlation_matrix = dataset[numeric_columns].corr().abs()
         processed_pairs = set()
@@ -44,7 +40,6 @@ def analyze_feature_selection(dataset: pd.DataFrame, target_column: str) -> dict
                     })
                     corr_rule_id = rule_result["rule_id"]
 
-    # ตรวจสอบ Low Variance ผ่าน Rule Engine
     for column_name in numeric_columns:
         feature_series = dataset[column_name].dropna()
         if len(feature_series) == 0:
@@ -62,7 +57,6 @@ def analyze_feature_selection(dataset: pd.DataFrame, target_column: str) -> dict
             })
             var_rule_id = rule_result["rule_id"]
 
-    # ดึง explanation จาก Rule Engine สำหรับ reason text ใน UI
     corr_rule = suggest("feature_selection", {"corr_value": 1.0})
     var_rule  = suggest("feature_selection", {"cv_abs": 0.0})
 

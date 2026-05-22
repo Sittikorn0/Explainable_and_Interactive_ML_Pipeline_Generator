@@ -17,10 +17,10 @@ from main_compo import render_metrics_row
 from user_interface.pages.Cleaning.cleaning_components.cleaning_compo import *
 
 # Button
+# บันทึก working_df เป็น main_df commit pipeline step และ log trace ใช้ใน render_cleaning
 def handle_confirm(df: pd.DataFrame, working_df: pd.DataFrame,
                     dup_before: int, outlier_before: int,
                     missing_now: int, dup_now: int, outlier_now: int) -> None:
-    """Confirm & Save  บันทึก working_df เป็น main_df และ log pipeline"""
 
     snapshot = {
         "before": {
@@ -43,8 +43,8 @@ def handle_confirm(df: pd.DataFrame, working_df: pd.DataFrame,
     st.success("บันทึกข้อมูลเรียบร้อย")
     st.rerun()
 
+# reset working_df กลับเป็น main_df ต้นฉบับ ล้าง cleaning state ใช้ใน render_cleaning
 def handle_reset(df: pd.DataFrame) -> None:
-    """Reset working_df กลับเป็น main_df ต้นฉบับ"""
     st.session_state["working_df"]        = df.copy()
     st.session_state["cleaning_confirmed"] = False
     for key in ["treated_outlier_cols", "cleaning_summary_snapshot", "original_outlier_bounds"]:
@@ -53,6 +53,7 @@ def handle_reset(df: pd.DataFrame) -> None:
     st.rerun()
 
 # Render Page
+# render หน้า Cleaning ทั้งหมด (profile/cleaning tabs/confirm/reset) ใช้ใน main.py
 def render_cleaning():
     from main_compo import page_header
     

@@ -8,6 +8,7 @@ from backend.core.cleaning.statistic import *
 from backend.core.cleaning.main_logic import *
 from backend.core.session.state import load_outlier_bounds, save_outlier_bounds
 
+# render tab Profile แสดง Missing/Outliers/Unique ของแต่ละ column ใช้ใน render_cleaning
 def render_cleaning_profile_tab(working_dataframe: pd.DataFrame, outlier_details: list):
     st.subheader("Data Profile")
 
@@ -36,8 +37,8 @@ def render_cleaning_profile_tab(working_dataframe: pd.DataFrame, outlier_details
         },
     )
     
+# สร้าง working_df copy จาก main_df ถ้ายังไม่มีหรือ shape เปลี่ยน ใช้ใน render_cleaning
 def init_working_df(df: pd.DataFrame) -> None:
-    """สร้าง working_df จาก main_df ถ้ายังไม่มี หรือ main_df เปลี่ยนรูปร่าง"""
     if (
         "working_df" not in st.session_state
         or st.session_state.get("working_df_source_shape") != df.shape
@@ -48,8 +49,8 @@ def init_working_df(df: pd.DataFrame) -> None:
         st.session_state.pop("original_outlier_count", None)
         st.session_state.pop("_treated_outlier_cols", None)
 
+# โหลด outlier bounds จาก disk หรือคำนวณจาก df แล้ว save ใช้ใน render_cleaning
 def load_or_compute_outlier_bounds(df: pd.DataFrame) -> dict:
-    """โหลด outlier bounds จาก disk หรือคำนวณจาก df แล้ว save"""
     if "original_outlier_bounds" not in st.session_state:
         saved = load_outlier_bounds()
         if saved:
@@ -64,8 +65,8 @@ def load_or_compute_outlier_bounds(df: pd.DataFrame) -> dict:
             save_outlier_bounds(bounds)
     return st.session_state["original_outlier_bounds"]
 
+# คำนวณ outlier distribution พร้อม cache คืน (total_outlier, outlier_details) ใช้ใน render_cleaning
 def get_distribution(working_df: pd.DataFrame, bounds: dict) -> tuple:
-    """คำนวณ distribution พร้อม cache คืน (total_outlier, outlier_details)"""
     cache_key = ("dist_cache", working_df.shape, int(pd.util.hash_pandas_object(working_df).sum()))
     if st.session_state.get("dist_key") != cache_key:
         with st.spinner("Calculating Data..."):
@@ -74,6 +75,7 @@ def get_distribution(working_df: pd.DataFrame, bounds: dict) -> tuple:
         st.session_state["dist_result"] = result
     return st.session_state["dist_result"]
 
+# render สรุปการเปลี่ยนแปลงหลัง cleaning (rows/cols/missing/dups/outliers) ใช้ใน render_cleaning
 def render_summary(working_dataframe: pd.DataFrame, original_dataframe: pd.DataFrame, duplicate_before: int, outlier_before: int, total_missing: int, duplicate_count: int, total_outlier: int):
     st.subheader("Summary")
 

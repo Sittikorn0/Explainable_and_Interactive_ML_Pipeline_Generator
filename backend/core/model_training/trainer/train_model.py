@@ -40,6 +40,7 @@ try:
 except ImportError:
     HAS_CATBOOST = False
 
+# คืน dict mapping model_key → lambda factory สำหรับ instantiate model ใช้ใน run_competition และ get_fitted_model
 def get_model_map() -> dict:
     model_mapping = {
         "logistic_regression":         lambda: LogisticRegression(max_iter=5000, solver="lbfgs", class_weight="balanced"),
@@ -67,6 +68,7 @@ def get_model_map() -> dict:
         
     return model_mapping
 
+# คืน dict model_key→label ที่ใช้งานได้จริงตาม task_type และ installed libraries ใช้ใน run_competition
 def get_available_models(task_type: str) -> dict:
     available_models = dict(MODELS_CLF if task_type == "classification" else MODELS_REG)
     if task_type == "classification":
@@ -79,6 +81,7 @@ def get_available_models(task_type: str) -> dict:
         if HAS_CATBOOST: available_models["catboost_regressor"]  = "CatBoost"
     return available_models
 
+# คำนวณ cv splits ที่ปลอดภัย (2-5) ไม่เกิน minority class count ใช้ใน run_competition
 def calculate_safe_cv(target_train, task_type: str):
     if task_type == "classification":
         min_class_count = int(pd.Series(target_train).value_counts().min())
@@ -88,18 +91,21 @@ def calculate_safe_cv(target_train, task_type: str):
         return cv_splits
     return max(2, min(5, len(target_train) // 2))
 
-def calculate_grid_size(param_grid: dict) -> int: 
+# คำนวณจำนวน combinations ทั้งหมดของ param_grid ใช้ใน run_competition เพื่อกำหนด n_iter
+def calculate_grid_size(param_grid: dict) -> int:
     total_combinations = 1
     for param_values in param_grid.values(): 
         total_combinations *= len(param_values)
     return total_combinations
 
+# สุ่มลด training data สำหรับ slow models (knn/svm) ใช้ใน run_competition
 def sample_data(features, target, max_rows: int):
     if len(features) <= max_rows: 
         return features, target
     sampled_indices = np.random.RandomState(42).choice(len(features), max_rows, replace=False)
     return features.iloc[sampled_indices].reset_index(drop=True), target.iloc[sampled_indices].reset_index(drop=True)
 
+# train ทุก model ด้วย RandomizedSearchCV เลือก best ตาม CV score คืน competition dict ใช้ใน model_process_page
 def run_competition(features_train, features_test, target_train, target_test,
                     task_type: str, on_progress=None) -> dict:
                         

@@ -10,6 +10,7 @@ from backend.core.model_training.config.config_ml import *
 from main import navigate
 
 # Function
+# render banner แสดง Target Column / Task type / Unique Values ใช้ใน model_process_page
 def render_target_info(target_col: str, task: str, n_unique: int):
     st.markdown(f"""
 <div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
@@ -34,6 +35,7 @@ padding: 16px 20px; margin-bottom: 24px; display: flex; gap: 24px; align-items: 
   </div>
 </div>""", unsafe_allow_html=True)
     
+# render HTML card อธิบายขั้นตอน model competition (train/CV/evaluate) ใช้ใน model_process_page
 def render_competition_desc():
     st.markdown("""
 <div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
@@ -44,6 +46,7 @@ padding: 16px 20px; margin-bottom: 24px; font-size: 0.95rem; color: #94A3B8; lin
   4. Evaluate บน Test set (20%)<br>
 </div>""", unsafe_allow_html=True)
 
+# render grid card แสดง model ทุกตัวที่จะแข่งขัน พร้อมคำอธิบาย ใช้ใน model_process_page
 def render_model_cards(avail: dict, model_desc: dict):
     st.markdown(f'<div style="font-weight:600; font-size:0.95rem; color:#94A3B8; margin-bottom:12px">'
                 f'Models ที่จะแข่งขัน ({len(avail)} ตัว)</div>', unsafe_allow_html=True)
@@ -62,6 +65,7 @@ def render_model_cards(avail: dict, model_desc: dict):
             st.markdown(card, unsafe_allow_html=True)
 
 
+# render card highlight best model พร้อมเหตุผล 3 ข้อ (CV score/consistency/model insight) ใช้ใน model_process_page
 def render_best_model_card(result: dict, best_label: str):
     ranked = sorted([(k, v) for k, v in result["competition"].items() if v["cv_score"]],
                     key=lambda x: x[1]["cv_score"], reverse=True)
@@ -96,6 +100,7 @@ padding: 20px; margin-top: 16px; margin-bottom: 24px;">
   </div>
 </div>""", unsafe_allow_html=True)
     
+# render glossary card อธิบาย metrics แต่ละตัว (classification/regression) ใช้ใน model_process_page
 def render_metrics_explain(metrics: dict, task_type: str):
     if task_type == "classification":
         acc = metrics.get("Accuracy", 0)
@@ -128,6 +133,7 @@ def render_metrics_explain(metrics: dict, task_type: str):
 </div>
 </div>""", unsafe_allow_html=True)
     
+# render summary bar แสดงสัดส่วน ทำนายถูก/ผิด จาก confusion matrix ใช้ใน model_process_page
 def render_cm_explain(y_test, y_pred):
     from sklearn.metrics import confusion_matrix as _cm
     y_test = np.array(y_test).flatten()
@@ -155,6 +161,7 @@ def render_cm_explain(y_test, y_pred):
     </div>
     """, unsafe_allow_html=True)
     
+# render คำอธิบายวิธีอ่าน Actual vs Predicted scatter plot ใช้ใน model_process_page (Regression)
 def render_scatter_explain():
     st.markdown("""
 <div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
@@ -165,6 +172,7 @@ padding: 16px 20px; margin: 12px 0; font-size: 0.9rem; color: #94A3B8; line-heig
   • จุดที่กระจายสม่ำเสมอรอบเส้น = model ไม่มี systematic bias
 </div>""", unsafe_allow_html=True)
     
+# render bar chart feature importance พร้อม top-3 cards และคำอธิบาย ใช้ใน model_process_page
 def render_fi(fi_df: pd.DataFrame | None, best_label: str, fi_error: str | None):
     st.caption("features ไหนมีผลต่อการตัดสินใจของ model มากที่สุด")
 
@@ -202,6 +210,7 @@ def render_fi(fi_df: pd.DataFrame | None, best_label: str, fi_error: str | None)
     else:
         st.info(f"{best_label} ไม่รองรับ Feature Importance โดยตรง")
         
+# render histogram/bar chart พร้อม selectbox คอลัมน์ และ correlation heatmap ใช้ใน model_process_page และ insight_page
 def render_viz(df: pd.DataFrame):
     st.caption(f"ข้อมูลปัจจุบัน {df.shape[0]:,} rows × {df.shape[1]} columns (หลัง transformation)")
     num_cols = df.select_dtypes(include="number").columns.tolist()
@@ -236,8 +245,8 @@ def render_viz(df: pd.DataFrame):
         st.plotly_chart(fig2, width="stretch")
 
 
+# render metrics เป็น card แถวเดียว รองรับทั้ง classification และ regression ใช้ใน model_process_page
 def render_metric_cards(metrics_dict: dict):
-    """แสดง metrics ในรูปแบบพรีเมียมการ์ด"""
     # กรองเฉพาะค่าที่เป็นตัวเลข
     display_metrics = {k: v for k, v in metrics_dict.items() if isinstance(v, (int, float))}
     cols = st.columns(len(display_metrics))
@@ -268,6 +277,7 @@ def render_metric_cards(metrics_dict: dict):
             </div>
             """, unsafe_allow_html=True)
             
+# render navigation bar (Back/Next) ท้ายหน้า model_process พร้อม disable Next ถ้ายังไม่ run ใช้ใน model_process_page
 def render_nav(result):
     st.divider()
     col1, _, col2 = st.columns([1.2, 7.6, 1.2])

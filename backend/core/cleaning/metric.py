@@ -14,8 +14,8 @@ from backend.core.insight.reasoning_engine.engine import suggest as _rule_sugges
 
 # ── Rule-based default suggestion helpers ─────────────────────────────────────
 
+# query Rule Engine หา strategy ที่แนะนำสำหรับ missing value ของแต่ละ column ใช้ใน render_missing_values
 def _suggest_missing_strategy(df: pd.DataFrame, col: str, missing_count: int) -> tuple[str | None, str, str]:
-    """คืน (strategy, rule_id, explanation) ที่ Rule Engine แนะนำสำหรับ missing value imputation"""
     col_dtype = actual_type(df[col])
     is_numeric = col_dtype in ("float", "int")
     missing_ratio = missing_count / max(len(df), 1)
@@ -58,8 +58,8 @@ def _suggest_missing_strategy(df: pd.DataFrame, col: str, missing_count: int) ->
     return action_map.get(result["action"]), result.get("rule_id", ""), result.get("explanation", "")
 
 
+# query Rule Engine หา strategy ที่แนะนำสำหรับ outlier ตาม outlier ratio ใช้ใน render_outliers
 def _suggest_outlier_strategy(outlier_count: int, df_len: int) -> tuple[str, str, str]:
-    """คืน (strategy, rule_id, explanation) ที่ Rule Engine แนะนำสำหรับ outlier treatment"""
     outlier_ratio = outlier_count / max(df_len, 1)
     result = _rule_suggest("outlier", {"outlier_ratio": outlier_ratio})
     if not result:
@@ -72,6 +72,7 @@ def _suggest_outlier_strategy(outlier_count: int, df_len: int) -> tuple[str, str
     return action_map.get(result["action"], "clip"), result.get("rule_id", ""), result.get("explanation", "")
 
 
+# UI section สำหรับ drop column ด้วยตนเองหรือตาม Rule Engine แนะนำ ใช้ใน cleaning page
 def render_drop_columns(working_dataframe: pd.DataFrame, target_column: str):
     st.subheader("Drop Columns")
 
@@ -139,6 +140,7 @@ def render_drop_columns(working_dataframe: pd.DataFrame, target_column: str):
         rule_tags = ", ".join(f"`{suggested_drop_reasons.get(c, '')}`" for c in suggested_drops_list)
         st.caption(f"แนะนำให้ลบ: {', '.join(suggested_drops_list)} — {rule_tags}")
 
+# UI section แสดงจำนวน duplicate rows พร้อมปุ่ม drop ใช้ใน cleaning page
 def render_duplicates(working_dataframe: pd.DataFrame, duplicate_count: int):
     st.subheader("Duplicates")
 
@@ -161,6 +163,7 @@ def render_duplicates(working_dataframe: pd.DataFrame, duplicate_count: int):
             track_cleaning("drop_dup", "duplicates_dropped", f"dropped {duplicate_count:,} duplicate rows")
             st.rerun()
 
+# คืน list ของ strategy ที่ใช้ได้กับ dtype นั้น ใช้ใน render_missing_values เพื่อกรอง selectbox
 def determine_missing_compatible(column_type: str) -> list:
     if column_type == "float":
         return ["mean", "median", "forward fill", "backward fill", "drop rows"]
@@ -171,6 +174,7 @@ def determine_missing_compatible(column_type: str) -> list:
     else:
         return ["most frequent", "forward fill", "backward fill", "drop rows"]
 
+# UI section ทั้งหมดสำหรับจัดการ missing value: global apply, per-column strategy ใช้ใน cleaning page
 def render_missing_values(working_dataframe: pd.DataFrame, missing_columns_dict: dict, null_counts_series: pd.Series):
     st.subheader("Missing Values")
 
@@ -284,6 +288,7 @@ def render_missing_values(working_dataframe: pd.DataFrame, missing_columns_dict:
             st.markdown(HORIZONTAL_RULE_HTML, unsafe_allow_html=True)
 
 
+# UI section ทั้งหมดสำหรับจัดการ outlier: global apply, per-column clip/drop ใช้ใน cleaning page
 def render_outliers(working_dataframe: pd.DataFrame, outlier_columns_dict: dict, outlier_details: list):
     st.subheader("Outliers")
 

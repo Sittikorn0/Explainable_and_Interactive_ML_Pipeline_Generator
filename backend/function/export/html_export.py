@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 
 # Functions
+# สร้าง HTML table ของ leaderboard ใช้ภายใน build_html_report
 def leaderboard_html(competition: dict, best_label: str) -> str:
     ranked = sorted(
         [(k, v) for k, v in competition.items() if v["cv_score"] is not None],
@@ -43,6 +44,7 @@ def leaderboard_html(competition: dict, best_label: str) -> str:
     )
 
 
+# สร้าง HTML table ของ feature importance พร้อม bar chart ใช้ภายใน build_html_report
 def fi_html(fi_df: pd.DataFrame) -> str:
     if fi_df is None or fi_df.empty:
         return ""
@@ -67,6 +69,7 @@ def fi_html(fi_df: pd.DataFrame) -> str:
     )
 
 
+# สร้าง HTML table ของ predictions พร้อม summary stats ใช้ภายใน build_html_report
 def pred_html(y_test, y_pred, task_type: str) -> str:
     y_test = np.array(y_test).flatten()
     y_pred = np.array(y_pred).flatten()
@@ -117,6 +120,7 @@ def pred_html(y_test, y_pred, task_type: str) -> str:
         f'<table class="tbl"><thead>{header}</thead><tbody>{body}</tbody></table>'
     )
     
+# สร้าง HTML report ครบชุด (leaderboard/metrics/fi/predictions) สำหรับ download ใช้ใน model_process_page
 def build_html_report(result: dict, metrics: dict, fi_df=None) -> str:
     now         = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     task_type   = result["task_type"]

@@ -34,13 +34,14 @@ _KEYS_TO_CLEAR = [
     "ml_scaling_used", "ml_leakage_warnings",
 ]
 
+# ดึงรายชื่อ Excel sheets จาก warning string ที่ฝังโดย file_reader ใช้ใน render_upload
 def parse_excel_sheets(warnings: list[str]) -> list[str]:
-    """ดึงรายชื่อ sheet จาก warning string ที่ฝังไว้โดย file_reader"""
     for w in warnings:
         if w.startswith("__excel_sheets__:"):
             return w.removeprefix("__excel_sheets__:").split(",")
     return []
 
+# สร้าง HTML badge แสดง file type (CSV/Excel/JSON) ใช้ใน render_upload
 def file_badge(extension: str) -> str:
     label, color = FILE_TYPE_INFO.get(extension.lower(), (extension.upper(), "#6c757d"))
     return (
@@ -48,8 +49,8 @@ def file_badge(extension: str) -> str:
         f"border-radius:12px;font-size:0.78rem;font-weight:600'>{label}</span>"
     )
     
+# บันทึก session_state ทั้งหมดสำหรับไฟล์ใหม่ ล้าง downstream state เก่าทิ้ง ใช้ใน render_upload
 def save_new_file(df: pd.DataFrame, filename: str, warnings: list, json_metadata: dict) -> None:
-    """บันทึก state ทั้งหมดสำหรับไฟล์ที่เพิ่งโหลด"""
     st.session_state["main_df"] = df
     st.session_state["last_uploaded_file"] = filename
     st.session_state["file_warnings"] = warnings
@@ -68,8 +69,8 @@ def save_new_file(df: pd.DataFrame, filename: str, warnings: list, json_metadata
     delete_ml_cache()
     save_to_local(df, filename)
     
+# บันทึก target col, log trace, commit_step แล้ว navigate ไป cleaning ใช้ใน render_upload
 def handle_next_step(df: pd.DataFrame, uploaded_file) -> None:
-    """บันทึก target, log pipeline trace แล้วไปหน้า cleaning"""
     try:
         target_col     = st.session_state["target_col"]
         task_type      = detect_task(df, target_col)
@@ -90,6 +91,7 @@ def handle_next_step(df: pd.DataFrame, uploaded_file) -> None:
         st.error(f"ไม่สามารถไปขั้นตอนต่อไปได้  {e}")
 
 # Render Page
+# render หน้า Upload ทั้งหมด (file uploader/json config/target selection/next step) ใช้ใน main.py
 def render_upload():
     from main_compo import page_header
 

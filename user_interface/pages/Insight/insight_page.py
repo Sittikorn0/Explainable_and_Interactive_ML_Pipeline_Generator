@@ -20,6 +20,7 @@ from user_interface.pages.Model_process.model_components.model_compo import rend
 # Functions
 
 # Render Page
+# render หน้า Insight (feature importance/data viz/model guide/pipeline trace/diff view) ใช้ใน main.py
 def render_insight():
     from main_compo import page_header
     

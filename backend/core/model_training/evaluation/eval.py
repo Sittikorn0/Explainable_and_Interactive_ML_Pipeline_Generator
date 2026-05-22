@@ -12,6 +12,7 @@ from sklearn.metrics import (
 from user_interface.pages.Model_process.model_components.model_compo import render_metric_cards
 
 # Function
+# คำนวณ metrics จาก y_test/y_pred ตาม task type (Accuracy/F1 สำหรับ clf, MSE/R² สำหรับ reg) ใช้ใน model_process_page
 def get_metrics(actual_values, predicted_values, task_type: str) -> dict:
     if task_type == "classification":
         actual_values = pd.Series(actual_values).astype(str)
@@ -33,11 +34,12 @@ def get_metrics(actual_values, predicted_values, task_type: str) -> dict:
         "R² Score": round(r2_score(actual_values, predicted_values), 4),
     }
 
+# render metric cards ใน UI โดยส่งต่อให้ render_metric_cards ใช้ใน model_process_page
 def show_metrics(evaluation_metrics: dict):
     render_metric_cards(evaluation_metrics)
 
+# แสดง residual scatter plot (Predicted vs Error) ใช้ตรวจ systematic bias สำหรับ Regression
 def show_residual_plot(actual_values, predicted_values):
-    """Regression Only: Plot residuals to check for bias"""
     actual = np.array(actual_values).flatten()
     predicted = np.array(predicted_values).flatten()
     residuals = actual - predicted
@@ -51,8 +53,8 @@ def show_residual_plot(actual_values, predicted_values):
     fig.update_layout(template="plotly_dark", height=400, margin=dict(t=20, b=20))
     st.plotly_chart(fig, width="stretch")
 
+# แสดง histogram การกระจายของ error ใช้ดู bias ของ Regression model
 def show_error_dist(actual_values, predicted_values):
-    """Regression Only: Plot error distribution"""
     actual = np.array(actual_values).flatten()
     predicted = np.array(predicted_values).flatten()
     errors = actual - predicted
@@ -65,6 +67,7 @@ def show_error_dist(actual_values, predicted_values):
     fig.update_layout(template="plotly_dark", height=400, margin=dict(t=20, b=20), showlegend=False)
     st.plotly_chart(fig, width="stretch")
 
+# แสดงตาราง leaderboard จัดอันดับ model ตาม CV score ใช้ใน model_process_page
 def show_leaderboard(model_competition_results: dict):
     ranked_models = sorted(
         [(model_name, result) for model_name, result in model_competition_results.items() if result["cv_score"] is not None],
@@ -123,6 +126,7 @@ def show_leaderboard(model_competition_results: dict):
             for _, result in failed_models:
                 st.caption(f"**{result['label']}**: {result['error']}")
 
+# แสดง confusion matrix สำหรับ Classification ใช้ใน model_process_page
 def show_confusion_matrix(actual_values, predicted_values):
     actual_array = np.array(actual_values).flatten()
     predicted_array = np.array(predicted_values).flatten()
@@ -158,6 +162,7 @@ def show_confusion_matrix(actual_values, predicted_values):
     
     st.plotly_chart(figure, width="stretch")
 
+# แสดง scatter plot Predicted vs Actual ใช้ตรวจ fit ของ Regression model ใช้ใน model_process_page
 def show_pred_vs_actual(actual_values, predicted_values):
     plot_dataset = pd.DataFrame({
         "Actual": np.array(actual_values).flatten(),
