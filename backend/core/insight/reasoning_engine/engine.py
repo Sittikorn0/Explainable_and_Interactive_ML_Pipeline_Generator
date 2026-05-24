@@ -5,18 +5,18 @@ from backend.knowledge_base.rules import RULES
 class RuleEngine:
     def __init__(self, rules: list[dict] | None = None):
         src = rules if rules is not None else RULES
+        # จัดเรียงลำดับกฎตาม priority (ตัวเลขน้อยประเมินก่อน) เพื่อทำ Priority-based Conflict Resolution
         self._rules = sorted(src, key=lambda r: r["priority"])
 
-    # ── Public API ────────────────────────────────────────────────
 
-    # คืน rule แรกที่ match (priority สูงสุด) ตาม domain/facts ใช้ทุกที่ที่ต้องการคำแนะนำ
+    # คืน rule แรกที่ตรงเงื่อนไข (priority สูงสุด) ตาม domain/facts ใช้ทุกที่ที่ต้องการคำแนะนำ
     def suggest(self, domain: str, facts: dict) -> dict | None:
         for rule in self._rules:
             if rule["domain"] == domain and self._matches(rule["conditions"], facts):
                 return self._format(rule, facts)
         return None
 
-    # คืน rule ที่ match ทั้งหมด (สำหรับแสดงผลเชิงการศึกษา) ใช้ใน Model Guide tab
+    # คืน rule ที่ตรงเงื่อนไขทั้งหมด (สำหรับแสดงผลเชิงการศึกษา) ใช้ในหน้า Model Guide
     def explain_all(self, domain: str, facts: dict) -> list[dict]:
         return [
             self._format(rule, facts)
