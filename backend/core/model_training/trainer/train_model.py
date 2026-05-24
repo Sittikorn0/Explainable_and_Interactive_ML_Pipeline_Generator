@@ -43,27 +43,27 @@ except ImportError:
 # คืน dict mapping model_key → lambda factory สำหรับ instantiate model ใช้ใน run_competition และ get_fitted_model
 def get_model_map() -> dict:
     model_mapping = {
-        "logistic_regression":         lambda: LogisticRegression(max_iter=5000, solver="lbfgs", class_weight="balanced"),
-        "decision_tree":               lambda: DecisionTreeClassifier(max_depth=8, random_state=42, class_weight="balanced"),
-        "random_forest":               lambda: RandomForestClassifier(n_estimators=50, n_jobs=N_JOBS_LIMIT, random_state=42, class_weight="balanced"),
-        "gradient_boosting":           lambda: HistGradientBoostingClassifier(max_iter=50, max_depth=4, random_state=42),
-        "svm":                         lambda: SGDClassifier(loss="hinge", max_iter=500, random_state=42, class_weight="balanced"),
-        "knn":                         lambda: KNeighborsClassifier(n_neighbors=5, n_jobs=N_JOBS_LIMIT),
-        "naive_bayes":                 lambda: GaussianNB(),
-        "linear_regression":           lambda: LinearRegression(),
-        "decision_tree_regressor":     lambda: DecisionTreeRegressor(max_depth=8, random_state=42),
-        "random_forest_regressor":     lambda: RandomForestRegressor(n_estimators=50, n_jobs=N_JOBS_LIMIT, random_state=42),
+        "logistic_regression": lambda: LogisticRegression(max_iter=5000, solver="lbfgs", class_weight="balanced"),
+        "decision_tree": lambda: DecisionTreeClassifier(max_depth=8, random_state=42, class_weight="balanced"),
+        "random_forest": lambda: RandomForestClassifier(n_estimators=50, n_jobs=N_JOBS_LIMIT, random_state=42, class_weight="balanced"),
+        "gradient_boosting": lambda: HistGradientBoostingClassifier(max_iter=50, max_depth=4, random_state=42),
+        "svm": lambda: SGDClassifier(loss="hinge", max_iter=500, random_state=42, class_weight="balanced"),
+        "knn": lambda: KNeighborsClassifier(n_neighbors=5, n_jobs=N_JOBS_LIMIT),
+        "naive_bayes": lambda: GaussianNB(),
+        "linear_regression": lambda: LinearRegression(),
+        "decision_tree_regressor": lambda: DecisionTreeRegressor(max_depth=8, random_state=42),
+        "random_forest_regressor": lambda: RandomForestRegressor(n_estimators=50, n_jobs=N_JOBS_LIMIT, random_state=42),
         "gradient_boosting_regressor": lambda: HistGradientBoostingRegressor(max_iter=50, max_depth=4, random_state=42),
-        "knn_regressor":               lambda: KNeighborsRegressor(n_neighbors=5, n_jobs=N_JOBS_LIMIT),
+        "knn_regressor": lambda: KNeighborsRegressor(n_neighbors=5, n_jobs=N_JOBS_LIMIT),
     }
     if HAS_XGBOOST:
-        model_mapping["xgboost"]           = lambda: XGBClassifier(n_estimators=50, max_depth=4, learning_rate=0.1, eval_metric="logloss", random_state=42, verbosity=0)
+        model_mapping["xgboost"] = lambda: XGBClassifier(n_estimators=50, max_depth=4, learning_rate=0.1, eval_metric="logloss", random_state=42, verbosity=0)
         model_mapping["xgboost_regressor"] = lambda: XGBRegressor(n_estimators=50, max_depth=4, learning_rate=0.1, random_state=42, verbosity=0)
     if HAS_LIGHTGBM:
-        model_mapping["lightgbm"]           = lambda: LGBMClassifier(n_estimators=50, max_depth=4, learning_rate=0.1, random_state=42, verbose=-1, class_weight="balanced")
+        model_mapping["lightgbm"] = lambda: LGBMClassifier(n_estimators=50, max_depth=4, learning_rate=0.1, random_state=42, verbose=-1, class_weight="balanced")
         model_mapping["lightgbm_regressor"] = lambda: LGBMRegressor(n_estimators=50, max_depth=4, learning_rate=0.1, random_state=42, verbose=-1)
     if HAS_CATBOOST:
-        model_mapping["catboost"]           = lambda: CatBoostClassifier(iterations=50, depth=4, learning_rate=0.1, random_seed=42, verbose=0, auto_class_weights="Balanced", train_dir="cache/catboost_info")
+        model_mapping["catboost"] = lambda: CatBoostClassifier(iterations=50, depth=4, learning_rate=0.1, random_seed=42, verbose=0, auto_class_weights="Balanced", train_dir="cache/catboost_info")
         model_mapping["catboost_regressor"] = lambda: CatBoostRegressor(iterations=50, depth=4, learning_rate=0.1, random_seed=42, verbose=0, train_dir="cache/catboost_info")
         
     return model_mapping
@@ -110,7 +110,7 @@ def run_competition(features_train, features_test, target_train, target_test,
                     task_type: str, on_progress=None) -> dict:
                         
     scorer_metric = "f1_macro" if task_type == "classification" else "r2"
-    cv_strategy   = calculate_safe_cv(target_train, task_type)
+    cv_strategy = calculate_safe_cv(target_train, task_type)
     model_configs = get_available_models(task_type)
     model_mapping = get_model_map()
 

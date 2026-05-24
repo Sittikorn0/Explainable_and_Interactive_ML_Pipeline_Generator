@@ -26,11 +26,11 @@ def page_header(title: str, subtitle: str = "") -> None:
 # สร้าง HTML badge inline ตามสี (blue/green/orange/red/gray) ใช้ใน upload_compo และ cleaning_compo
 def badge(text: str, color: str = "blue") -> str:
     colors = {
-        "blue":   ("#1a3a5c", "#58a6ff"),
-        "green":  ("#1a3a2a", "#3fb950"),
+        "blue": ("#1a3a5c", "#58a6ff"),
+        "green": ("#1a3a2a", "#3fb950"),
         "orange": ("#3a2a10", "#d29922"),
-        "red":    ("#3a1a1a", "#f85149"),
-        "gray":   ("#21262d", "#8b949e"),
+        "red": ("#3a1a1a", "#f85149"),
+        "gray": ("#21262d", "#8b949e"),
     }
     bg, fg = colors.get(color, colors["blue"])
     return (

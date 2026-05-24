@@ -167,9 +167,9 @@ def apply_json_overrides(raw_dataframe: pd.DataFrame,column_decisions: list[dict
 
 # entry point: decode → parse → json_normalize → scan complex columns → apply defaults คืน (df, joined_cols, meta) ใช้ใน file_reader
 def json_normalized(file_bytes: bytes) -> tuple[pd.DataFrame, list[str], dict]:
-    json_text  = decode_json_bytes(file_bytes)
-    raw_data   = parse_json_raw(json_text)
-    raw_df     = pd.json_normalize(raw_data, max_level=JSON_MAX_LEVEL)
+    json_text = decode_json_bytes(file_bytes)
+    raw_data = parse_json_raw(json_text)
+    raw_df = pd.json_normalize(raw_data, max_level=JSON_MAX_LEVEL)
 
     col_decisions: list[dict] = []
     for col in raw_df.columns:
@@ -181,41 +181,41 @@ def json_normalized(file_bytes: bytes) -> tuple[pd.DataFrame, list[str], dict]:
         if is_list.any():
             has_dicts = sample[is_list].apply(lambda v: len(v) > 0 and isinstance(v[0], dict)).any()
             if has_dicts:
-                col_type         = "nested_array_of_dicts"
-                fields           = get_nested_fields(sample)
-                actions          = ["count"] + [f"extract_field:{f}" for f in fields[:5]] + ["to_string", "drop"]
+                col_type = "nested_array_of_dicts"
+                fields = get_nested_fields(sample)
+                actions = ["count"] + [f"extract_field:{f}" for f in fields[:5]] + ["to_string", "drop"]
             else:
-                col_type         = "array"
-                fields           = []
-                actions          = ["join", "count", "first", "drop"]
+                col_type = "array"
+                fields = []
+                actions = ["join", "count", "first", "drop"]
 
             rec_action, rec_reason = recommend_for_column(sample, col_type, fields)
             default = rec_action if col_type == "nested_array_of_dicts" else "join"
             col_decisions.append({
-                "col":                  col,
-                "type":                 col_type,
-                "default_action":       default,
-                "recommended_action":   rec_action,
+                "col": col,
+                "type": col_type,
+                "default_action": default,
+                "recommended_action": rec_action,
                 "recommendation_reason":rec_reason,
-                "available_actions":    actions,
-                "available_fields":     fields,
-                "sample_before":        "  |  ".join(str(v)[:60] for v in sample.head(2).tolist()),
+                "available_actions": actions,
+                "available_fields": fields,
+                "sample_before": "  |  ".join(str(v)[:60] for v in sample.head(2).tolist()),
             })
             continue
 
         is_dict = sample.apply(lambda v: isinstance(v, dict))
         if is_dict.any():
-            actions              = ["flatten_more", "to_string", "count", "drop"]
+            actions = ["flatten_more", "to_string", "count", "drop"]
             rec_action, rec_reason = recommend_for_column(sample, "dict", [])
             col_decisions.append({
-                "col":                  col,
-                "type":                 "dict",
-                "default_action":       "to_string",
-                "recommended_action":   rec_action,
+                "col": col,
+                "type": "dict",
+                "default_action": "to_string",
+                "recommended_action": rec_action,
                 "recommendation_reason":rec_reason,
-                "available_actions":    actions,
-                "available_fields":     [],
-                "sample_before":        "  |  ".join(str(v)[:60] for v in sample.head(2).tolist()),
+                "available_actions": actions,
+                "available_fields": [],
+                "sample_before": "  |  ".join(str(v)[:60] for v in sample.head(2).tolist()),
             })
 
     processed_df = apply_json_overrides(raw_df, col_decisions, {})

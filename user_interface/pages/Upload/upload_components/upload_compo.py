@@ -10,18 +10,18 @@ from backend.core.upload.target import suggest_target, describe_target
 from backend.core.upload.column import get_column_reasons
 
 TYPE_BADGE_INFO: dict[str, tuple[str, str]] = {
-    "array":                 ("Array",          "#0d6efd"),
-    "dict":                  ("Object",         "#6c757d"),
+    "array": ("Array", "#0d6efd"),
+    "dict": ("Object", "#6c757d"),
     "nested_array_of_dicts": ("⚠ Nested Array", "#fd7e14"),
 }
 
 ACTION_BASE_LABELS: dict[str, str] = {
-    "join":        "Join เป็น string",
-    "first":       "ค่าแรก (First only)",
-    "count":       "นับจำนวน (Count)",
-    "to_string":   "แปลงเป็น string",
+    "join": "Join เป็น string",
+    "first": "ค่าแรก (First only)",
+    "count": "นับจำนวน (Count)",
+    "to_string": "แปลงเป็น string",
     "flatten_more":"Flatten เพิ่มเติม",
-    "drop":        "Drop column",
+    "drop": "Drop column",
 }
 
 # Functions

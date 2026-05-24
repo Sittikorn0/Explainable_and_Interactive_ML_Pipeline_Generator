@@ -72,8 +72,8 @@ def save_new_file(df: pd.DataFrame, filename: str, warnings: list, json_metadata
 # บันทึก target col, log trace, commit_step แล้ว navigate ไป cleaning ใช้ใน render_upload
 def handle_next_step(df: pd.DataFrame, uploaded_file) -> None:
     try:
-        target_col     = st.session_state["target_col"]
-        task_type      = detect_task(df, target_col)
+        target_col = st.session_state["target_col"]
+        task_type = detect_task(df, target_col)
         target_reasons = get_column_reasons(df, target_col)
 
         save_target_col(target_col)
@@ -81,10 +81,10 @@ def handle_next_step(df: pd.DataFrame, uploaded_file) -> None:
         log_upload(df, uploaded_file.name, target_col, task_type, target_reasons=target_reasons)
         commit_step("upload", {
             "filename": uploaded_file.name,
-            "rows":     df.shape[0],
-            "cols":     df.shape[1],
-            "target":   target_col,
-            "task":     task_type,
+            "rows": df.shape[0],
+            "cols": df.shape[1],
+            "target": target_col,
+            "task": task_type,
         })
         navigate("cleaning")
     except Exception as e:

@@ -35,9 +35,9 @@ def handle_confirm(df: pd.DataFrame, working_df: pd.DataFrame,
     }
     original_filename = st.session_state.get("last_uploaded_file", "dataset.csv")
     save_cleaned_data(working_df, original_filename)
-    st.session_state["main_df"]                    = working_df.copy()
-    st.session_state["cleaning_confirmed"]         = True
-    st.session_state["cleaning_summary_snapshot"]  = snapshot
+    st.session_state["main_df"] = working_df.copy()
+    st.session_state["cleaning_confirmed"] = True
+    st.session_state["cleaning_summary_snapshot"] = snapshot
     commit_cleaning(df, working_df)
     commit_step("cleaning", snapshot)
     st.success("บันทึกข้อมูลเรียบร้อย")
@@ -45,7 +45,7 @@ def handle_confirm(df: pd.DataFrame, working_df: pd.DataFrame,
 
 # reset working_df กลับเป็น main_df ต้นฉบับ ล้าง cleaning state ใช้ใน render_cleaning
 def handle_reset(df: pd.DataFrame) -> None:
-    st.session_state["working_df"]        = df.copy()
+    st.session_state["working_df"] = df.copy()
     st.session_state["cleaning_confirmed"] = False
     for key in ["treated_outlier_cols", "cleaning_summary_snapshot", "original_outlier_bounds"]:
         st.session_state.pop(key, None)
@@ -81,7 +81,7 @@ def render_cleaning():
     # Stats
     init_working_df(df)
     working_df = st.session_state["working_df"]
-    bounds     = load_or_compute_outlier_bounds(df)
+    bounds = load_or_compute_outlier_bounds(df)
     total_outlier, outlier_details = get_distribution(working_df, bounds)
 
     if "original_outlier_count" not in st.session_state:
@@ -112,9 +112,9 @@ def render_cleaning():
         render_cleaning_profile_tab(working_df, outlier_details)
 
     with tab_cleaning:
-        working_df    = st.session_state["working_df"]
-        target_col    = st.session_state.get("target_col")
-        dup_before    = st.session_state.get("original_dup_count", int(df.duplicated().sum()))
+        working_df = st.session_state["working_df"]
+        target_col = st.session_state.get("target_col")
+        dup_before = st.session_state.get("original_dup_count", int(df.duplicated().sum()))
         outlier_before= st.session_state["original_outlier_count"]
 
         render_drop_columns(working_df, target_col);    st.divider()

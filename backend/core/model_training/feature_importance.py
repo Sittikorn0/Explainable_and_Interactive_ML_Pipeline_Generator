@@ -13,7 +13,7 @@ def compute_fi(df: pd.DataFrame, target_col: str,
                trans_summary: dict) -> tuple[pd.DataFrame | None, str | None]:
 
     try:
-        scaling_method     = trans_summary.get("scaling_method", "no_scaling")
+        scaling_method = trans_summary.get("scaling_method", "no_scaling")
         encoding_decisions = trans_summary.get("encoding_decisions") or None
         X_tr, _, y_tr, _, _ = preprocess(
             df, target_col,

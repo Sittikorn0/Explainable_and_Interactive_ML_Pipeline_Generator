@@ -3,18 +3,18 @@ import pandas as pd
 import plotly.express as px
 
 SCALING_LABELS = {
-    "log_transform":  "Log Transform (log1p)",
+    "log_transform": "Log Transform (log1p)",
     "standard_scaler": "Standard Scaler (Z-score)",
-    "minmax_scaler":   "MinMax Scaler [0, 1]",
-    "robust_scaler":   "Robust Scaler (Median/IQR)",
-    "no_scaling":      "ไม่ทำ Scaling",
+    "minmax_scaler": "MinMax Scaler [0, 1]",
+    "robust_scaler": "Robust Scaler (Median/IQR)",
+    "no_scaling": "ไม่ทำ Scaling",
 }
 SCALING_WHEN = {
-    "log_transform":   "เมื่อข้อมูล skewed รุนแรง (|skew| > 2) เช่น รายได้ ราคา จำนวน transaction",
+    "log_transform": "เมื่อข้อมูล skewed รุนแรง (|skew| > 2) เช่น รายได้ ราคา จำนวน transaction",
     "standard_scaler": "เมื่อข้อมูลกระจายแบบ normal, ไม่มี outlier",
-    "minmax_scaler":   "เมื่อข้อมูล skewed เล็กน้อย หรือต้องการช่วง [0,1]",
-    "robust_scaler":   "เมื่อมี outlier มาก (>5% ของข้อมูล)",
-    "no_scaling":      "เมื่อใช้ tree-based model ล้วนๆ",
+    "minmax_scaler": "เมื่อข้อมูล skewed เล็กน้อย หรือต้องการช่วง [0,1]",
+    "robust_scaler": "เมื่อมี outlier มาก (>5% ของข้อมูล)",
+    "no_scaling": "เมื่อใช้ tree-based model ล้วนๆ",
 }
 
 # render UI scaling section พร้อม stats/visualization/radio selector คืน chosen scaling method ใช้ใน transformation_page
@@ -35,12 +35,12 @@ def render_ml_scaling(dataframe: pd.DataFrame, target_column: str,
             hide_index=True,
             width="stretch",
             column_config={
-                "col":         st.column_config.TextColumn("COLUMN"),
-                "min":         st.column_config.NumberColumn("MIN",  format="%.3f"),
-                "max":         st.column_config.NumberColumn("MAX",  format="%.3f"),
-                "mean":        st.column_config.NumberColumn("MEAN", format="%.3f"),
-                "std":         st.column_config.NumberColumn("STD",  format="%.3f"),
-                "skew":        st.column_config.NumberColumn("SKEW", format="%.3f"),
+                "col": st.column_config.TextColumn("COLUMN"),
+                "min": st.column_config.NumberColumn("MIN",  format="%.3f"),
+                "max": st.column_config.NumberColumn("MAX",  format="%.3f"),
+                "mean": st.column_config.NumberColumn("MEAN", format="%.3f"),
+                "std": st.column_config.NumberColumn("STD",  format="%.3f"),
+                "skew": st.column_config.NumberColumn("SKEW", format="%.3f"),
                 "outlier_pct": st.column_config.NumberColumn("OUTLIER %", format="%.1f%%"),
             }
         )
@@ -58,8 +58,8 @@ def render_ml_scaling(dataframe: pd.DataFrame, target_column: str,
         st.plotly_chart(figure, width="stretch")
 
     # Recommendation
-    rec_label  = SCALING_LABELS.get(scaling_analysis["recommended"], scaling_analysis["recommended"]).upper()
-    rule_id    = scaling_analysis.get("rule_id", "")
+    rec_label = SCALING_LABELS.get(scaling_analysis["recommended"], scaling_analysis["recommended"]).upper()
+    rule_id = scaling_analysis.get("rule_id", "")
 
     st.markdown(f"""
 <div style="background-color: rgba(122, 162, 247, 0.05); border: 1px solid rgba(122, 162, 247, 0.2); border-radius: 8px; padding: 20px; margin-bottom: 24px;">

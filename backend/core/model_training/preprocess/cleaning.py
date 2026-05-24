@@ -47,7 +47,7 @@ def clean_fit_transform(features_train: pd.DataFrame, features_test: pd.DataFram
 
     if fill_values_dict:
         features_train = features_train.fillna(fill_values_dict)
-        features_test  = features_test.fillna(fill_values_dict)
+        features_test = features_test.fillna(fill_values_dict)
 
     return features_train, features_test
 

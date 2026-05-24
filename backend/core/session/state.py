@@ -100,10 +100,10 @@ def save_ml_cache(ml_result: dict, ml_metrics_data: dict,
         with open(ml_cache_path(), "wb") as file:
             pickle.dump(ml_result, file)
         metadata = {
-            "ml_metrics":    ml_metrics_data,
+            "ml_metrics": ml_metrics_data,
             "trans_summary": transformation_summary,
-            "target_col":    target_column,
-            "scaling_used":  scaling_used,
+            "target_col": target_column,
+            "scaling_used": scaling_used,
             "leakage_warnings": leakage_warnings
         }
         with open(ml_meta_path(), "w", encoding="utf-8") as file:
@@ -122,7 +122,7 @@ def delete_ml_cache() -> None:
 
 # โหลด ml_result และ metadata จาก cache คืน tuple 6 ค่า ใช้ใน restore_session
 def load_ml_cache() -> tuple[dict | None, dict, dict, str | None, str | None, list | None]:
-    pkl_file_path  = ml_cache_path()
+    pkl_file_path = ml_cache_path()
     meta_file_path = ml_meta_path()
     if not os.path.exists(pkl_file_path):
         return None, {}, {}, None, None, None
@@ -134,10 +134,10 @@ def load_ml_cache() -> tuple[dict | None, dict, dict, str | None, str | None, li
         if os.path.exists(meta_file_path):
             with open(meta_file_path, "r", encoding="utf-8") as file:
                 metadata = json.load(file)
-            ml_metrics_data    = metadata.get("ml_metrics", {})
+            ml_metrics_data = metadata.get("ml_metrics", {})
             transformation_summary = metadata.get("trans_summary", {})
-            target_column    = metadata.get("target_col")
-            scaling_used     = metadata.get("scaling_used")
+            target_column = metadata.get("target_col")
+            scaling_used = metadata.get("scaling_used")
             leakage_warnings = metadata.get("leakage_warnings")
         return ml_result, ml_metrics_data, transformation_summary, target_column, scaling_used, leakage_warnings
     except Exception as error:

@@ -49,11 +49,11 @@ def _suggest_missing_strategy(df: pd.DataFrame, col: str, missing_count: int) ->
         return None, "", ""
 
     action_map = {
-        "no_action":     None,
-        "drop_column":   "drop rows",
+        "no_action": None,
+        "drop_column": "drop rows",
         "median_impute": "median (rounded)" if col_dtype == "int" else "median",
-        "mean_impute":   "mean",
-        "mode_impute":   "most frequent",
+        "mean_impute": "mean",
+        "mode_impute": "most frequent",
     }
     return action_map.get(result["action"]), result.get("rule_id", ""), result.get("explanation", "")
 
@@ -66,7 +66,7 @@ def _suggest_outlier_strategy(outlier_count: int, df_len: int) -> tuple[str, str
         return "clip", "", ""
     action_map = {
         "no_action": "clip",
-        "clip":      "clip",
+        "clip": "clip",
         "drop rows": "drop rows",
     }
     return action_map.get(result["action"], "clip"), result.get("rule_id", ""), result.get("explanation", "")

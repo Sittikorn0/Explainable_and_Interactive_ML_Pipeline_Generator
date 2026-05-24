@@ -11,21 +11,21 @@ from backend.core.session.pipeline_state import get_comparison, clear_comparison
 
 # Functions
 # Design tokens - Midnight Lab Palette (Flat Modern)
-BACKGROUND_COLOR       = "#24283B"  # Deep Navy Surface
-BORDER_COLOR   = "#414868"          # Sharp Slate Border
-TEXT_COLOR     = "#7AA2F7"          # Soft Blue for Headings
+BACKGROUND_COLOR = "#24283B"  # Deep Navy Surface
+BORDER_COLOR = "#414868"          # Sharp Slate Border
+TEXT_COLOR = "#7AA2F7"          # Soft Blue for Headings
 TEXT_DIM_COLOR = "#94a3b8"          # Muted Slate
-ACCENT_BLUE    = "#7AA2F7"          # Soft Blue
+ACCENT_BLUE = "#7AA2F7"          # Soft Blue
 ACCENT_INSIGHT = "#9ECE6A"          # Lime Tea
-BORDER_RADIUS        = "4px"        # Minimal Sharp Corner
-PADDING_STYLE      = "1.25rem"
-MARGIN_GAP      = "margin: 1.5rem 0"
+BORDER_RADIUS = "4px"        # Minimal Sharp Corner
+PADDING_STYLE = "1.25rem"
+MARGIN_GAP = "margin: 1.5rem 0"
 
 STEP_COLORS_INFO = {
-    "Upload":              "#58a6ff",
-    "Data Cleaning":       "#3fb950",
+    "Upload": "#58a6ff",
+    "Data Cleaning": "#3fb950",
     "Data Transformation": "#d29922",
-    "Model Process":          "#bc8cff",
+    "Model Process": "#bc8cff",
 }
 PIPELINE_STEP_ORDER = ["Upload", "Data Cleaning", "Data Transformation", "Model Process"]
 
@@ -56,7 +56,7 @@ def render_importance(model, X_test, y_test, task_type):
             st.session_state[cache_key] = permutation_dataframe
     permutation_dataframe = st.session_state[cache_key]
 
-    top_features_count   = min(15, len(permutation_dataframe))
+    top_features_count = min(15, len(permutation_dataframe))
     plot_dataframe = permutation_dataframe.head(top_features_count)
 
     bar_chart_figure = go.Figure(go.Bar(
@@ -85,8 +85,8 @@ def render_importance(model, X_test, y_test, task_type):
 
     render_section_header("3 Feature สำคัญที่สุด")
 
-    rank_colors  = ["#E0AF68", "#BB9AF7", "#7AA2F7"]
-    rank_labels  = ["#1", "#2", "#3"]
+    rank_colors = ["#E0AF68", "#BB9AF7", "#7AA2F7"]
+    rank_labels = ["#1", "#2", "#3"]
     total_importance = positive_importance_features["Importance"].sum() + 1e-9
     top_3_features = positive_importance_features.head(3).reset_index(drop=True)
     card_columns = st.columns(len(top_3_features))
@@ -244,10 +244,10 @@ def render_comparison():
             value_current = flat_current.get(key, "")
             is_changed = str(value_previous) != str(value_current)
             
-            left_background  = "background:rgba(248, 81, 73, 0.12);" if is_changed else "background:transparent;"
+            left_background = "background:rgba(248, 81, 73, 0.12);" if is_changed else "background:transparent;"
             right_background = "background:rgba(63, 185, 80, 0.15);" if is_changed else "background:transparent;"
             
-            left_text_color  = "#F85149" if is_changed else "#8B949E"
+            left_text_color = "#F85149" if is_changed else "#8B949E"
             right_text_color = "#3FB950" if is_changed else "#C9D1D9"
             
             diff_rows_html.append(f"""

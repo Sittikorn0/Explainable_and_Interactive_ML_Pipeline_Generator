@@ -58,12 +58,12 @@ class RuleEngine:
     # แปลง rule dict เป็น output format มาตรฐาน (action/explanation/facts_used) ใช้ภายใน suggest และ explain_all
     def _format(self, rule: dict, facts: dict) -> dict:
         return {
-            "action":      rule["action"],
-            "rule_id":     rule["id"],
-            "domain":      rule["domain"],
-            "priority":    rule["priority"],
+            "action": rule["action"],
+            "rule_id": rule["id"],
+            "domain": rule["domain"],
+            "priority": rule["priority"],
             "explanation": rule["explanation"],
-            "facts_used":  {k: facts.get(k) for k in rule["conditions"]},
+            "facts_used": {k: facts.get(k) for k in rule["conditions"]},
         }
 
 

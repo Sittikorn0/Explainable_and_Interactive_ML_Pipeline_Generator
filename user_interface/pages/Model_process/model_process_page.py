@@ -43,7 +43,7 @@ def render_model_process():
     st.info(f"**Current Dataset:** {file_name}  |  {dataframe.shape[0]:,} rows × {dataframe.shape[1]} columns")
 
     # 1. Target Column
-    columns_list   = dataframe.columns.tolist()
+    columns_list = dataframe.columns.tolist()
     # ใช้ _trans_target_saved (set โดย transformation step) เป็น source of truth
     # fallback ไป target_col ซึ่ง set โดย upload step
     preset_target = (st.session_state.get("_trans_target_saved") or
@@ -99,7 +99,7 @@ def render_model_process():
                     outlier_rules=st.session_state.get("outlier_rules"),
                     encoding_decisions=encoding_decisions,
                 )
-                st.session_state["ml_task_type"]    = task_type
+                st.session_state["ml_task_type"] = task_type
                 st.session_state["_ml_scaling_used"] = scaling_method
             except Exception as error:
                 st.error(f"Preprocess ล้มเหลว: {error}")
@@ -114,10 +114,10 @@ def render_model_process():
             progress_bar.progress((current_index + 1) / total_models, text=f"Training {label}... ({current_index+1}/{total_models})")
 
         try:
-            competition_result  = run_competition(X_train, X_test, y_train, y_test, task_type, on_progress=progress_callback)
+            competition_result = run_competition(X_train, X_test, y_train, y_test, task_type, on_progress=progress_callback)
             evaluation_metrics = get_metrics(competition_result["y_test"], competition_result["y_pred"], task_type)
             progress_bar.empty()
-            st.session_state["ml_result"]  = competition_result
+            st.session_state["ml_result"] = competition_result
             st.session_state["ml_metrics"] = evaluation_metrics
             
             log_model_process(competition_result, evaluation_metrics)
@@ -138,15 +138,15 @@ def render_model_process():
             return
 
     # Results
-    competition_result  = st.session_state.get("ml_result")
+    competition_result = st.session_state.get("ml_result")
     evaluation_metrics = st.session_state.get("ml_metrics")
     if not (competition_result and evaluation_metrics):
         render_nav(competition_result)
         return
 
-    task_type   = competition_result["task_type"]
-    best_model_label  = competition_result["best_label"]
-    best_model_key    = competition_result["best_key"]
+    task_type = competition_result["task_type"]
+    best_model_label = competition_result["best_label"]
+    best_model_key = competition_result["best_key"]
     best_hyperparameters = competition_result["best_params"]
 
     # แสดง scaling info และ leakage warnings ที่เก็บไว้ก่อน rerun
@@ -158,8 +158,8 @@ def render_model_process():
     high_risk_items = [item for item in leakage_items if item["severity"] == "high"]
     
     if high_risk_items:
-        leakage_color  = "#f85149"
-        leakage_title  = "ตรวจพบความเสี่ยง Data Leakage ค่า Metric อาจสูงผิดปกติ"
+        leakage_color = "#f85149"
+        leakage_title = "ตรวจพบความเสี่ยง Data Leakage ค่า Metric อาจสูงผิดปกติ"
 
         rows_html_content = ""
         for item in high_risk_items:

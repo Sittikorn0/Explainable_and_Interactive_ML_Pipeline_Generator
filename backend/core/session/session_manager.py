@@ -8,12 +8,12 @@ CACHE_DIR = "cache"
 CACHE_TTL = 3 * 3600  # 3 ชม.
 MAX_SESSIONS = 10      # จำนวน session สูงสุดที่เก็บไว้พร้อมกัน
 
-SUBDIR_DATASET        = "dataset"
-SUBDIR_CLEANING       = "cleaning"
+SUBDIR_DATASET = "dataset"
+SUBDIR_CLEANING = "cleaning"
 SUBDIR_TRANSFORMATION = "transformation"
-SUBDIR_MODEL          = "model"
-SUBDIR_LOG            = "log"
-SUBDIR_CATBOOST       = "catboost_info"
+SUBDIR_MODEL = "model"
+SUBDIR_LOG = "log"
+SUBDIR_CATBOOST = "catboost_info"
 
 ALL_SUBDIRS = [SUBDIR_DATASET, SUBDIR_CLEANING, SUBDIR_TRANSFORMATION, SUBDIR_MODEL, SUBDIR_LOG, SUBDIR_CATBOOST]
 

@@ -4,10 +4,10 @@ import pandas as pd
 from main_compo import badge, recommendation_box
 
 ENCODING_LABELS = {
-    "one_hot_encoding":  "One-hot Encoding",
-    "label_encoding":    "Label Encoding",
-    "ordinal_encoding":  "Ordinal Encoding",
-    "drop_column":       "Drop (ตัดออก)",
+    "one_hot_encoding": "One-hot Encoding",
+    "label_encoding": "Label Encoding",
+    "ordinal_encoding": "Ordinal Encoding",
+    "drop_column": "Drop (ตัดออก)",
 }
 
 # render UI encoding section พร้อม radio selector สำหรับแต่ละ categorical column คืน decisions dict ใช้ใน transformation_page

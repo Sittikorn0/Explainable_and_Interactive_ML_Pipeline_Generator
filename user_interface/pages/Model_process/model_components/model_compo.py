@@ -104,7 +104,7 @@ padding: 20px; margin-top: 16px; margin-bottom: 24px;">
 def render_metrics_explain(metrics: dict, task_type: str):
     if task_type == "classification":
         acc = metrics.get("Accuracy", 0)
-        f1  = metrics.get("F1(Mac)", 0)
+        f1 = metrics.get("F1(Mac)", 0)
         items = [
             ("#3fb950", "Accuracy", f"ทำนายถูก {acc*100:.1f}% ของข้อมูลทั้งหมดใน Test set"),
             ("#58a6ff", "Precision", "ความแม่นยำของการทำนายในแต่ละ Class (ทายว่าเป็น A แล้วเป็น A จริงไหม)"),
@@ -138,11 +138,11 @@ def render_cm_explain(y_test, y_pred):
     from sklearn.metrics import confusion_matrix as _cm
     y_test = np.array(y_test).flatten()
     y_pred = np.array(y_pred).flatten()
-    labels  = sorted(list(set(y_test) | set(y_pred)), key=str)
-    cm_arr  = _cm(y_test, y_pred, labels=labels)
-    correct   = int(np.trace(cm_arr))
+    labels = sorted(list(set(y_test) | set(y_pred)), key=str)
+    cm_arr = _cm(y_test, y_pred, labels=labels)
+    correct = int(np.trace(cm_arr))
     incorrect = int(cm_arr.sum() - correct)
-    total     = correct + incorrect
+    total = correct + incorrect
     accuracy_pct = (correct / total) * 100 if total > 0 else 0
     incorrect_pct = (incorrect / total) * 100 if total > 0 else 0
     
@@ -177,7 +177,7 @@ def render_fi(fi_df: pd.DataFrame | None, best_label: str, fi_error: str | None)
     st.caption("features ไหนมีผลต่อการตัดสินใจของ model มากที่สุด")
 
     if fi_df is not None:
-        top_n  = min(20, len(fi_df))
+        top_n = min(20, len(fi_df))
         fig_fi = px.bar(fi_df.head(top_n), x="Importance", y="Feature", orientation="h",
                         color="Importance", color_continuous_scale="Blues",
                         text=fi_df.head(top_n)["Importance"].round(4))
@@ -187,7 +187,7 @@ def render_fi(fi_df: pd.DataFrame | None, best_label: str, fi_error: str | None)
         fig_fi.update_traces(textposition="outside")
         st.plotly_chart(fig_fi, width="stretch")
 
-        total  = fi_df["Importance"].sum()
+        total = fi_df["Importance"].sum()
         medals = ["#1", "#2", "#3"]
         html = ('<div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px 20px; margin: 12px 0">'
                 '<div style="font-size: 0.9rem; color: #94A3B8; line-height: 1.8">'
@@ -252,13 +252,13 @@ def render_metric_cards(metrics_dict: dict):
     cols = st.columns(len(display_metrics))
     
     style_map = {
-        "Accuracy":       {"color": "#3fb950"},
+        "Accuracy": {"color": "#3fb950"},
         "Precision(Mac)": {"color": "#58a6ff"},
-        "Recall(Mac)":    {"color": "#d29922"},
-        "F1(Mac)":        {"color": "#bc8cff"},
-        "MSE":            {"color": "#f85149"},
-        "RMSE":           {"color": "#f85149"},
-        "R² Score":       {"color": "#3fb950"},
+        "Recall(Mac)": {"color": "#d29922"},
+        "F1(Mac)": {"color": "#bc8cff"},
+        "MSE": {"color": "#f85149"},
+        "RMSE": {"color": "#f85149"},
+        "R² Score": {"color": "#3fb950"},
     }
 
     for i, (name, val) in enumerate(display_metrics.items()):

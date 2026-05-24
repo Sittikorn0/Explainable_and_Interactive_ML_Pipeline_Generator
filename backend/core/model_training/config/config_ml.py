@@ -1,42 +1,42 @@
 MAX_ROWS_TRAIN = 50_000
-MAX_ROWS_SLOW  = 5_000
-SLOW_MODELS    = {"knn", "knn_regressor", "svm"}
+MAX_ROWS_SLOW = 5_000
+SLOW_MODELS = {"knn", "knn_regressor", "svm"}
 
 MODELS_CLF = {
-    "random_forest":       "Random Forest",
-    "gradient_boosting":   "Gradient Boosting",
+    "random_forest": "Random Forest",
+    "gradient_boosting": "Gradient Boosting",
     "logistic_regression": "Logistic Regression",
-    "decision_tree":       "Decision Tree",
-    "svm":                 "SVM",
-    "knn":                 "kNN",
-    "naive_bayes":         "Naive Bayes",
+    "decision_tree": "Decision Tree",
+    "svm": "SVM",
+    "knn": "kNN",
+    "naive_bayes": "Naive Bayes",
 }
 MODELS_REG = {
-    "random_forest_regressor":     "Random Forest",
+    "random_forest_regressor": "Random Forest",
     "gradient_boosting_regressor": "Gradient Boosting",
-    "linear_regression":           "Linear Regression",
-    "decision_tree_regressor":     "Decision Tree",
-    "knn_regressor":               "kNN",
+    "linear_regression": "Linear Regression",
+    "decision_tree_regressor": "Decision Tree",
+    "knn_regressor": "kNN",
 }
 MODEL_DESC = {
-    "random_forest":               "ใช้ต้นไม้ตัดสินใจหลายต้นร่วมกันทำนาย (Ensemble) เพื่อให้ได้ผลลัพธ์ที่แม่นยำและเสถียรสูง",
-    "gradient_boosting":           "เรียนรู้แบบลำดับขั้น โดยแต่ละโมเดลจะแก้ไขข้อผิดพลาดจากตัวก่อนหน้าเพื่อความแม่นยำ",
-    "logistic_regression":         "หาความน่าจะเป็นด้วยความสัมพันธ์เชิงเส้น เหมาะเป็นพื้นฐานการเรียนรู้โมเดลจำแนกประเภท",
-    "decision_tree":               "จำลองตรรกะการตัดสินใจเป็นลำดับขั้น (Hierarchical Rules) ที่มนุษย์สามารถตีความได้ง่าย",
-    "svm":                         "หาเส้นแบ่งข้อมูลที่มีช่องว่างกว้างที่สุด (Maximum Margin) เพื่อแยกประเภทข้อมูลที่มีความซับซ้อน",
-    "knn":                         "จำแนกข้อมูลตามความเหมือน โดยอ้างอิงจากกลุ่มข้อมูลตัวอย่างที่อยู่ใกล้เคียงที่สุด",
-    "naive_bayes":                 "ใช้หลักความน่าจะเป็นพื้นฐาน (Bayes' Theorem) ทำงานได้เร็วและมีประสิทธิภาพกับข้อมูลขนาดใหญ่",
-    "xgboost":                     "อัลกอริทึมขั้นสูงที่ใช้เทคนิค Gradient Boosting แบบเพิ่มประสิทธิภาพเพื่อความแม่นยำสูงสุด",
-    "lightgbm":                    "เทคนิค Boosting ที่เน้นความรวดเร็วในการฝึกฝนโมเดล เหมาะสำหรับใช้สอนกับชุดข้อมูลขนาดใหญ่",
-    "catboost":                    "โดดเด่นในการจัดการตัวแปรเชิงหมวดหมู่ (Categorical Features) โดยไม่ต้องเตรียมข้อมูลซับซ้อน",
-    "linear_regression":           "การพยากรณ์ค่าด้วยสมการเชิงเส้น เป็นโมเดลพื้นฐานที่สำคัญที่สุดในงาน Regression",
-    "decision_tree_regressor":     "พยากรณ์ค่าตัวเลขตามลำดับเงื่อนไข ช่วยให้เห็นโครงสร้างการตัดสินใจของข้อมูลได้ชัดเจน",
-    "random_forest_regressor":     "ใช้ต้นไม้ตัดสินใจหลายต้นรวมกันเพื่อพยากรณ์ค่า ช่วยให้ผลลัพธ์มีความเสถียรและทนทานต่อสัญญาณรบกวน",
+    "random_forest": "ใช้ต้นไม้ตัดสินใจหลายต้นร่วมกันทำนาย (Ensemble) เพื่อให้ได้ผลลัพธ์ที่แม่นยำและเสถียรสูง",
+    "gradient_boosting": "เรียนรู้แบบลำดับขั้น โดยแต่ละโมเดลจะแก้ไขข้อผิดพลาดจากตัวก่อนหน้าเพื่อความแม่นยำ",
+    "logistic_regression": "หาความน่าจะเป็นด้วยความสัมพันธ์เชิงเส้น เหมาะเป็นพื้นฐานการเรียนรู้โมเดลจำแนกประเภท",
+    "decision_tree": "จำลองตรรกะการตัดสินใจเป็นลำดับขั้น (Hierarchical Rules) ที่มนุษย์สามารถตีความได้ง่าย",
+    "svm": "หาเส้นแบ่งข้อมูลที่มีช่องว่างกว้างที่สุด (Maximum Margin) เพื่อแยกประเภทข้อมูลที่มีความซับซ้อน",
+    "knn": "จำแนกข้อมูลตามความเหมือน โดยอ้างอิงจากกลุ่มข้อมูลตัวอย่างที่อยู่ใกล้เคียงที่สุด",
+    "naive_bayes": "ใช้หลักความน่าจะเป็นพื้นฐาน (Bayes' Theorem) ทำงานได้เร็วและมีประสิทธิภาพกับข้อมูลขนาดใหญ่",
+    "xgboost": "อัลกอริทึมขั้นสูงที่ใช้เทคนิค Gradient Boosting แบบเพิ่มประสิทธิภาพเพื่อความแม่นยำสูงสุด",
+    "lightgbm": "เทคนิค Boosting ที่เน้นความรวดเร็วในการฝึกฝนโมเดล เหมาะสำหรับใช้สอนกับชุดข้อมูลขนาดใหญ่",
+    "catboost": "โดดเด่นในการจัดการตัวแปรเชิงหมวดหมู่ (Categorical Features) โดยไม่ต้องเตรียมข้อมูลซับซ้อน",
+    "linear_regression": "การพยากรณ์ค่าด้วยสมการเชิงเส้น เป็นโมเดลพื้นฐานที่สำคัญที่สุดในงาน Regression",
+    "decision_tree_regressor": "พยากรณ์ค่าตัวเลขตามลำดับเงื่อนไข ช่วยให้เห็นโครงสร้างการตัดสินใจของข้อมูลได้ชัดเจน",
+    "random_forest_regressor": "ใช้ต้นไม้ตัดสินใจหลายต้นรวมกันเพื่อพยากรณ์ค่า ช่วยให้ผลลัพธ์มีความเสถียรและทนทานต่อสัญญาณรบกวน",
     "gradient_boosting_regressor": "พัฒนาความแม่นยำในการพยากรณ์ตัวเลขผ่านการเรียนรู้จากข้อผิดพลาดแบบวนซ้ำ",
-    "knn_regressor":               "ประมาณค่าตัวเลขโดยอ้างอิงจากค่าเฉลี่ยของกลุ่มตัวอย่างที่มีลักษณะใกล้เคียงกันที่สุด",
-    "xgboost_regressor":           "โมเดลพยากรณ์เชิงตัวเลขประสิทธิภาพสูง ที่มีการควบคุมความซับซ้อนเพื่อป้องกันโมเดลจำจำข้อมูลเกิน",
-    "lightgbm_regressor":          "ใช้โครงสร้างการเรียนรู้แบบพิเศษที่ช่วยให้ประมวลผลงานพยากรณ์เชิงตัวเลขได้รวดเร็วเป็นพิเศษ",
-    "catboost_regressor":          "จัดการตัวแปรเชิงกลุ่มได้อย่างมีประสิทธิภาพในงานพยากรณ์ ช่วยลดขั้นตอนการเตรียมข้อมูลลง",
+    "knn_regressor": "ประมาณค่าตัวเลขโดยอ้างอิงจากค่าเฉลี่ยของกลุ่มตัวอย่างที่มีลักษณะใกล้เคียงกันที่สุด",
+    "xgboost_regressor": "โมเดลพยากรณ์เชิงตัวเลขประสิทธิภาพสูง ที่มีการควบคุมความซับซ้อนเพื่อป้องกันโมเดลจำจำข้อมูลเกิน",
+    "lightgbm_regressor": "ใช้โครงสร้างการเรียนรู้แบบพิเศษที่ช่วยให้ประมวลผลงานพยากรณ์เชิงตัวเลขได้รวดเร็วเป็นพิเศษ",
+    "catboost_regressor": "จัดการตัวแปรเชิงกลุ่มได้อย่างมีประสิทธิภาพในงานพยากรณ์ ช่วยลดขั้นตอนการเตรียมข้อมูลลง",
 }
 MODEL_WHY = {
     "Random Forest":
@@ -81,7 +81,7 @@ PARAM_GRIDS = {
     # max_depth: None=unbound ไว้เป็น ceiling, min_samples_split ป้องกัน overfit
     # combinations: 4×3 = 12
     "decision_tree": {
-        "max_depth":         [3, 5, 8, None],
+        "max_depth": [3, 5, 8, None],
         "min_samples_split": [2, 5, 10],
     },
 
@@ -89,14 +89,14 @@ PARAM_GRIDS = {
     # combinations: 3×3 = 9
     "random_forest": {
         "n_estimators": [50, 100, 200],
-        "max_depth":    [4, 6, None],
+        "max_depth": [4, 6, None],
     },
 
     # learning_rate+max_iter มี trade-off กัน rate ต่ำต้องการ iter มาก
     # combinations: 3×3×3 = 27 → n_iter จะสุ่ม 10 ชุด
     "gradient_boosting": {
-        "max_iter":     [50, 100, 200],
-        "max_depth":    [3, 4, 6],
+        "max_iter": [50, 100, 200],
+        "max_depth": [3, 4, 6],
         "learning_rate":[0.05, 0.1, 0.2],
     },
 
@@ -110,7 +110,7 @@ PARAM_GRIDS = {
     # combinations: 4×2 = 8
     "knn": {
         "n_neighbors": [3, 5, 7, 11],
-        "weights":     ["uniform", "distance"],
+        "weights": ["uniform", "distance"],
     },
 
     # var_smoothing: ป้องกัน log(0), log scale
@@ -120,19 +120,19 @@ PARAM_GRIDS = {
     },
 
     # XGBoost/LightGBM/CatBoost: combinations: 2×3×3 = 18
-    "xgboost":  {
+    "xgboost": {
         "n_estimators": [50, 100],
-        "max_depth":    [3, 4, 6],
+        "max_depth": [3, 4, 6],
         "learning_rate":[0.05, 0.1, 0.2],
     },
     "lightgbm": {
         "n_estimators": [50, 100],
-        "max_depth":    [3, 4, 6],
+        "max_depth": [3, 4, 6],
         "learning_rate":[0.05, 0.1, 0.2],
     },
     "catboost": {
-        "iterations":   [50, 100],
-        "depth":        [3, 4, 6],
+        "iterations": [50, 100],
+        "depth": [3, 4, 6],
         "learning_rate":[0.05, 0.1, 0.2],
     },
 
@@ -144,42 +144,42 @@ PARAM_GRIDS = {
     # Regression trees: เหมือน classification แต่ใช้ MSE แทน gini
     # combinations: 4×3 = 12
     "decision_tree_regressor": {
-        "max_depth":         [3, 5, 8, None],
+        "max_depth": [3, 5, 8, None],
         "min_samples_split": [2, 5, 10],
     },
 
     # combinations: 3×3 = 9
     "random_forest_regressor": {
         "n_estimators": [50, 100, 200],
-        "max_depth":    [4, 6, None],
+        "max_depth": [4, 6, None],
     },
 
     # combinations: 3×3×3 = 27
     "gradient_boosting_regressor": {
-        "max_iter":     [50, 100, 200],
-        "max_depth":    [3, 4, 6],
+        "max_iter": [50, 100, 200],
+        "max_depth": [3, 4, 6],
         "learning_rate":[0.05, 0.1, 0.2],
     },
 
     # combinations: 4×2 = 8
     "knn_regressor": {
         "n_neighbors": [3, 5, 7, 11],
-        "weights":     ["uniform", "distance"],
+        "weights": ["uniform", "distance"],
     },
 
     "xgboost_regressor": {
         "n_estimators": [50, 100],
-        "max_depth":    [3, 4, 6],
+        "max_depth": [3, 4, 6],
         "learning_rate":[0.05, 0.1, 0.2],
     },
     "lightgbm_regressor": {
         "n_estimators": [50, 100],
-        "max_depth":    [3, 4, 6],
+        "max_depth": [3, 4, 6],
         "learning_rate":[0.05, 0.1, 0.2],
     },
     "catboost_regressor": {
-        "iterations":   [50, 100],
-        "depth":        [3, 4, 6],
+        "iterations": [50, 100],
+        "depth": [3, 4, 6],
         "learning_rate":[0.05, 0.1, 0.2],
     },
 }

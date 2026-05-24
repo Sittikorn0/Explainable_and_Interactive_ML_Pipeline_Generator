@@ -7,57 +7,57 @@ from user_interface.pages.Insight.insight_components.insight_compo import *
 # Functions
 MODEL_GUIDE_INFO = {
     "Random Forest": {
-        "simple":   "สร้าง Decision Tree หลายต้นพร้อมกัน แล้วให้ทุกต้น vote ผลลัพธ์ เหมือนถามหลายคนแล้วใช้เสียงส่วนใหญ่",
+        "simple": "สร้าง Decision Tree หลายต้นพร้อมกัน แล้วให้ทุกต้น vote ผลลัพธ์ เหมือนถามหลายคนแล้วใช้เสียงส่วนใหญ่",
         "strength": "ทนทานต่อข้อมูลที่ผิดปกติ ใช้งานได้ดีกับข้อมูลหลายประเภทโดยไม่ต้อง scale",
         "weakness": "ตีความยากกว่า Decision Tree เดี่ยว ใช้ memory มากขึ้น",
     },
     "Gradient Boosting": {
-        "simple":   "สร้าง tree ทีละต้น แต่ละต้นพยายามแก้ข้อผิดพลาดของต้นก่อนหน้า  เรียนรู้จากความผิดพลาดไปเรื่อยๆ",
+        "simple": "สร้าง tree ทีละต้น แต่ละต้นพยายามแก้ข้อผิดพลาดของต้นก่อนหน้า  เรียนรู้จากความผิดพลาดไปเรื่อยๆ",
         "strength": "มักให้ผลแม่นที่สุดกับข้อมูลแบบ tabular",
         "weakness": "ใช้เวลา train นานกว่า ต้องปรับ hyperparameter",
     },
     "Logistic Regression": {
-        "simple":   "คำนวณน้ำหนักของแต่ละ feature แล้วรวมเป็นคะแนน บอกได้ทันทีว่า feature ไหนมีผลมากแค่ไหน",
+        "simple": "คำนวณน้ำหนักของแต่ละ feature แล้วรวมเป็นคะแนน บอกได้ทันทีว่า feature ไหนมีผลมากแค่ไหน",
         "strength": "เร็ว ตีความง่าย เหมาะเป็น baseline",
         "weakness": "จับ pattern ซับซ้อนไม่ได้ ต้องการ feature scaling",
     },
     "Decision Tree": {
-        "simple":   "ตัดสินใจแบบ if-then-else ทีละขั้น เหมือน flowchart ที่ถามคำถาม Yes/No ไปเรื่อยๆ",
+        "simple": "ตัดสินใจแบบ if-then-else ทีละขั้น เหมือน flowchart ที่ถามคำถาม Yes/No ไปเรื่อยๆ",
         "strength": "ตีความได้ง่ายที่สุด เห็นเหตุผลการตัดสินใจชัดเจน",
         "weakness": "เสี่ยง overfit ถ้าต้นไม้ลึกเกินไป",
     },
     "XGBoost": {
-        "simple":   "Gradient Boosting รุ่นที่ optimize แล้ว มีระบบป้องกัน overfit ในตัว ทำงานได้เร็วกว่า",
+        "simple": "Gradient Boosting รุ่นที่ optimize แล้ว มีระบบป้องกัน overfit ในตัว ทำงานได้เร็วกว่า",
         "strength": "accuracy สูงมาก ป้องกัน overfit ได้ดี",
         "weakness": "ต้อง tune hyperparameter หลายตัว",
     },
     "LightGBM": {
-        "simple":   "Gradient Boosting ที่เร็วมากเป็นพิเศษ ใช้ algorithm แบบ histogram เพื่อประหยัดเวลาและ memory",
+        "simple": "Gradient Boosting ที่เร็วมากเป็นพิเศษ ใช้ algorithm แบบ histogram เพื่อประหยัดเวลาและ memory",
         "strength": "เร็วที่สุดในกลุ่ม boosting เหมาะกับข้อมูลขนาดใหญ่",
         "weakness": "อาจ overfit กับ dataset เล็ก",
     },
     "CatBoost": {
-        "simple":   "Gradient Boosting ที่จัดการ categorical features ได้โดยตรง ไม่ต้อง encode เอง",
+        "simple": "Gradient Boosting ที่จัดการ categorical features ได้โดยตรง ไม่ต้อง encode เอง",
         "strength": "ใช้ง่าย ลด data leakage จากการ encode",
         "weakness": "ช้ากว่า LightGBM ใช้ memory มาก",
     },
     "Linear Regression": {
-        "simple":   "หาสูตรเส้นตรงที่ fit ข้อมูลได้ดีที่สุด  y = w₁×x₁ + w₂×x₂ + ... + c",
+        "simple": "หาสูตรเส้นตรงที่ fit ข้อมูลได้ดีที่สุด  y = w₁×x₁ + w₂×x₂ + ... + c",
         "strength": "ตีความง่ายที่สุด เร็วมาก เห็น coefficient ของแต่ละ feature ทันที",
         "weakness": "จับ pattern โค้งหรือซับซ้อนไม่ได้",
     },
     "SVM": {
-        "simple":   "หาเส้นตรง (hyperplane) ที่แบ่ง class ออกจากกัน train ด้วย SGD ทำให้เร็วมากแม้ข้อมูลใหญ่",
+        "simple": "หาเส้นตรง (hyperplane) ที่แบ่ง class ออกจากกัน train ด้วย SGD ทำให้เร็วมากแม้ข้อมูลใหญ่",
         "strength": "เร็วมาก รองรับข้อมูลขนาดใหญ่ได้ดี เหมาะกับ high-dimensional data",
         "weakness": "จับ pattern ที่ไม่เป็นเส้นตรงไม่ได้ ต้องการ feature scaling",
     },
     "kNN": {
-        "simple":   "ทำนายโดยดูจาก k ตัวอย่างที่ใกล้เคียงที่สุด  ถ้าเพื่อนบ้าน k คนส่วนใหญ่เป็น class A ก็ทำนายว่าเป็น class A",
+        "simple": "ทำนายโดยดูจาก k ตัวอย่างที่ใกล้เคียงที่สุด  ถ้าเพื่อนบ้าน k คนส่วนใหญ่เป็น class A ก็ทำนายว่าเป็น class A",
         "strength": "ง่ายมาก ไม่ต้อง train",
         "weakness": "ช้ากับข้อมูลใหญ่ ต้องการ scaling",
     },
     "Naive Bayes": {
-        "simple":   "คำนวณความน่าจะเป็นว่าข้อมูลนี้อยู่ใน class ไหน โดยสมมติว่าแต่ละ feature กระจายแบบ Normal และไม่ขึ้นต่อกัน",
+        "simple": "คำนวณความน่าจะเป็นว่าข้อมูลนี้อยู่ใน class ไหน โดยสมมติว่าแต่ละ feature กระจายแบบ Normal และไม่ขึ้นต่อกัน",
         "strength": "เร็วมากที่สุด เหมาะเป็น baseline สำหรับข้อมูลตัวเลขที่กระจายใกล้เคียง Normal",
         "weakness": "สมมติว่า feature อิสระกัน ซึ่งมักไม่จริงในทางปฏิบัติ ทำให้แม่นยำน้อยลงกับข้อมูลที่มี feature สัมพันธ์กัน",
     },

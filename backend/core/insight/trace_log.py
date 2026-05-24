@@ -7,7 +7,7 @@ import os
 from backend.core.session.session_manager import trace_log_path
 
 
-LOG_KEY     = "trace_log"
+LOG_KEY = "trace_log"
 ACTIONS_KEY = "cleaning_actions"
 
 # บันทึก trace_log และ cleaning_actions ลงดิสก์ (JSON) ใช้หลังทุก append/clear
@@ -62,7 +62,7 @@ def get_log() -> list[dict]:
 
 # ล้าง trace_log และ cleaning_actions ทั้งหมด เรียกเมื่อ upload ไฟล์ใหม่
 def clear():
-    st.session_state[LOG_KEY]     = []
+    st.session_state[LOG_KEY] = []
     st.session_state[ACTIONS_KEY] = []
     persist_log()
 
@@ -78,8 +78,8 @@ def remove_steps_from(step_names: list[str]):
 def log_upload(df, file_name: str, target_col: str, task_hint: str,
                target_reasons: list = None):
     n_numeric = df.select_dtypes(include="number").shape[1]
-    n_categ   = df.select_dtypes(include=["object", "category"]).shape[1]
-    n_miss    = int(df.isnull().sum().sum())
+    n_categ = df.select_dtypes(include=["object", "category"]).shape[1]
+    n_miss = int(df.isnull().sum().sum())
 
     items = [
         f"ไฟล์: {file_name}",
@@ -152,11 +152,11 @@ def track_cleaning_bulk(action_type: str, cols: list, detail: str, explanation: 
 
 # commit cleaning actions เป็น trace step "Data Cleaning" พร้อม diff สรุปและ explanation ใช้ใน cleaning_page
 def commit_cleaning(df_before, df_after):
-    actions   = st.session_state.get(ACTIONS_KEY, [])
+    actions = st.session_state.get(ACTIONS_KEY, [])
     row_delta = df_after.shape[0] - df_before.shape[0]
     col_delta = df_after.shape[1] - df_before.shape[1]
     miss_before = int(df_before.isnull().sum().sum())
-    miss_after  = int(df_after.isnull().sum().sum())
+    miss_after = int(df_after.isnull().sum().sum())
 
     items = [
         f"จำนวนแถว: ก่อน {df_before.shape[0]:,} หลัง {df_after.shape[0]:,}  ({row_delta:+,})",
@@ -165,8 +165,8 @@ def commit_cleaning(df_before, df_after):
     ]
 
     label_map = {
-        "missing":  "วิธีจัดการข้อมูลขาดหาย",
-        "outlier":  "วิธีจัดการค่าผิดปกติ",
+        "missing": "วิธีจัดการข้อมูลขาดหาย",
+        "outlier": "วิธีจัดการค่าผิดปกติ",
         "drop_col": "คอลัมน์ที่ลบออก",
         "drop_dup": "แถวซ้ำที่ลบออก",
     }
@@ -249,10 +249,10 @@ SCALING_REASONS = {
 
 ENCODING_REASONS = {
     "onehot": "มีค่าไม่กี่แบบ จึงสร้างคอลัมน์ใหม่แทนแต่ละค่า เพื่อไม่ให้โมเดลเข้าใจว่ามีลำดับ",
-    "label":  "มีค่าหลายแบบเกินไป จึงแปลงเป็นตัวเลข 0, 1, 2, ... แทน",
+    "label": "มีค่าหลายแบบเกินไป จึงแปลงเป็นตัวเลข 0, 1, 2, ... แทน",
     "ordinal": "ข้อมูลมีลำดับชัดเจน (เช่น ต่ำ < กลาง < สูง) จึงแปลงเป็นตัวเลขตามลำดับ",
-    "drop":   "ไม่เหมาะจะนำมาสร้างโมเดล เช่น รหัสหรือข้อความอิสระ",
-    "skip":   "เป็นตัวเลขอยู่แล้ว ไม่ต้องแปลง",
+    "drop": "ไม่เหมาะจะนำมาสร้างโมเดล เช่น รหัสหรือข้อความอิสระ",
+    "skip": "เป็นตัวเลขอยู่แล้ว ไม่ต้องแปลง",
 }
 
 
@@ -316,8 +316,8 @@ def log_transformation(summary: dict, enc_decisions: dict, scaling_method: str, 
 
 # บันทึก trace step "Model Process" (leaderboard/metrics/explanation) ใช้ใน model_process_page
 def log_model_process(result: dict, metrics: dict):
-    task_type   = result["task_type"]
-    best_label  = result["best_label"]
+    task_type = result["task_type"]
+    best_label = result["best_label"]
     competition = result["competition"]
 
     ranked = sorted(
@@ -373,7 +373,7 @@ def log_model_process(result: dict, metrics: dict):
     # แปลผลคะแนน
     if task_type == "classification":
         acc = metrics.get("Accuracy")
-        f1  = metrics.get("F1(Mac)")
+        f1 = metrics.get("F1(Mac)")
         if isinstance(acc, (int, float)) and isinstance(f1, (int, float)):
             if acc > 0.9:
                 explanations.append(f"ผลทดสอบ: Accuracy = {acc:.4f} อยู่ในเกณฑ์ดีมาก ทำนายถูกมากกว่า 90%")

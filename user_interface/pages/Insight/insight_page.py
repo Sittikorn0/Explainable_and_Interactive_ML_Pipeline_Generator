@@ -77,10 +77,10 @@ def render_insight():
                     missing_rules=st.session_state.get("missing_rules"),
                     outlier_rules=st.session_state.get("outlier_rules"),
                 )
-                st.session_state["_xai_model"]    = fitted_model
-                st.session_state["_xai_X_train"]  = X_train
-                st.session_state["_xai_X_test"]   = X_test
-                st.session_state["_xai_y_test"]   = y_test
+                st.session_state["_xai_model"] = fitted_model
+                st.session_state["_xai_X_train"] = X_train
+                st.session_state["_xai_X_test"] = X_test
+                st.session_state["_xai_y_test"] = y_test
                 st.session_state["_xai_cache_id"] = caching_key
                 for session_key in list(st.session_state.keys()):
                     if session_key.startswith("_xai_perm_"):
@@ -91,7 +91,7 @@ def render_insight():
                 st.code(traceback.format_exc())
                 return
 
-    fitted_model  = st.session_state["_xai_model"]
+    fitted_model = st.session_state["_xai_model"]
     X_test = st.session_state["_xai_X_test"]
     y_test = st.session_state["_xai_y_test"]
 

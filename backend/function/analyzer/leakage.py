@@ -19,8 +19,8 @@ def mutual_info_score(col_vals: np.ndarray, y_vals: np.ndarray,
             )[0]
         # normalize: MI / H(y)  clamp 0..1
         y_series = pd.Series(y_vals)
-        counts   = y_series.value_counts(normalize=True)
-        h_y      = float(-(counts * np.log(counts + 1e-12)).sum())
+        counts = y_series.value_counts(normalize=True)
+        h_y = float(-(counts * np.log(counts + 1e-12)).sum())
         return float(np.clip(mi / (h_y + 1e-12), 0, 1))
     except Exception:
         return 0.0
@@ -28,7 +28,7 @@ def mutual_info_score(col_vals: np.ndarray, y_vals: np.ndarray,
 # ตรวจหา column ที่อาจทำให้เกิด Data Leakage (Pearson/Spearman/MI/Bijective) คืน list[dict] ใช้ใน analyze_all
 def analyze_leakage(df: pd.DataFrame, target_col: str) -> list[dict]:
     results: list[dict] = []
-    y        = df[target_col]
+    y = df[target_col]
     is_classif = not pd.api.types.is_numeric_dtype(y) or y.nunique() <= 20
     seen: set[str] = set()
 
@@ -38,7 +38,7 @@ def analyze_leakage(df: pd.DataFrame, target_col: str) -> list[dict]:
 
         reasons:  list[str] = []
         scores:   list[float] = [] # เก็บค่าคะแนนต่างๆ เพื่อประเมิน severity
-        severity  = "low"
+        severity = "low"
 
         # 0. Identity Check
         if df[col].astype(str).equals(y.astype(str)):
@@ -97,7 +97,7 @@ def analyze_leakage(df: pd.DataFrame, target_col: str) -> list[dict]:
                     severity = "medium"
 
         # 4. Name Similarity
-        col_c    = col.lower().replace("_", "").replace("-", "")
+        col_c = col.lower().replace("_", "").replace("-", "")
         target_c = target_col.lower().replace("_", "").replace("-", "")
         if (col_c in target_c or target_c in col_c) and col_c != target_col.lower():
             if severity == "low":

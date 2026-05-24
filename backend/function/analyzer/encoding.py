@@ -48,26 +48,26 @@ def analyze_encoding(dataset: pd.DataFrame, target_column: str) -> list[dict]:
         is_ordinal = _looks_ordinal(all_unique_values)
 
         facts = {
-            "cardinality":       num_unique_values,
+            "cardinality": num_unique_values,
             "cardinality_ratio": unique_to_row_ratio,
-            "looks_ordinal":     is_ordinal,
+            "looks_ordinal": is_ordinal,
         }
         rule_result = suggest("encoding", facts)
 
         _enc_action_map = {
-            "one_hot_encoding":  "one_hot_encoding",
-            "label_encoding":    "label_encoding",
-            "ordinal_encoding":  "ordinal_encoding",
-            "drop_column":       "drop_column",
+            "one_hot_encoding": "one_hot_encoding",
+            "label_encoding": "label_encoding",
+            "ordinal_encoding": "ordinal_encoding",
+            "drop_column": "drop_column",
         }
         if rule_result:
             recommended_method = _enc_action_map.get(rule_result["action"], "label_encoding")
-            reason      = rule_result["explanation"]
-            rule_id     = rule_result["rule_id"]
+            reason = rule_result["explanation"]
+            rule_id = rule_result["rule_id"]
         else:
             recommended_method = "label_encoding"
-            reason      = f"มี {num_unique_values} categories  ใช้ Label Encoding เป็น default"
-            rule_id     = "ENC_FALLBACK"
+            reason = f"มี {num_unique_values} categories  ใช้ Label Encoding เป็น default"
+            rule_id = "ENC_FALLBACK"
 
         warning_message = None
         if recommended_method == "drop_column":
@@ -78,13 +78,13 @@ def analyze_encoding(dataset: pd.DataFrame, target_column: str) -> list[dict]:
             warning_message = f"ข้อควรระวัง: High cardinality มีถึง {num_unique_values} ค่าที่ไม่ซ้ำกัน"
 
         analysis_results.append({
-            "col":         column_name,
+            "col": column_name,
             "cardinality": num_unique_values,
             "recommended": recommended_method,
-            "options":     ["one_hot_encoding", "label_encoding", "ordinal_encoding", "drop_column"],
-            "reason":      reason,
-            "rule_id":     rule_id,
-            "warning":     warning_message,
+            "options": ["one_hot_encoding", "label_encoding", "ordinal_encoding", "drop_column"],
+            "reason": reason,
+            "rule_id": rule_id,
+            "warning": warning_message,
             "sample_values": list(dataset[column_name].dropna().unique()[:5]),
         })
 

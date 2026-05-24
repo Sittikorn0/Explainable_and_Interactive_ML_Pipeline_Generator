@@ -93,7 +93,7 @@ def render_summary(working_dataframe: pd.DataFrame, original_dataframe: pd.DataF
         summary_dataframe = pd.DataFrame({
             "Metric": ["Rows", "Columns", "Missing Values", "Duplicates", "Outliers"],
             "Before": [before_state['rows'], before_state['cols'], before_state['missing'], before_state['dups'], before_state['outliers']],
-            "After":  [after_state['rows'], after_state['cols'], after_state['missing'], after_state['dups'], after_state['outliers']],
+            "After": [after_state['rows'], after_state['cols'], after_state['missing'], after_state['dups'], after_state['outliers']],
             "Changed": changed_values,
         })
     else:

@@ -32,10 +32,10 @@ def analyze_feature_selection(dataset: pd.DataFrame, target_column: str) -> dict
                 rule_result = suggest("feature_selection", {"corr_value": corr_value})
                 if rule_result and rule_result["action"] == "drop_high_correlation":
                     columns_to_drop_corr.append({
-                        "col_a":   column_a,
-                        "col_b":   column_b,
-                        "corr":    round(corr_value, 3),
-                        "drop":    column_b,
+                        "col_a": column_a,
+                        "col_b": column_b,
+                        "corr": round(corr_value, 3),
+                        "drop": column_b,
                         "rule_id": rule_result["rule_id"],
                     })
                     corr_rule_id = rule_result["rule_id"]
@@ -50,15 +50,15 @@ def analyze_feature_selection(dataset: pd.DataFrame, target_column: str) -> dict
         rule_result = suggest("feature_selection", {"cv_abs": cv_abs})
         if rule_result and rule_result["action"] == "drop_low_variance":
             columns_to_drop_var.append({
-                "col":     column_name,
-                "std":     round(float(feature_series.std()), 6),
-                "cv":      round(float(coefficient_of_variation), 6),
+                "col": column_name,
+                "std": round(float(feature_series.std()), 6),
+                "cv": round(float(coefficient_of_variation), 6),
                 "rule_id": rule_result["rule_id"],
             })
             var_rule_id = rule_result["rule_id"]
 
     corr_rule = suggest("feature_selection", {"corr_value": 1.0})
-    var_rule  = suggest("feature_selection", {"cv_abs": 0.0})
+    var_rule = suggest("feature_selection", {"cv_abs": 0.0})
 
     reason_for_corr_drop = corr_rule["explanation"] if corr_rule else (
         "คอลัมน์ที่มี Correlation สูงถือว่ามีข้อมูลซ้ำซ้อนกัน (Multicollinearity)"
@@ -69,9 +69,9 @@ def analyze_feature_selection(dataset: pd.DataFrame, target_column: str) -> dict
 
     return {
         "drop_high_corr": columns_to_drop_corr,
-        "drop_low_var":   columns_to_drop_var,
-        "reason_corr":    reason_for_corr_drop,
-        "reason_var":     reason_for_var_drop,
-        "corr_rule_id":   corr_rule_id,
-        "var_rule_id":    var_rule_id,
+        "drop_low_var": columns_to_drop_var,
+        "reason_corr": reason_for_corr_drop,
+        "reason_var": reason_for_var_drop,
+        "corr_rule_id": corr_rule_id,
+        "var_rule_id": var_rule_id,
     }

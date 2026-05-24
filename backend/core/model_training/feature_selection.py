@@ -86,7 +86,7 @@ def render_ml_feature_selection(dataframe: pd.DataFrame, target_column: str,
     st.markdown('<div class="section-header">FEATURE SELECTION</div>', unsafe_allow_html=True)
 
     drop_high_correlation = feature_selection_analysis["drop_high_corr"]
-    drop_low_variance   = feature_selection_analysis["drop_low_var"]
+    drop_low_variance = feature_selection_analysis["drop_low_var"]
 
     if not drop_high_correlation and not drop_low_variance:
         st.markdown("**[ OK ]** ไม่พบ features ที่ควรตัดออก")
@@ -115,7 +115,7 @@ def render_ml_feature_selection(dataframe: pd.DataFrame, target_column: str,
                     if column != target_column and pd.api.types.is_numeric_dtype(dataframe[column])]
         if len(numeric_columns) >= 2:
             correlation_matrix = dataframe[numeric_columns].corr()
-            figure  = px.imshow(correlation_matrix, text_auto=".2f", color_continuous_scale="RdBu_r",
+            figure = px.imshow(correlation_matrix, text_auto=".2f", color_continuous_scale="RdBu_r",
                              range_color=[-1, 1], aspect="auto")
             figure.update_layout(template="plotly_dark", height=320, margin=dict(t=10, b=10, l=10, r=10),
                                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")

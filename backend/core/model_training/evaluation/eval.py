@@ -21,16 +21,16 @@ def get_metrics(actual_values, predicted_values, task_type: str) -> dict:
         # หมายเหตุ: weighted recall = accuracy เสมอ (ทางคณิตศาสตร์)
         #           จึงใช้ macro เพื่อให้ค่าทั้ง 4 แสดงผลที่แตกต่างและมีความหมาย
         return {
-            "Accuracy":       round(accuracy_score(actual_values, predicted_values), 4),
+            "Accuracy": round(accuracy_score(actual_values, predicted_values), 4),
             "Precision(Mac)": round(precision_score(actual_values, predicted_values, average="macro", zero_division=0), 4),
-            "Recall(Mac)":    round(recall_score(actual_values, predicted_values, average="macro", zero_division=0), 4),
-            "F1(Mac)":        round(f1_score(actual_values, predicted_values, average="macro", zero_division=0), 4),
+            "Recall(Mac)": round(recall_score(actual_values, predicted_values, average="macro", zero_division=0), 4),
+            "F1(Mac)": round(f1_score(actual_values, predicted_values, average="macro", zero_division=0), 4),
         }
         
     mse_score = mean_squared_error(actual_values, predicted_values)
     return {
-        "MSE":      round(mse_score, 4),
-        "RMSE":     round(float(np.sqrt(mse_score)), 4),
+        "MSE": round(mse_score, 4),
+        "RMSE": round(float(np.sqrt(mse_score)), 4),
         "R² Score": round(r2_score(actual_values, predicted_values), 4),
     }
 

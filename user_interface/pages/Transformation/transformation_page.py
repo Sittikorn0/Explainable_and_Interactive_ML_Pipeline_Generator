@@ -31,7 +31,7 @@ def render_transformation():
         return
     
     is_cleaned = st.session_state.get("cleaning_confirmed", False)
-    dataframe        = st.session_state["working_df"] if is_cleaned and "working_df" in st.session_state else st.session_state["main_df"]
+    dataframe = st.session_state["working_df"] if is_cleaned and "working_df" in st.session_state else st.session_state["main_df"]
     file_name = st.session_state.get("last_uploaded_file", "Unknown File")
 
     st.info(
@@ -51,7 +51,7 @@ def render_transformation():
     # Target Column
     columns_list = dataframe.columns.tolist()
     saved_target = st.session_state.get("target_col", columns_list[-1])
-    target_column   = saved_target if saved_target in columns_list else columns_list[-1]
+    target_column = saved_target if saved_target in columns_list else columns_list[-1]
     
     st.metric("TARGET COLUMN", target_column)
 
@@ -61,23 +61,23 @@ def render_transformation():
     if st.session_state.get("_trans_cache_key") != cache_key:
         with st.spinner("วิเคราะห์ข้อมูล..."):
             analysis_result = analyze_all(dataframe, target_column)
-        st.session_state["_trans_analysis"]  = analysis_result
+        st.session_state["_trans_analysis"] = analysis_result
         st.session_state["_trans_cache_key"] = cache_key
     else:
         analysis_result = st.session_state["_trans_analysis"]
 
     encoding_analysis = analysis_result["encoding"]
-    scaling_analysis  = analysis_result["scaling"]
-    leakage_analysis  = analysis_result.get("leakage", [])
+    scaling_analysis = analysis_result["scaling"]
+    leakage_analysis = analysis_result.get("leakage", [])
     feature_selection_analysis = analysis_result["feature_selection"]
 
     # Render sections
-    encoding_decisions  = render_ml_encoding(dataframe, target_column, encoding_analysis)
+    encoding_decisions = render_ml_encoding(dataframe, target_column, encoding_analysis)
     chosen_scaling_method = render_ml_scaling(dataframe, target_column, scaling_analysis)
-    leakage_drops_list  = render_leakage_check(leakage_analysis)
+    leakage_drops_list = render_leakage_check(leakage_analysis)
     
     # เรียงลำดับเพื่อให้การเปรียบเทียบใน Choice Tracker เสถียร (ป้องกันลำดับสลับไปมาใน set)
-    dropped_columns      = sorted(list(set(render_ml_feature_selection(dataframe, target_column, feature_selection_analysis) + leakage_drops_list)))
+    dropped_columns = sorted(list(set(render_ml_feature_selection(dataframe, target_column, feature_selection_analysis) + leakage_drops_list)))
 
     st.markdown("---")
     
@@ -96,10 +96,10 @@ def render_transformation():
                 # [Force Update] มั่นใจว่า summary เก็บค่าที่เราเลือกจริงๆ
                 transformation_summary["scaling_method"] = final_scaling_method
                 
-                st.session_state["transformed_df"]      = transformed_dataframe
+                st.session_state["transformed_df"] = transformed_dataframe
                 st.session_state["_trans_target_saved"] = target_column
-                st.session_state["trans_summary"]       = transformation_summary
-                st.session_state["trans_confirmed"]     = True
+                st.session_state["trans_summary"] = transformation_summary
+                st.session_state["trans_confirmed"] = True
                 
                 # [Persistence] Save data and metadata immediately
                 save_transformed_df(transformed_dataframe)
@@ -129,7 +129,7 @@ def render_transformation():
     # แสดง summary ถ้า apply แล้ว
     if st.session_state.get("trans_confirmed"):
         transformed_dataframe = st.session_state["transformed_df"]
-        transformation_summary        = st.session_state["trans_summary"]
+        transformation_summary = st.session_state["trans_summary"]
         render_summary_view(dataframe, transformed_dataframe, transformation_summary, target_column)
 
     # Navigation

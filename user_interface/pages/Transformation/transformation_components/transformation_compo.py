@@ -126,21 +126,21 @@ def apply_all(dataset: pd.DataFrame, encoding_decisions: dict, scaling_method: s
             col = info.get("col")
             if col and col in encoding_decisions:
                 enc_rule_refs[col] = {
-                    "rule_id":    info.get("rule_id", ""),
+                    "rule_id": info.get("rule_id", ""),
                 }
 
     transformation_summary = {
-        "original_rows":      dataset.shape[0],
-        "original_cols":      dataset.shape[1],
-        "dropped_cols":       len(all_drops),
-        "encoded_cols":       len(encoding_decisions),
-        "final_cols":         transformed_dataset.shape[1],
-        "scaling_method":     scaling_method,
-        "task_type":          task_type,
+        "original_rows": dataset.shape[0],
+        "original_cols": dataset.shape[1],
+        "dropped_cols": len(all_drops),
+        "encoded_cols": len(encoding_decisions),
+        "final_cols": transformed_dataset.shape[1],
+        "scaling_method": scaling_method,
+        "task_type": task_type,
         "encoding_decisions": encoding_decisions,
         # ── rule engine metadata ──
-        "scaling_rule_id":    scaling_analysis.get("rule_id", "")    if scaling_analysis else "",
-        "enc_rule_refs":      enc_rule_refs,
+        "scaling_rule_id": scaling_analysis.get("rule_id", "")    if scaling_analysis else "",
+        "enc_rule_refs": enc_rule_refs,
     }
 
     return transformed_dataset, transformation_summary

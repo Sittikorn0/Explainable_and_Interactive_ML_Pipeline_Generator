@@ -13,10 +13,10 @@ def leaderboard_html(competition: dict, best_label: str) -> str:
     rows = ""
     for i, (_, res) in enumerate(ranked):
         is_best = res["label"] == best_label
-        params  = ", ".join(f"{k}={v}" for k, v in res["best_params"].items()) if res["best_params"] else ""
+        params = ", ".join(f"{k}={v}" for k, v in res["best_params"].items()) if res["best_params"] else ""
         rank_cls = "rank-top" if i < 3 else "rank-num"
         best_tag = "<span class='best-tag'>best</span>" if is_best else ""
-        row_cls  = "row-best" if is_best else ""
+        row_cls = "row-best" if is_best else ""
         rows += (
             f'<tr class="{row_cls}">'
             f'<td><span class="{rank_cls}">{i+1}</span></td>'
@@ -76,9 +76,9 @@ def pred_html(y_test, y_pred, task_type: str) -> str:
     n = len(y_test)
 
     if task_type == "classification":
-        correct   = int((y_test == y_pred).sum())
+        correct = int((y_test == y_pred).sum())
         incorrect = n - correct
-        acc       = correct / n * 100
+        acc = correct / n * 100
         summary = (
             f'<div class="stat-row">'
             f'<div class="stat"><span class="stat-val ok">{correct:,}</span><span class="stat-lbl">Correct</span></div>'
@@ -103,7 +103,7 @@ def pred_html(y_test, y_pred, task_type: str) -> str:
             f'</div>'
         )
         header = "<tr><th>#</th><th>Actual</th><th>Predicted</th><th>Error</th><th>Abs Error</th></tr>"
-        body   = "".join(
+        body = "".join(
             f'<tr>'
             f'<td class="row-idx">{i+1}</td>'
             f'<td class="num">{a:.4f}</td><td class="num">{p:.4f}</td>'
@@ -122,12 +122,12 @@ def pred_html(y_test, y_pred, task_type: str) -> str:
     
 # สร้าง HTML report ครบชุด (leaderboard/metrics/fi/predictions) สำหรับ download ใช้ใน model_process_page
 def build_html_report(result: dict, metrics: dict, fi_df=None) -> str:
-    now         = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    task_type   = result["task_type"]
-    best_label  = result["best_label"]
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    task_type = result["task_type"]
+    best_label = result["best_label"]
     best_params = result.get("best_params") or {}
-    n_models    = len(result["competition"])
-    has_fi      = fi_df is not None and not fi_df.empty
+    n_models = len(result["competition"])
+    has_fi = fi_df is not None and not fi_df.empty
 
     # metric cards
     met_cards = "".join(
@@ -147,15 +147,15 @@ def build_html_report(result: dict, metrics: dict, fi_df=None) -> str:
     )
 
     fi_section_html = ""
-    fi_nav          = ""
-    pred_num        = "03"
+    fi_nav = ""
+    pred_num = "03"
     if has_fi:
         fi_section_html = f"""
       <section id="fi">
         <div class="sec-hd"><span class="sec-num">03</span><div><div class="sec-title">Feature Importance</div><div class="sec-sub">feature ที่มีผลต่อการตัดสินใจของ model มากที่สุด</div></div></div>
         {fi_html(fi_df)}
       </section>"""
-        fi_nav   = '<a href="#fi"><span class="nav-num">03</span>Feature Importance</a>'
+        fi_nav = '<a href="#fi"><span class="nav-num">03</span>Feature Importance</a>'
         pred_num = "04"
 
     # summary strip values

@@ -326,7 +326,7 @@ def generate_and_save_report(report_path, dataset_path, df_raw, target_column, t
     }
     _scaling_label = _scaling_label_map.get(scaling_method, scaling_method)
     if encoding_decisions:
-        _le_cols  = [c for c, m in encoding_decisions.items() if m == "label_encoding"]
+        _le_cols = [c for c, m in encoding_decisions.items() if m == "label_encoding"]
         _ohe_cols = [c for c, m in encoding_decisions.items() if m == "one_hot_encoding"]
         _drop_cols = [c for c, m in encoding_decisions.items() if m == "drop_column"]
         _enc_parts = []
@@ -484,7 +484,7 @@ def main():
     else:
         our_cols = transformed_cols if (has_session_config and transformed_cols) else list(X_train_raw.columns)
         X_train_our = X_train_raw[our_cols].copy()
-        X_test_our  = X_test_raw[our_cols].copy()
+        X_test_our = X_test_raw[our_cols].copy()
         y_train_our, y_test_our = y_train_raw, y_test_raw
         print("[INFO] ไม่พบ transformed_df — fallback ใช้ raw split")
 
