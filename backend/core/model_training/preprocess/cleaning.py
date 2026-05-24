@@ -21,9 +21,10 @@ def clean_fit_transform(features_train: pd.DataFrame, features_test: pd.DataFram
             if strategy == "mean":
                 fill_values_dict[column_name] = features_train[column_name].mean()
             elif strategy == "median":
-                fill_values_dict[column_name] = features_train[column_name].median()
-            elif strategy == "median (rounded)":
-                fill_values_dict[column_name] = round(features_train[column_name].median())
+                median_val = features_train[column_name].median()
+                if features_train[column_name].dropna().mod(1).eq(0).all():
+                    median_val = round(median_val)
+                fill_values_dict[column_name] = median_val
             elif strategy == "most frequent":
                 modes = features_train[column_name].mode()
                 fill_values_dict[column_name] = modes.iloc[0] if not modes.empty else 0

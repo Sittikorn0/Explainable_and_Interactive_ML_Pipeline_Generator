@@ -4,7 +4,6 @@ from backend.core.cleaning.data_distribution import data_distribution
 MISSING_STRATEGY_INFO = {
     "mean": "แทนด้วยค่าเฉลี่ย (Mean) เหมาะกับข้อมูลตัวเลขที่กระจายตัวปกติ",
     "median": "แทนด้วยค่ากลาง (Median) เหมาะกับข้อมูลที่เบ้หรือมีค่าผิดปกติ",
-    "median (rounded)": "แทนด้วยค่ากลางแบบปัดเศษ เหมาะกับข้อมูลจำนวนเต็ม",
     "most frequent": "แทนด้วยฐานนิยม (Mode) เหมาะกับข้อมูลหมวดหมู่ (Categorical)",
     "forward fill": "ดึงค่าก่อนหน้ามาเติม (Forward Fill) เหมาะกับข้อมูลอนุกรมเวลา",
     "backward fill": "ดึงค่าถัดไปมาเติม (Backward Fill) เหมาะกับข้อมูลอนุกรมเวลา",
@@ -31,9 +30,10 @@ def use_missing_strategy(dataset: pd.DataFrame, column_name: str, missing_strate
     if missing_strategy == "mean":
         dataset[column_name] = dataset[column_name].fillna(dataset[column_name].mean())
     elif missing_strategy == "median":
-        dataset[column_name] = dataset[column_name].fillna(dataset[column_name].median())
-    elif missing_strategy == "median (rounded)":
-        dataset[column_name] = dataset[column_name].fillna(round(dataset[column_name].median()))
+        median_val = dataset[column_name].median()
+        if dataset[column_name].dropna().mod(1).eq(0).all():
+            median_val = round(median_val)
+        dataset[column_name] = dataset[column_name].fillna(median_val)
     elif missing_strategy == "most frequent":
         frequent_values = dataset[column_name].mode()
         if len(frequent_values) > 0:

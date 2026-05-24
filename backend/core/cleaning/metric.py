@@ -51,7 +51,7 @@ def _suggest_missing_strategy(df: pd.DataFrame, col: str, missing_count: int) ->
     action_map = {
         "no_action": None,
         "drop_column": "drop rows",
-        "median_impute": "median (rounded)" if col_dtype == "int" else "median",
+        "median_impute": "median",
         "mean_impute": "mean",
         "mode_impute": "most frequent",
     }
@@ -168,7 +168,7 @@ def determine_missing_compatible(column_type: str) -> list:
     if column_type == "float":
         return ["mean", "median", "forward fill", "backward fill", "drop rows"]
     elif column_type == "int":
-        return ["median (rounded)", "most frequent", "forward fill", "backward fill", "drop rows"]
+        return ["median", "most frequent", "forward fill", "backward fill", "drop rows"]
     elif column_type == "datetime":
         return ["forward fill", "backward fill", "drop rows"]
     else:
@@ -210,7 +210,7 @@ def render_missing_values(working_dataframe: pd.DataFrame, missing_columns_dict:
     with global_strategy_col:
         global_missing_strategy = st.selectbox(
             "Global Strategy",
-            ["mean", "median", "median (rounded)", "most frequent", "forward fill", "backward fill", "drop rows"],
+            ["mean", "median", "most frequent", "forward fill", "backward fill", "drop rows"],
             key="miss_global_strategy",
             label_visibility="collapsed",
         )
