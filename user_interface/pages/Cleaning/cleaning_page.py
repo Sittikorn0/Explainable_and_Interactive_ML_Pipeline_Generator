@@ -8,7 +8,7 @@ from main import navigate
 from backend.core.cleaning.data_distribution import *
 from backend.core.cleaning.statistic import *
 from backend.core.cleaning.main_logic import *
-from backend.core.session.state import load_outlier_bounds, save_outlier_bounds, save_cleaned_data
+from backend.core.session.state import load_outlier_bounds, save_outlier_bounds, save_cleaned_data, load_raw_data
 from backend.core.session.pipeline_state import commit_step
 from backend.core.cleaning.metric import *
 
@@ -44,12 +44,18 @@ def handle_confirm(df: pd.DataFrame, working_df: pd.DataFrame,
     st.rerun()
 
 def handle_reset(df: pd.DataFrame) -> None:
-    """Reset working_df กลับเป็น main_df ต้นฉบับ"""
-    st.session_state["working_df"]        = df.copy()
-    st.session_state["cleaning_confirmed"] = False
-    for key in ["treated_outlier_cols", "cleaning_summary_snapshot", "original_outlier_bounds"]:
+    """Reset working_df กลับเป็นข้อมูลดิบก่อน cleaning"""
+    raw_df = load_raw_data()
+    reset_source = raw_df if raw_df is not None else df
+    st.session_state["working_df"]             = reset_source.copy()
+    st.session_state["working_df_source_shape"] = reset_source.shape
+    st.session_state["main_df"]                = reset_source.copy()
+    st.session_state["cleaning_confirmed"]      = False
+    for key in ["treated_outlier_cols", "cleaning_summary_snapshot",
+                "original_outlier_bounds", "original_outlier_count",
+                "original_dup_count"]:
         st.session_state.pop(key, None)
-    st.info("Reset ข้อมูลเรียบร้อย")
+    st.info("Reset ข้อมูลเรียบร้อย — กลับเป็นข้อมูลดิบก่อน cleaning")
     st.rerun()
 
 # Render Page

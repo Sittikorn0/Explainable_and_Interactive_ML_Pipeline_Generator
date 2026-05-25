@@ -184,40 +184,52 @@ def commit_cleaning(df_before, df_after):
 
     for a in by_type.get("missing", []):
         if a.get("explanation"):
-            explanations.append(f"[{a['col']}] {a['explanation']}")
+            explanations.append(f"ทำไม [{a['col']}] ถึงต้องจัดการข้อมูลขาดหาย?")
+            explanations.append(f"  → {a['explanation']}")
         else:
             d = a["detail"].lower()
             if "median" in d:
-                explanations.append(f"ทำไมเติมค่ากลาง (Median) ให้ '{a['col']}'? เพราะค่ากลางไม่ถูกดึงไปตามค่าที่สูงหรือต่ำผิดปกติ")
+                explanations.append(f"ทำไมเติมค่ากลาง (Median) ให้ [{a['col']}]?")
+                explanations.append("  → ค่ากลางไม่ถูกดึงไปตามค่าที่สูงหรือต่ำผิดปกติ จึงเป็นตัวแทนที่ดีกว่าค่าเฉลี่ย")
             elif "mean" in d:
-                explanations.append(f"ทำไมเติมค่าเฉลี่ย (Mean) ให้ '{a['col']}'? เพราะข้อมูลกระจายตัวสม่ำเสมอ ค่าเฉลี่ยจึงเป็นตัวแทนที่ดี")
+                explanations.append(f"ทำไมเติมค่าเฉลี่ย (Mean) ให้ [{a['col']}]?")
+                explanations.append("  → ข้อมูลกระจายตัวสม่ำเสมอ ค่าเฉลี่ยจึงเป็นตัวแทนที่ดี")
             elif "mode" in d or "frequent" in d:
-                explanations.append(f"ทำไมเติมค่าที่พบบ่อยสุด (Mode) ให้ '{a['col']}'? เพราะเป็นข้อมูลข้อความ ใช้ค่าเฉลี่ยไม่ได้")
+                explanations.append(f"ทำไมเติมค่าที่พบบ่อยสุด (Mode) ให้ [{a['col']}]?")
+                explanations.append("  → เป็นข้อมูลข้อความ ใช้ค่าเฉลี่ยไม่ได้ Mode จึงเหมาะที่สุด")
             elif "drop" in d:
-                explanations.append(f"ทำไมลบแถวที่ข้อมูลขาดหายของ '{a['col']}'? เพราะมีจำนวนน้อย ลบออกแล้วไม่กระทบภาพรวม")
+                explanations.append(f"ทำไมลบแถวที่ข้อมูลขาดหายของ [{a['col']}]?")
+                explanations.append("  → มีจำนวนน้อย ลบออกแล้วไม่กระทบภาพรวม")
 
     for a in by_type.get("outlier", []):
         if a.get("explanation"):
-            explanations.append(f"[{a['col']}] {a['explanation']}")
+            explanations.append(f"ทำไม [{a['col']}] ถึงต้องจัดการค่าผิดปกติ?")
+            explanations.append(f"  → {a['explanation']}")
         else:
             d = a["detail"].lower()
             if "clip" in d:
-                explanations.append(f"ทำไมตัดค่าผิดปกติของ '{a['col']}' ให้อยู่ในขอบเขต? เพราะค่าที่สูงหรือต่ำเกินไปจะทำให้โมเดลสับสน")
+                explanations.append(f"ทำไมตัดค่าผิดปกติของ [{a['col']}] ให้อยู่ในขอบเขต?")
+                explanations.append("  → ค่าที่สูงหรือต่ำเกินไปจะทำให้โมเดลสับสน Clipping บีบค่าที่เกินขอบเขตให้อยู่ในเกณฑ์ รักษาจำนวนแถวไว้ครบ")
             elif "drop" in d or "remove" in d:
-                explanations.append(f"ทำไมลบค่าผิดปกติของ '{a['col']}'? เพราะค่านั้นอาจเกิดจากความผิดพลาดในการบันทึก")
+                explanations.append(f"ทำไมลบค่าผิดปกติของ [{a['col']}]?")
+                explanations.append("  → ค่านั้นอาจเกิดจากความผิดพลาดในการบันทึก การลบออกทำให้โมเดลเรียนรู้จากข้อมูลจริงได้ดีขึ้น")
 
     if "drop_dup" in by_type:
-        explanations.append("ทำไมลบแถวที่ซ้ำกัน? เพราะข้อมูลซ้ำทำให้โมเดลให้ความสำคัญกับข้อมูลนั้นมากเกินจริง อาจทำให้ผลไม่แม่นยำ")
+        explanations.append("ทำไมลบแถวที่ซ้ำกัน?")
+        explanations.append("  → ข้อมูลซ้ำทำให้โมเดลให้ความสำคัญกับข้อมูลนั้นมากเกินจริง อาจทำให้ผลไม่แม่นยำ")
 
     if by_type.get("drop_col"):
         for a in by_type["drop_col"]:
             if a.get("explanation"):
-                explanations.append(f"[{a['col']}] {a['explanation']}")
+                explanations.append(f"ทำไมลบคอลัมน์ [{a['col']}]?")
+                explanations.append(f"  → {a['explanation']}")
             else:
-                explanations.append(f"ทำไมลบคอลัมน์ '{a['col']}'? เพราะไม่มีข้อมูลที่เป็นประโยชน์ เก็บไว้จะเป็นสัญญาณรบกวนให้โมเดล")
+                explanations.append(f"ทำไมลบคอลัมน์ [{a['col']}]?")
+                explanations.append("  → ไม่มีข้อมูลที่เป็นประโยชน์ เก็บไว้จะเป็นสัญญาณรบกวนให้โมเดล")
 
     if not actions:
-        explanations.append("ไม่ต้องทำความสะอาด เพราะข้อมูลอยู่ในสภาพดีอยู่แล้ว")
+        explanations.append("ทำไมไม่ต้องทำความสะอาด?")
+        explanations.append("  → ข้อมูลอยู่ในสภาพดีอยู่แล้ว ไม่มีค่าขาดหาย ค่าซ้ำ หรือค่าผิดปกติที่ต้องจัดการ")
     else:
         explanations.append("หลักการ: ต้องทำความสะอาดข้อมูลก่อนสร้างโมเดลเสมอ เพราะข้อมูลที่สะอาดจะช่วยให้โมเดลเรียนรู้ได้แม่นยำขึ้น")
 

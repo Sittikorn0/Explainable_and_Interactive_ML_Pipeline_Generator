@@ -8,15 +8,28 @@ import streamlit as st
 # Logic Import
 from backend.core.session.session_manager import (
     local_path, metadata_path, cleaned_csv_path, target_path,
-    ml_cache_path, ml_meta_path, ensure_cache_dir, transformed_path
+    ml_cache_path, ml_meta_path, ensure_cache_dir, transformed_path, raw_path
 )
 from backend.function.data_loader.file_reader import sanitize_for_parquet
 
 # Functions
 def save_to_local(dataset: pd.DataFrame, filename: str) -> None:
     sanitize_for_parquet(dataset).to_parquet(local_path(), index=False)
+    # เก็บ raw copy ไว้สำหรับ rollback กลับมา Cleaning
+    sanitize_for_parquet(dataset).to_parquet(raw_path(), index=False)
     with open(metadata_path(), "w", encoding="utf-8") as file:
         file.write(filename)
+
+def load_raw_data() -> pd.DataFrame | None:
+    """โหลดข้อมูลดิบก่อน cleaning (สำหรับ rollback / reset)"""
+    path = raw_path()
+    if not os.path.exists(path):
+        return None
+    try:
+        return pd.read_parquet(path)
+    except Exception as error:
+        print(f"load_raw_data error: {error}")
+        return None
 
 def load_from_local() -> tuple[pd.DataFrame | None, str | None]:
     cache_file_path = local_path()

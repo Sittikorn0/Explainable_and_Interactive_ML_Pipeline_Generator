@@ -15,7 +15,6 @@ from backend.function.export.df_export import *
 # UI Import
 from main import navigate
 from user_interface.pages.Insight.insight_components.insight_compo import *
-from user_interface.pages.Model_process.model_components.model_compo import render_viz
 
 # Functions
 
@@ -94,30 +93,34 @@ def render_insight():
     X_test = st.session_state["_xai_X_test"]
     y_test = st.session_state["_xai_y_test"]
 
-    tabs_labels = ["Feature Importance", "Data Visualization", "Model Guide", "Pipeline Trace"]
+    tabs_labels = ["Feature Importance", "Leaderboard", "Data Visualization", "Model Guide", "Pipeline Trace"]
     if has_comparison():
         tabs_labels.append("Diff Views")
 
     tabs_objects = st.tabs(tabs_labels)
-    
+
     with tabs_objects[0]:
         st.markdown("<br>", unsafe_allow_html=True)
         render_importance(fitted_model, X_test, y_test, task_type)
 
     with tabs_objects[1]:
         st.markdown("<br>", unsafe_allow_html=True)
-        render_viz(dataframe)
+        render_leaderboard_insight(competition_result)
 
     with tabs_objects[2]:
         st.markdown("<br>", unsafe_allow_html=True)
-        render_guide(best_model_label, task_type, evaluation_metrics)
+        render_viz_insight(dataframe, target_column, task_type)
 
     with tabs_objects[3]:
         st.markdown("<br>", unsafe_allow_html=True)
+        render_guide(best_model_label, task_type, evaluation_metrics)
+
+    with tabs_objects[4]:
+        st.markdown("<br>", unsafe_allow_html=True)
         render_trace()
-        
+
     if has_comparison():
-        with tabs_objects[4]:
+        with tabs_objects[5]:
             st.markdown("<br>", unsafe_allow_html=True)
             render_comparison()
 

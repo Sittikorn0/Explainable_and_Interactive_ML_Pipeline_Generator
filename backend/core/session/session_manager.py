@@ -144,3 +144,8 @@ def trace_log_path() -> str:
 def transformed_path() -> str:
     ensure_cache_dir()
     return cache_path("transformed", "parquet", SUBDIR_TRANSFORMATION)
+
+def raw_path() -> str:
+    """ข้อมูลดิบก่อน cleaning — ใช้คืนค่าเมื่อ rollback มาที่ Cleaning"""
+    ensure_cache_dir()
+    return cache_path("raw", "parquet", SUBDIR_DATASET)

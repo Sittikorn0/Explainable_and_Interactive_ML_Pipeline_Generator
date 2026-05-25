@@ -4,6 +4,7 @@ import streamlit as st
 
 from backend.core.insight.trace_log import *
 from backend.core.session.state import *
+from backend.core.session.state import load_raw_data
 
 STEP_ORDER = ["upload", "cleaning", "eda", "transformation", "model_process", "insight"]
 STEP_LABELS = {
@@ -133,8 +134,16 @@ def rollback_to(step: str):
     if step == "transformation" and "_main_df_backup" in st.session_state:
         st.session_state["main_df"] = st.session_state["_main_df_backup"]
 
-    # ถ้าถอยไปถึง Upload/Cleaning ให้โหลด data ใหม่จาก local เพื่อความชัวร์ (ป้องกัน state ค้าง)
-    if step in ["upload", "cleaning"]:
+    # ถ้าถอยไปถึง Cleaning ให้โหลด raw data (ก่อน cleaning) เพื่อให้ reset ได้จากต้นฉบับ
+    if step == "cleaning":
+        raw_df = load_raw_data()
+        if raw_df is not None:
+            st.session_state["main_df"] = raw_df
+        else:
+            df, _ = load_from_local()
+            if df is not None:
+                st.session_state["main_df"] = df
+    elif step == "upload":
         df, _ = load_from_local()
         if df is not None:
             st.session_state["main_df"] = df

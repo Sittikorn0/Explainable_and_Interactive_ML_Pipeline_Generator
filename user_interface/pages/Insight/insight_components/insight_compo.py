@@ -1,6 +1,9 @@
 # Libraries
 import streamlit as st
 import plotly.graph_objects as go
+import plotly.express as px
+import pandas as pd
+import numpy as np
 
 # Logic Import
 from backend.core.insight.explain.explainer import *
@@ -280,3 +283,308 @@ def render_comparison():
     if st.button("Clear History", width="stretch"):
         clear_comparison()
         st.rerun()
+
+
+# ── Model Characteristics ──────────────────────────────────────────────────────
+
+MODEL_CHARACTERISTICS = {
+    # Classification
+    "logistic_regression":         {"tags": ["interpretable", "fast"], "pros": ["อธิบายได้ง่ายด้วย coefficients", "train เร็ว ใช้ memory น้อย", "เหมาะกับ binary classification"], "cons": ["สมมติว่าความสัมพันธ์เป็นเชิงเส้น", "อ่อนไหวต่อ outlier และ correlated features"]},
+    "decision_tree":               {"tags": ["interpretable", "fast"], "pros": ["อ่านเหมือน flowchart เข้าใจง่ายที่สุด", "ไม่ต้อง scaling", "จัดการ non-linear ได้"], "cons": ["Overfit ง่ายถ้าไม่ prune", "ผลลัพธ์ไม่ stable เมื่อข้อมูลเปลี่ยนเล็กน้อย"]},
+    "random_forest":               {"tags": ["accurate", "stable"], "pros": ["แม่นยำสูง ทนต่อ outlier", "ไม่ต้อง scaling", "บอก feature importance ได้"], "cons": ["อธิบายได้ยากกว่า single tree", "ใช้ memory และเวลา train มากกว่า"]},
+    "gradient_boosting":           {"tags": ["accurate", "stable"], "pros": ["แม่นยำสูงมาก จัดการ pattern ซับซ้อนได้", "ทนต่อ noise ได้ดี"], "cons": ["Train ช้ากว่า Random Forest", "ต้องปรับ hyperparameter หลายตัว"]},
+    "svm":                         {"tags": ["accurate"], "pros": ["ทำงานได้ดีใน high-dimensional space", "ทนต่อ outlier ปานกลาง"], "cons": ["Train ช้ามากกับข้อมูลขนาดใหญ่", "ต้องทำ scaling ก่อนเสมอ", "อธิบายผลได้ยาก"]},
+    "knn":                         {"tags": ["interpretable", "fast"], "pros": ["ง่าย ไม่มี training phase จริงๆ", "เข้าใจง่าย: ทำนายจากเพื่อนบ้านที่ใกล้ที่สุด"], "cons": ["ช้ามากกับข้อมูลขนาดใหญ่", "อ่อนไหวต่อ scale และ noise"]},
+    "naive_bayes":                 {"tags": ["fast", "interpretable"], "pros": ["Train และ predict เร็วมาก", "ทำงานได้ดีกับข้อมูลน้อย"], "cons": ["สมมติว่า features เป็นอิสระต่อกัน (ซึ่งมักไม่จริง)", "แม่นยำต่ำกว่า ensemble methods"]},
+    "xgboost":                     {"tags": ["accurate", "stable"], "pros": ["แม่นยำสูงมาก มี regularization ในตัว", "จัดการ missing values ได้เอง"], "cons": ["ต้องปรับ hyperparameter ค่อนข้างเยอะ", "อธิบายผลได้ยาก"]},
+    "lightgbm":                    {"tags": ["accurate", "fast"], "pros": ["Train เร็วมาก รองรับข้อมูลขนาดใหญ่", "แม่นยำสูงใกล้เคียง XGBoost"], "cons": ["อาจ overfit กับข้อมูลขนาดเล็ก", "parameter มีผลต่อ performance มาก"]},
+    "catboost":                    {"tags": ["accurate", "stable"], "pros": ["จัดการ categorical features ได้เองโดยไม่ต้อง encoding", "ทนต่อ overfitting"], "cons": ["Train ช้ากว่า LightGBM", "ใช้ memory มาก"]},
+    # Regression
+    "linear_regression":           {"tags": ["interpretable", "fast"], "pros": ["อธิบายได้ด้วย coefficients ชัดเจน", "Train เร็วมาก", "เหมาะกับความสัมพันธ์เชิงเส้น"], "cons": ["ใช้ได้เฉพาะ linear relationship", "อ่อนไหวต่อ outlier"]},
+    "decision_tree_regressor":     {"tags": ["interpretable", "fast"], "pros": ["อ่านผลง่าย ไม่ต้อง scaling", "จัดการ non-linear ได้"], "cons": ["Overfit ง่าย", "ผลไม่ smooth"]},
+    "random_forest_regressor":     {"tags": ["accurate", "stable"], "pros": ["แม่นยำสูง ทนต่อ noise", "ไม่ต้อง scaling"], "cons": ["ใช้ memory มาก", "ช้ากว่า single model"]},
+    "gradient_boosting_regressor": {"tags": ["accurate", "stable"], "pros": ["แม่นยำสูงมาก จัดการ pattern ซับซ้อน"], "cons": ["Train ช้า ต้องปรับ hyperparameter"]},
+    "knn_regressor":               {"tags": ["interpretable", "fast"], "pros": ["ง่าย เข้าใจง่าย"], "cons": ["ช้ากับข้อมูลใหญ่ อ่อนไหวต่อ scale"]},
+    "xgboost_regressor":           {"tags": ["accurate", "stable"], "pros": ["แม่นยำสูง มี regularization"], "cons": ["ต้องปรับ hyperparameter เยอะ"]},
+    "lightgbm_regressor":          {"tags": ["accurate", "fast"], "pros": ["Train เร็ว รองรับข้อมูลใหญ่"], "cons": ["อาจ overfit กับข้อมูลเล็ก"]},
+    "catboost_regressor":          {"tags": ["accurate", "stable"], "pros": ["จัดการ categorical ได้เอง ทนต่อ overfitting"], "cons": ["Train ช้า ใช้ memory มาก"]},
+}
+
+TAG_META = {
+    "interpretable": {"label": "อธิบายได้",  "color": "#9ECE6A", "desc": "มีกลไกที่มนุษย์อ่านและตีความได้ง่าย"},
+    "accurate":      {"label": "แม่นยำสูง",   "color": "#7AA2F7", "desc": "CV Score สูงสุดในกลุ่ม"},
+    "fast":          {"label": "เร็ว/เบา",     "color": "#E0AF68", "desc": "Train และ predict เร็ว เหมาะกับ production"},
+    "stable":        {"label": "เสถียร",       "color": "#BB9AF7", "desc": "±Std ต่ำ ให้ผลสม่ำเสมอ"},
+}
+
+
+def render_leaderboard_insight(competition_result: dict):
+    """Leaderboard พร้อม Filter ตาม Characteristic และ Card จุดเด่น-จุดอ่อน"""
+    competition = competition_result["competition"]
+    best_key    = competition_result["best_key"]
+    task_type   = competition_result["task_type"]
+
+    ranked = sorted(
+        [(k, v) for k, v in competition.items() if v["cv_score"] is not None],
+        key=lambda x: x[1]["cv_score"], reverse=True,
+    )
+    if not ranked:
+        st.info("ยังไม่มีผลการแข่งขัน")
+        return
+
+    render_section_header(
+        "Model Leaderboard",
+        "เปรียบเทียบโมเดลทั้งหมด และเลือกโมเดลที่เหมาะกับความต้องการของคุณ",
+    )
+
+    # ── Filter ──
+    st.markdown('<div style="font-size:0.8rem;color:#94A3B8;font-family:monospace;letter-spacing:0.1em;margin-bottom:8px;">FILTER BY CHARACTERISTIC</div>', unsafe_allow_html=True)
+    tag_cols = st.columns(len(TAG_META) + 1)
+    selected_tags = []
+    with tag_cols[0]:
+        if st.button("ทั้งหมด", key="lb_tag_all", use_container_width=True):
+            st.session_state["_lb_tags"] = []
+    for i, (tag, meta) in enumerate(TAG_META.items()):
+        with tag_cols[i + 1]:
+            active = tag in st.session_state.get("_lb_tags", [])
+            if st.button(meta["label"], key=f"lb_tag_{tag}", use_container_width=True,
+                         type="primary" if active else "secondary"):
+                tags = list(st.session_state.get("_lb_tags", []))
+                if tag in tags:
+                    tags.remove(tag)
+                else:
+                    tags.append(tag)
+                st.session_state["_lb_tags"] = tags
+                st.rerun()
+
+    active_tags = st.session_state.get("_lb_tags", [])
+
+    # ── Leaderboard Table ──
+    st.markdown("<br>", unsafe_allow_html=True)
+    best_score = ranked[0][1]["cv_score"]
+    for rank_i, (key, val) in enumerate(ranked):
+        chars = MODEL_CHARACTERISTICS.get(key, {})
+        model_tags = chars.get("tags", [])
+
+        if active_tags and not any(t in model_tags for t in active_tags):
+            continue
+
+        is_best   = key == best_key
+        score_pct = val["cv_score"] / (best_score + 1e-9) * 100
+        bar_width = max(10, int(score_pct))
+
+        tag_badges = "".join(
+            f'<span style="background:{TAG_META[t]["color"]}22;color:{TAG_META[t]["color"]};'
+            f'border:1px solid {TAG_META[t]["color"]}44;font-size:0.7rem;font-weight:700;'
+            f'padding:1px 7px;border-radius:4px;margin-right:4px;">{TAG_META[t]["label"]}</span>'
+            for t in model_tags if t in TAG_META
+        )
+        best_badge = (
+            '<span style="background:#10B98122;color:#10B981;border:1px solid #10B98144;'
+            'font-size:0.7rem;font-weight:700;padding:1px 7px;border-radius:4px;margin-right:4px;">BEST</span>'
+            if is_best else ""
+        )
+        border_color = "#10B981" if is_best else "#414868"
+        rank_color   = "#E0AF68" if rank_i == 0 else ("#94A3B8" if rank_i == 1 else "#CD7F32" if rank_i == 2 else "#475569")
+
+        st.markdown(f"""
+<div style="background:#1e2030;border:1px solid {border_color};border-radius:8px;padding:16px 20px;margin-bottom:10px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="color:{rank_color};font-weight:800;font-size:1.1rem;font-family:monospace;min-width:36px;white-space:nowrap;">#{rank_i+1}</span>
+      <span style="color:#E2E8F0;font-weight:700;font-size:1.05rem;">{val["label"]}</span>
+      <span style="margin-left:4px;">{best_badge}{tag_badges}</span>
+    </div>
+    <div style="text-align:right;">
+      <span style="color:#7AA2F7;font-size:1.1rem;font-weight:800;font-family:monospace;">{val["cv_score"]:.4f}</span>
+      <span style="color:#475569;font-size:0.85rem;margin-left:6px;">±{val["cv_std"]:.4f}</span>
+    </div>
+  </div>
+  <div style="background:#0d1117;border-radius:4px;height:6px;margin-bottom:12px;">
+    <div style="background:{"#10B981" if is_best else "#7AA2F7"};width:{bar_width}%;height:6px;border-radius:4px;"></div>
+  </div>
+  <div style="display:flex;gap:24px;">
+    <div style="flex:1;">
+      <div style="color:#9ECE6A;font-size:0.75rem;font-weight:700;margin-bottom:4px;letter-spacing:0.08em;">จุดเด่น</div>
+      {"".join(f'<div style="color:#C9D1D9;font-size:0.85rem;line-height:1.7;">• {p}</div>' for p in chars.get("pros", ["-"]))}
+    </div>
+    <div style="flex:1;">
+      <div style="color:#F7768E;font-size:0.75rem;font-weight:700;margin-bottom:4px;letter-spacing:0.08em;">จุดอ่อน</div>
+      {"".join(f'<div style="color:#C9D1D9;font-size:0.85rem;line-height:1.7;">• {c}</div>' for c in chars.get("cons", ["-"]))}
+    </div>
+  </div>
+</div>""", unsafe_allow_html=True)
+
+    # ── Failed models ──
+    failed = [(k, v) for k, v in competition.items() if v["cv_score"] is None]
+    if failed:
+        st.markdown('<div style="color:#475569;font-size:0.8rem;margin-top:8px;">โมเดลที่ train ไม่สำเร็จ: ' +
+                    ", ".join(v["label"] for _, v in failed) + '</div>', unsafe_allow_html=True)
+
+
+# ── Data Visualization (Insight) ───────────────────────────────────────────────
+
+def render_viz_insight(df: pd.DataFrame, target_col: str, task_type: str):
+    """Insight-focused visualization: distribution แยกตาม target class + patterns"""
+    render_section_header(
+        "Data Visualization",
+        "Pattern และ insight ที่ซ่อนอยู่ในข้อมูล หลัง transformation",
+    )
+
+    num_cols = [c for c in df.select_dtypes(include="number").columns if c != target_col]
+    cat_cols = [c for c in df.select_dtypes(include=["object", "category"]).columns if c != target_col]
+    is_clf   = task_type == "classification"
+
+    if not num_cols:
+        st.info("ไม่มี numeric feature สำหรับวิเคราะห์")
+        return
+
+    # ── Section 1: Feature Distribution by Target ──
+    st.markdown('<div style="font-size:0.8rem;color:#94A3B8;font-family:monospace;letter-spacing:0.1em;margin:16px 0 8px 0;">FEATURE DISTRIBUTION BY TARGET</div>', unsafe_allow_html=True)
+
+    sel_feature = st.selectbox(
+        "เลือก Feature",
+        num_cols,
+        key="viz_insight_feat",
+        label_visibility="collapsed",
+    )
+
+    if is_clf and df[target_col].nunique() <= 20:
+        # Box plot แยกตาม class
+        fig = px.box(
+            df, x=target_col, y=sel_feature,
+            color=target_col,
+            color_discrete_sequence=["#7AA2F7","#9ECE6A","#F7768E","#E0AF68","#BB9AF7","#7DCFFF"],
+            points="outliers",
+        )
+        fig.update_layout(
+            template="plotly_dark", height=380, showlegend=False,
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            margin=dict(t=20, b=20),
+            xaxis_title=target_col, yaxis_title=sel_feature,
+        )
+        st.plotly_chart(fig, width="stretch")
+
+        # Insight: median ต่างกันไหม
+        grp = df.groupby(target_col)[sel_feature]
+        medians = grp.median().sort_values()
+        spread  = medians.max() - medians.min()
+        rel_spread = spread / (df[sel_feature].std() + 1e-9)
+        if rel_spread > 1.0:
+            insight_text = f"feature นี้แยก class ได้ดีมาก — median ต่างกัน **{spread:.2f}** ({rel_spread:.1f}× std)"
+            insight_color = "#9ECE6A"
+        elif rel_spread > 0.3:
+            insight_text = f"feature นี้แยก class ได้ปานกลาง — median ต่างกัน **{spread:.2f}**"
+            insight_color = "#E0AF68"
+        else:
+            insight_text = f"feature นี้แยก class ได้น้อย — distribution ของแต่ละ class ทับซ้อนกันมาก"
+            insight_color = "#F7768E"
+
+        st.markdown(f"""
+<div style="background:{insight_color}11;border:1px solid {insight_color}33;border-left:4px solid {insight_color};
+border-radius:6px;padding:10px 14px;margin-top:4px;font-size:0.9rem;color:#E2E8F0;line-height:1.6;">
+  <b style="color:{insight_color};">Insight:</b> {insight_text}<br>
+  <span style="color:#94A3B8;font-size:0.82rem;">
+    {"  |  ".join(f"{cls}: median={med:.2f}" for cls, med in medians.items())}
+  </span>
+</div>""", unsafe_allow_html=True)
+
+    else:
+        # Regression: scatter feature vs target + trend
+        sample_df = df[[sel_feature, target_col]].dropna().sample(min(1000, len(df)), random_state=42)
+        fig = px.scatter(
+            sample_df, x=sel_feature, y=target_col,
+            opacity=0.5, trendline="ols",
+            color_discrete_sequence=["#7AA2F7"],
+            trendline_color_override="#F7768E",
+        )
+        fig.update_layout(
+            template="plotly_dark", height=380,
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            margin=dict(t=20, b=20),
+        )
+        st.plotly_chart(fig, width="stretch")
+        corr = sample_df[[sel_feature, target_col]].corr().iloc[0, 1]
+        corr_abs = abs(corr)
+        strength = "สูง" if corr_abs >= 0.7 else ("ปานกลาง" if corr_abs >= 0.4 else "ต่ำ")
+        direction = "บวก (ขึ้นพร้อมกัน)" if corr > 0 else "ลบ (ค่าหนึ่งขึ้น อีกค่าลง)"
+        st.caption(f"Pearson r = **{corr:.3f}** — ความสัมพันธ์ {strength} เชิง{direction}")
+
+    st.divider()
+
+    # ── Section 2: Top Features Separation Power ──
+    st.markdown('<div style="font-size:0.8rem;color:#94A3B8;font-family:monospace;letter-spacing:0.1em;margin-bottom:12px;">TOP FEATURES — SEPARATION POWER</div>', unsafe_allow_html=True)
+
+    if is_clf and df[target_col].nunique() <= 20:
+        # คำนวณ separation power = std of class medians / overall std
+        sep_scores = {}
+        for col in num_cols:
+            try:
+                class_medians = df.groupby(target_col)[col].median()
+                sep = (class_medians.max() - class_medians.min()) / (df[col].std() + 1e-9)
+                sep_scores[col] = round(float(sep), 3)
+            except Exception:
+                pass
+        if sep_scores:
+            sep_df = pd.DataFrame({"Feature": list(sep_scores.keys()), "Separation": list(sep_scores.values())})
+            sep_df = sep_df.sort_values("Separation", ascending=False).head(15)
+            fig2 = px.bar(
+                sep_df, x="Separation", y="Feature", orientation="h",
+                color="Separation",
+                color_continuous_scale=[[0, "rgba(122,162,247,0.2)"], [1, "#9ECE6A"]],
+            )
+            fig2.update_layout(
+                template="plotly_dark", height=max(280, len(sep_df) * 32),
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                yaxis=dict(autorange="reversed"), coloraxis_showscale=False,
+                margin=dict(t=10, b=20, l=10, r=20),
+                xaxis_title="Separation Score (ยิ่งสูง = แยก class ได้ดีกว่า)",
+            )
+            st.plotly_chart(fig2, width="stretch")
+            st.caption("Separation Score = ช่วง median ระหว่าง class ÷ std รวม  สูง = feature นี้ช่วยแยก class ได้ดี")
+    else:
+        # Regression: correlation กับ target
+        corr_series = df[num_cols].corrwith(df[target_col]).dropna().sort_values(key=abs, ascending=False).head(15)
+        corr_df = pd.DataFrame({"Feature": corr_series.index, "Correlation": corr_series.values})
+        corr_df["color"] = corr_df["Correlation"].apply(lambda v: "positive" if v >= 0 else "negative")
+        fig2 = px.bar(
+            corr_df, x="Correlation", y="Feature", orientation="h",
+            color="color", color_discrete_map={"positive": "#9ECE6A", "negative": "#F7768E"},
+            range_x=[-1, 1], text=corr_df["Correlation"].round(2),
+        )
+        fig2.update_traces(textposition="outside")
+        fig2.update_layout(
+            template="plotly_dark", height=max(280, len(corr_df) * 32),
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            yaxis=dict(autorange="reversed"), showlegend=False,
+            margin=dict(t=10, b=20, l=10, r=60),
+            xaxis_title="Pearson r กับ Target",
+        )
+        st.plotly_chart(fig2, width="stretch")
+
+    st.divider()
+
+    # ── Section 3: Correlation Heatmap ──
+    if len(num_cols) >= 2:
+        st.markdown('<div style="font-size:0.8rem;color:#94A3B8;font-family:monospace;letter-spacing:0.1em;margin-bottom:12px;">FEATURE CORRELATION HEATMAP</div>', unsafe_allow_html=True)
+        corr_matrix = df[num_cols].corr()
+        show_text   = ".2f" if len(num_cols) <= 12 else False
+        fig3 = px.imshow(corr_matrix, text_auto=show_text,
+                         color_continuous_scale="RdBu_r", range_color=[-1, 1], aspect="auto")
+        fig3.update_layout(
+            template="plotly_dark", height=min(600, max(320, len(num_cols) * 35)),
+            paper_bgcolor="rgba(0,0,0,0)",
+            margin=dict(t=10, b=10),
+        )
+        st.plotly_chart(fig3, width="stretch")
+        st.caption("สีแดงเข้ม = สัมพันธ์บวกสูง (+1) | สีน้ำเงินเข้ม = สัมพันธ์ลบสูง (−1) | สีจาง = ไม่สัมพันธ์กัน (≈0)")
+
+        high_corr = [
+            (corr_matrix.columns[i], corr_matrix.columns[j], round(corr_matrix.iloc[i, j], 2))
+            for i in range(len(corr_matrix.columns))
+            for j in range(i + 1, len(corr_matrix.columns))
+            if abs(corr_matrix.iloc[i, j]) > 0.8
+        ]
+        if high_corr:
+            pairs = " | ".join(f"`{a}` & `{b}` (r={r})" for a, b, r in high_corr[:5])
+            st.warning(f"พบ Feature ที่มีความสัมพันธ์กันสูง (|r| > 0.8): {pairs} — อาจเกิด Multicollinearity กับ Linear-based models")
