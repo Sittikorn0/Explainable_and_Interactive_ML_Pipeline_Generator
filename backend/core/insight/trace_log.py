@@ -258,61 +258,103 @@ ENCODING_REASONS = {
 }
 
 
-def log_transformation(summary: dict, enc_decisions: dict, scaling_method: str, drop_cols: list,
-                       scaling_reason: str = "", enc_reasons: dict = None):
+def log_transformation(summary: dict, enc_decisions: dict,
+                       scaling_decisions: dict | str, drop_cols: list,
+                       enc_reasons: dict = None):
     """
+    scaling_decisions: dict {col: method} (per-column) หรือ str (global)
     enc_reasons: {col: reason_string} จาก rule engine (optional)
-    scaling_reason: explanation string จาก rule engine (optional)
     """
+    # ── สรุป scaling ──
+    if isinstance(scaling_decisions, dict) and scaling_decisions:
+        methods_used = set(scaling_decisions.values())
+        scaling_summary = f"per_column ({len(scaling_decisions)} คอลัมน์)"
+    else:
+        scaling_summary = str(scaling_decisions) if scaling_decisions else "standard_scaler"
+        methods_used = {scaling_summary}
+
     items = [
         f"คอลัมน์เริ่มต้น: {summary.get('original_cols', '?')}",
         f"คอลัมน์ที่ลบ: {summary.get('dropped_cols', 0)}",
         f"หลังแปลงข้อมูล: {summary.get('final_cols', '?')} คอลัมน์",
-        f"วิธีปรับขนาด: {scaling_method}",
+        f"วิธีปรับขนาด: {scaling_summary}",
     ]
+
+    # แสดงรายละเอียด per-column
+    if isinstance(scaling_decisions, dict) and len(methods_used) > 1:
+        from collections import defaultdict
+        by_method: dict = defaultdict(list)
+        for col, m in scaling_decisions.items():
+            by_method[m].append(col)
+        for method, cols in by_method.items():
+            items.append(f"  • {method}: {', '.join(cols)}")
+
     if drop_cols:
         items.append(f"คอลัมน์ที่ตัดออก ({len(drop_cols)}): {', '.join(drop_cols)}")
 
     enc_by_method: dict = {}
     for col, method in (enc_decisions.items() if isinstance(enc_decisions, dict) else []):
         enc_by_method.setdefault(method, []).append(col)
-    for method, cols in enc_by_method.items():
-        items.append(f"การแปลงข้อความ  {method}: {', '.join(cols)}")
+    if enc_by_method:
+        total_enc_cols = sum(len(cols) for cols in enc_by_method.values())
+        enc_methods_count = len(enc_by_method)
+        enc_header = f"per_column ({enc_methods_count} methods, {total_enc_cols} คอลัมน์)" if enc_methods_count > 1 else f"{next(iter(enc_by_method))} ({total_enc_cols} คอลัมน์)"
+        items.append(f"วิธีแปลงข้อความ: {enc_header}")
+        for method, cols in enc_by_method.items():
+            items.append(f"  • {method}: {', '.join(cols)}")
 
     explanations = []
 
-    # Scaling reason — ใช้จาก rule engine ถ้ามี ไม่งั้น fallback hardcode
-    scl_reason = scaling_reason or SCALING_REASONS.get(scaling_method, f"ใช้ {scaling_method}")
-    explanations.append(f"ทำไมปรับขนาดด้วย {scaling_method}? เหตุผลคือ {scl_reason}")
+    # Scaling explanations — per-column ถ้ามีหลาย method
+    if isinstance(scaling_decisions, dict) and scaling_decisions:
+        from collections import defaultdict
+        by_method2: dict = defaultdict(list)
+        for col, m in scaling_decisions.items():
+            by_method2[m].append(col)
+        for method, cols in by_method2.items():
+            reason = SCALING_REASONS.get(method, f"ใช้ {method}")
+            cols_str = ", ".join(f"[{c}]" for c in cols[:3]) + (f" อีก {len(cols)-3} ตัว" if len(cols) > 3 else "")
+            explanations.append(f"ทำไมปรับขนาด {cols_str} ด้วย {method}?")
+            explanations.append(f"  → {reason}")
+    else:
+        m = scaling_summary
+        reason = SCALING_REASONS.get(m, f"ใช้ {m}")
+        explanations.append(f"ทำไมปรับขนาดด้วย {m}?")
+        explanations.append(f"  → {reason}")
 
-    if scaling_method != "no_scaling":
+    if "no_scaling" not in methods_used:
         explanations.append(
-            "ทำไมต้องปรับขนาดข้อมูล? เพราะถ้าคอลัมน์หนึ่งมีค่าเป็นหลักล้าน "
-            "แต่อีกคอลัมน์มีค่าแค่ 0-100 โมเดลจะให้ความสำคัญกับตัวเลขใหญ่มากเกินไป "
+            "ทำไมต้องปรับขนาดข้อมูล?"
+        )
+        explanations.append(
+            "  → ถ้าคอลัมน์หนึ่งมีค่าเป็นหลักล้าน แต่อีกคอลัมน์มีค่าแค่ 0–100 "
+            "โมเดลจะให้ความสำคัญกับตัวเลขใหญ่มากเกินไป "
             "ปรับขนาดช่วยให้ทุกคอลัมน์มีน้ำหนักเท่าเทียมกัน"
         )
 
     # Encoding reasons — ใช้จาก rule engine รายคอลัมน์ถ้ามี
     enc_reasons = enc_reasons or {}
     for method, cols in enc_by_method.items():
-        # ดึง reason จาก rule engine (ใช้ reason ของ col แรกในกลุ่มเป็นตัวแทน)
         rule_reason = next((enc_reasons[c] for c in cols if c in enc_reasons), "")
         reason = rule_reason or ENCODING_REASONS.get(method, f"ใช้ {method}")
-        cols_str = ", ".join(cols[:3])
+        cols_str = ", ".join(f"[{c}]" for c in cols[:3])
         if len(cols) > 3:
             cols_str += f" อีก {len(cols)-3} ตัว"
-        explanations.append(f"ทำไมแปลง {cols_str} ด้วย {method}? เหตุผลคือ {reason}")
+        explanations.append(f"ทำไมแปลง {cols_str} ด้วย {method}?")
+        explanations.append(f"  → {reason}")
 
     if enc_by_method:
+        explanations.append("ทำไมต้องแปลงข้อความเป็นตัวเลข?")
         explanations.append(
-            "ทำไมต้องแปลงข้อความเป็นตัวเลข? เพราะโมเดลคำนวณได้เฉพาะตัวเลขเท่านั้น "
+            "  → โมเดลคำนวณได้เฉพาะตัวเลขเท่านั้น "
             "ข้อความเช่น \"แดง\" หรือ \"น้ำเงิน\" ต้องถูกแปลงก่อน"
         )
 
     if drop_cols:
+        cols_str = ", ".join(f"[{c}]" for c in drop_cols[:3]) + (f" อีก {len(drop_cols)-3} ตัว" if len(drop_cols) > 3 else "")
+        explanations.append(f"ทำไมตัดออก {cols_str}?")
         explanations.append(
-            f"ทำไมตัดออก {len(drop_cols)} คอลัมน์? "
-            "เพราะเป็นข้อมูลที่ไม่ช่วยในการทำนาย เช่น รหัสที่ไม่ซ้ำกัน "
+            "  → เป็นข้อมูลที่ไม่ช่วยในการทำนาย เช่น รหัสที่ไม่ซ้ำกัน "
             "หรือข้อมูลที่ขาดหายเยอะเกินไป เก็บไว้จะรบกวนการเรียนรู้ของโมเดล"
         )
 

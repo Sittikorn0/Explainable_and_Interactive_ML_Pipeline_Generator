@@ -165,18 +165,34 @@ def render_trace():
         # ปรับปรุงส่วน Insights (Explanations)
         insights_html = ""
         if explanations:
+            import re as _re
+            def _highlight_col(text: str) -> str:
+                """แปลง [col] → badge สีฟ้า ตัวใหญ่"""
+                return _re.sub(
+                    r'\[([^\]]+)\]',
+                    r'<span style="color:#7AA2F7;font-size:1.05rem;font-weight:700;font-family:monospace;">[\1]</span>',
+                    text,
+                )
             items_content = ""
             for exp in explanations:
-                # ทำความสะอาดข้อความ "ทำไม..." ออกเพื่อลดความซ้ำซ้อน
                 display_text = exp.replace("ทำไม", "").replace("?", "").strip()
                 if exp.startswith("ทำไม"):
-                    items_content += f'<div style="font-weight: 700; color: #58a6ff; font-size: 0.95rem; margin-bottom: 4px;">{display_text}</div>'
+                    items_content += f'<div style="font-weight: 700; color: #58a6ff; font-size: 0.95rem; margin-bottom: 4px;">{_highlight_col(display_text)}</div>'
                 elif exp.startswith("  →"):
-                    items_content += f'<div style="color: #c9d1d9; font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px;">{exp.strip().replace("→", "")}</div>'
+                    items_content += f'<div style="color: #c9d1d9; font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px;">{_highlight_col(exp.strip().replace("→", ""))}</div>'
+                elif exp.startswith("หลักการ:"):
+                    body = exp[len("หลักการ:"):].strip()
+                    items_content += (
+                        f'<div style="margin: 14px 0 4px 0; background: rgba(88,166,255,0.08); '
+                        f'border: 1px solid rgba(88,166,255,0.35); border-left: 4px solid #58a6ff; '
+                        f'border-radius: 6px; padding: 10px 14px;">'
+                        f'<span style="color:#e6edf3; font-size:0.92rem; line-height:1.65;">'
+                        f'<b style="color:#7AA2F7;">หลักการ:</b> {_highlight_col(body)}</span></div>'
+                    )
                 elif "✓" in exp or "⚠" in exp or "ℹ" in exp:
-                    items_content += f'<div style="font-size: 0.88rem; color: #8b949e; margin: 4px 0;">{exp}</div>'
+                    items_content += f'<div style="font-size: 0.88rem; color: #8b949e; margin: 4px 0;">{_highlight_col(exp)}</div>'
                 else:
-                    items_content += f'<div style="font-size: 0.9rem; color: #e6edf3; margin: 4px 0;">{exp}</div>'
+                    items_content += f'<div style="font-size: 0.9rem; color: #e6edf3; margin: 4px 0;">{_highlight_col(exp)}</div>'
 
             insights_html = f'<div style="margin-top: 20px; border-top: 1px solid #30363d; padding-top: 16px;"><div style="font-size: 0.8rem; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Data Insights & Rationale</div><div class="insight-bubble">{items_content}</div></div>'
 

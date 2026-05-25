@@ -2,6 +2,9 @@ MAX_ROWS_TRAIN = 50_000
 MAX_ROWS_SLOW  = 5_000
 SLOW_MODELS    = {"knn", "knn_regressor", "svm"}
 
+# ปิด/เปิด Hyperparameter Tuning (True = ใช้ RandomizedSearchCV, False = ใช้ default params)
+ENABLE_HYPERPARAMETER_TUNING = True
+
 MODELS_CLF = {
     "random_forest":       "Random Forest",
     "gradient_boosting":   "Gradient Boosting",

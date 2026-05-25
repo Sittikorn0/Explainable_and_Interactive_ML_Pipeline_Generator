@@ -166,7 +166,7 @@ def render_json_config(col_decisions: list[dict], raw_dataframe: pd.DataFrame | 
         st.success("**Apply สำเร็จ**  actions ที่ถูก apply:\n\n" + "\n".join(result_lines))
 
     st.markdown("#### จัดการ Nested Fields")
-    st.caption("★ = action ที่ระบบแนะนำ หลังจากปรับแล้วสามารถกด Apply")
+    st.caption("= action ที่ระบบแนะนำ หลังจากปรับแล้วสามารถกด Apply")
 
     type_order = {"nested_array_of_dicts": 0, "array": 1, "dict": 2}
     sorted_decisions = sorted(col_decisions, key=lambda decision: type_order.get(decision["type"], 9))
@@ -200,7 +200,7 @@ def render_json_config(col_decisions: list[dict], raw_dataframe: pd.DataFrame | 
                     "action",
                     options=available_actions,
                     format_func=lambda action, rec=recommended_action: (
-                        f"★ {action_label(action)}" if action == rec else action_label(action)
+                        f"{action_label(action)}" if action == rec else action_label(action)
                     ),
                     index=available_actions.index(default_action) if default_action in available_actions else 0,
                     key=f"json_choice_{col_name}",

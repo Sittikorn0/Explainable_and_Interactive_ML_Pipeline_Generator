@@ -14,11 +14,13 @@ _N_JOBS = min(4, os.cpu_count() or 1)
 def get_fitted_model(df, target_col, best_key, best_params, trans_summary,
                      missing_rules=None, outlier_rules=None):
     """Retrain best model → (model, X_train, X_test, y_train, y_test, task_type)"""
+    scaling_decisions  = trans_summary.get("scaling_decisions") or None
     scaling_method     = trans_summary.get("scaling_method", "standard_scaler")
     encoding_decisions = trans_summary.get("encoding_decisions") or None
     X_train, X_test, y_train, y_test, task_type = preprocess(
         df, target_col,
         scaling_method=scaling_method,
+        scaling_decisions=scaling_decisions,
         encoding_decisions=encoding_decisions,
         missing_rules=missing_rules,
         outlier_rules=outlier_rules,

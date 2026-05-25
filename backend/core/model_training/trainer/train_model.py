@@ -135,7 +135,7 @@ def run_competition(features_train, features_test, target_train, target_test,
         
         try:
             model_instance = model_mapping[model_key]()
-            param_grid = PARAM_GRIDS.get(model_key, {})
+            param_grid = PARAM_GRIDS.get(model_key, {}) if ENABLE_HYPERPARAMETER_TUNING else {}
             best_parameters = {}
             
             with warnings.catch_warnings():

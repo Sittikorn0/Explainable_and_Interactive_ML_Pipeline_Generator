@@ -158,7 +158,7 @@ RULES: list[dict] = [
         "explanation": (
             "ข้อมูลกระจายสมมาตร (|Skew| < 0.5)  ใช้ Z-Score Method (mean ± 3σ) "
             "เพราะข้อมูลใกล้ Normal Distribution ทำให้ Mean และ Std เป็นตัวแทนที่ดี "
-            "ค่าที่ห่างจาก mean เกิน 3 standard deviation ถือเป็น outlier"
+            "ค่าที่ห่างจาก mean เกิน 3 staจำกัดขอบเขตndard deviation ถือเป็น outlier"
         ),
     },
 

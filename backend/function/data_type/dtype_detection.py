@@ -33,11 +33,9 @@ def ml_category(actual_data_type: str, is_target: bool) -> str:
     """จัดประเภทตาม ML Category"""
     if actual_data_type == "datetime":
         category_name = "Datetime"
-    elif actual_data_type == "int":
-        category_name = "Numeric/Discrete"
-    elif actual_data_type == "float":
-        category_name = "Numeric/Continuous"
+    elif actual_data_type in ("int", "float"):
+        category_name = "Numeric"
     else:
-        category_name = "Categorical/Nominal"
-        
+        category_name = "Categorical"
+
     return f"{category_name} (Target)" if is_target else category_name

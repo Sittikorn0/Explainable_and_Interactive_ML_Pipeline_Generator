@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 
 SCALING_LABELS = {
-    "log_transform":  "Log Transform (log1p)",
+    "log_transform":   "Log Transform (log1p)",
     "standard_scaler": "Standard Scaler (Z-score)",
     "minmax_scaler":   "MinMax Scaler [0, 1]",
     "robust_scaler":   "Robust Scaler (Median/IQR)",
@@ -17,100 +17,108 @@ SCALING_WHEN = {
     "no_scaling":      "เมื่อใช้ tree-based model ล้วนๆ",
 }
 
-def render_ml_scaling(dataframe: pd.DataFrame, target_column: str,
-                    scaling_analysis: dict) -> str:
+
+def render_ml_scaling(dataframe: pd.DataFrame, _target_column: str,
+                      scaling_analysis: dict) -> dict:
+    """
+    แสดง UI สำหรับ per-column scaling (ดีไซน์เหมือน Encoding)
+    Returns: dict {col: method} ที่ผู้ใช้เลือก
+    """
     st.markdown('<div class="section-header">SCALING</div>', unsafe_allow_html=True)
 
-    column_statistics = scaling_analysis["column_stats"]
-    if not column_statistics:
+    column_decisions = scaling_analysis.get("column_decisions", [])
+    if not column_decisions:
         st.markdown("**[ OK ]** ไม่มี numeric columns ที่ต้องทำ scaling")
-        return "no_scaling"
+        return {}
 
-    # แสดง stats ของ numeric columns
-    with st.expander("Feature Statistics"):
-        statistics_df = pd.DataFrame(column_statistics)
-        st.dataframe(
-            statistics_df,
-            hide_index=True,
-            width="stretch",
-            column_config={
-                "col":         st.column_config.TextColumn("COLUMN"),
-                "min":         st.column_config.NumberColumn("MIN",  format="%.3f"),
-                "max":         st.column_config.NumberColumn("MAX",  format="%.3f"),
-                "mean":        st.column_config.NumberColumn("MEAN", format="%.3f"),
-                "std":         st.column_config.NumberColumn("STD",  format="%.3f"),
-                "skew":        st.column_config.NumberColumn("SKEW", format="%.3f"),
-                "outlier_pct": st.column_config.NumberColumn("OUTLIER %", format="%.1f%%"),
-            }
-        )
+    options = scaling_analysis.get(
+        "options",
+        ["log_transform", "standard_scaler", "minmax_scaler", "robust_scaler", "no_scaling"],
+    )
 
-    # Visualization
-    numeric_columns = [stats["col"] for stats in column_statistics]
-    if numeric_columns:
-        st.markdown('<div style="font-family:monospace; font-size:0.7rem; color:#475569; margin: 10px 0 5px 0; letter-spacing: 0.1em;">DISTRIBUTION PLOT</div>', unsafe_allow_html=True)
-        selected_column = st.selectbox("Select column to visualize:", numeric_columns, key="sc_viz_col", label_visibility="collapsed")
-        figure = px.histogram(dataframe, x=selected_column, nbins=30, marginal="box",
-                           color_discrete_sequence=["#7AA2F7"])
-        figure.update_layout(template="plotly_dark", height=280, showlegend=False,
-                          margin=dict(t=10, b=10, l=10, r=10),
-                          paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-        st.plotly_chart(figure, width="stretch")
+    with st.expander("Method Comparison", expanded=False):
+        st.markdown("""
+| Method | เหมาะกับ | ข้อดี | ข้อเสีย |
+|---|---|---|---|
+| **Standard Scaler** | ข้อมูล Normal, ไม่มี outlier | รักษา relative distance | ถูก outlier ดึง |
+| **MinMax Scaler** | ข้อมูล skewed เล็กน้อย | ช่วง [0,1] ชัดเจน | ไวต่อ outlier |
+| **Robust Scaler** | มี outlier มาก | ทนต่อ outlier | ช่วงไม่ fixed |
+| **Log Transform** | skewed รุนแรง (>2) | ลด skewness ก่อน scale | ใช้ได้เฉพาะค่า ≥ 0 |
+| **ไม่ทำ Scaling** | Tree-based model | ไม่ต้อง preprocess | โมเดลอื่นอาจแย่ลง |
+""")
 
-    # Recommendation
-    rec_label  = SCALING_LABELS.get(scaling_analysis["recommended"], scaling_analysis["recommended"]).upper()
-    rule_id    = scaling_analysis.get("rule_id", "")
-
-    st.markdown(f"""
-<div style="background-color: rgba(122, 162, 247, 0.05); border: 1px solid rgba(122, 162, 247, 0.2); border-radius: 8px; padding: 20px; margin-bottom: 24px;">
-<div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid rgba(122, 162, 247, 0.1); padding-bottom: 8px; margin-bottom: 8px;">
-<div style="color: #7AA2F7; font-weight: bold; font-family: monospace; font-size: 1.05rem;">RECOMMENDED METHOD: {rec_label}</div>
-{f'<span style="background:rgba(122,162,247,0.15);color:#7AA2F7;font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:4px;font-family:monospace">{rule_id}</span>' if rule_id else ''}
-</div>
-<div style="color: #E2E8F0; font-size: 1rem; line-height: 1.6;">{scaling_analysis['reason']}</div>
-</div>
-""", unsafe_allow_html=True)
-
-    # แสดง info พิเศษสำหรับ log transform
-    if scaling_analysis["recommended"] == "log_transform":
-        heavy_skew_columns = scaling_analysis.get("heavy_skew_cols", [])
-        st.markdown(f"""
-<div style="background-color: rgba(255,255,255,0.02); border-left: 3px solid #7AA2F7; border-radius: 4px; padding: 12px 20px; margin-top: 12px; margin-bottom: 24px;">
-<div style="color: #7AA2F7; font-family: monospace; font-weight: bold; margin-bottom: 4px;">LOG TRANSFORM SPEC</div>
-<div style="color: #94A3B8; font-size: 0.95rem;">
-<strong>Method:</strong> log1p(x)<br>
-<strong>Applied to:</strong> {', '.join(heavy_skew_columns[:3])}{'...' if len(heavy_skew_columns)>3 else ''}
-</div>
-</div>
-""", unsafe_allow_html=True)
-
-    # เลือก method
-    with st.expander("METHOD COMPARISON", expanded=False):
-        method_rows = []
-        for key, label in SCALING_LABELS.items():
-            method_rows.append({"Method": label, "Condition": SCALING_WHEN[key]})
-        st.table(pd.DataFrame(method_rows))
-
-    available_options = scaling_analysis["options"]
-    recommended_value = scaling_analysis["recommended"]
-    
     def on_scaling_change():
         st.session_state["trans_confirmed"] = False
         st.session_state.pop("trans_summary", None)
         st.session_state.pop("transformed_df", None)
 
-    default_index = 0
-    if "scaling_method" in st.session_state and st.session_state["scaling_method"] in available_options:
-        default_index = available_options.index(st.session_state["scaling_method"])
-    else:
-        default_index = available_options.index(recommended_value)
-
-    chosen_scaling = st.radio(
-        "Select Scaling Method",
-        options=available_options,
-        format_func=lambda method: SCALING_LABELS.get(method, method),
-        index=default_index,
-        key="scaling_method",
-        on_change=on_scaling_change,
-        horizontal=True,
+    # Visualization
+    st.markdown(
+        '<div style="font-family:monospace;font-size:0.7rem;color:#475569;'
+        'margin:10px 0 5px 0;letter-spacing:0.1em;">DISTRIBUTION PLOT</div>',
+        unsafe_allow_html=True,
     )
-    return chosen_scaling
+    numeric_cols = [d["col"] for d in column_decisions]
+    selected_col = st.selectbox(
+        "Select column to visualize:", numeric_cols,
+        key="sc_viz_col", label_visibility="collapsed",
+    )
+    fig = px.histogram(dataframe, x=selected_col, nbins=30, marginal="box",
+                       color_discrete_sequence=["#7AA2F7"])
+    fig.update_layout(
+        template="plotly_dark", height=280, showlegend=False,
+        margin=dict(t=10, b=10, l=10, r=10),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+    )
+    st.plotly_chart(fig, width="stretch")
+
+    scaling_decisions: dict[str, str] = {}
+
+    for decision in column_decisions:
+        col        = decision["col"]
+        rec        = decision["recommended"]
+        rule_id    = decision.get("rule_id", "")
+        reason     = decision.get("reason", "")
+        skew_val   = decision.get("skew", 0)
+        out_pct    = decision.get("outlier_pct", 0)
+        min_val    = decision.get("min", 0)
+        max_val    = decision.get("max", 0)
+
+        rec_label = SCALING_LABELS.get(rec, rec).upper()
+
+        st.markdown(f"""
+<div style="margin-bottom: 24px;">
+<div style="margin-bottom: 12px;">
+<div style="display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 4px; margin-bottom: 4px;">
+<span style="font-size: 1.15rem; font-weight: 600; color: #E2E8F0; font-family: monospace;">COLUMN: <span style="color: #7AA2F7;">{col}</span></span>
+<span style="color: #94A3B8; font-size: 0.85rem; font-family: monospace;">skew: {skew_val:+.2f} &nbsp;|&nbsp; outlier: {out_pct:.1f}% &nbsp;|&nbsp; [{min_val:.2f}, {max_val:.2f}]</span>
+</div>
+</div>
+<div style="background-color: rgba(122, 162, 247, 0.05); border: 1px solid rgba(122, 162, 247, 0.2); border-radius: 8px; padding: 20px;">
+<div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid rgba(122, 162, 247, 0.1); padding-bottom: 8px; margin-bottom: 8px;">
+<div style="color: #7AA2F7; font-weight: bold; font-family: monospace; font-size: 1.05rem;">RECOMMENDED METHOD: {rec_label}</div>
+<span style="background:rgba(122,162,247,0.15);color:#7AA2F7;font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:4px;font-family:monospace">{rule_id}</span>
+</div>
+<div style="color: #E2E8F0; font-size: 1rem; line-height: 1.6;">{reason}</div>
+</div>
+</div>
+""", unsafe_allow_html=True)
+
+        widget_key  = f"scl_{col}"
+        saved       = st.session_state.get(widget_key)
+        default_idx = options.index(saved) if saved in options else (options.index(rec) if rec in options else 0)
+
+        chosen = st.radio(
+            f"เลือก method สำหรับ `{col}`",
+            options=options,
+            format_func=lambda m: SCALING_LABELS.get(m, m),
+            index=default_idx,
+            key=widget_key,
+            on_change=on_scaling_change,
+            horizontal=True,
+            label_visibility="collapsed",
+        )
+        scaling_decisions[col] = chosen
+        st.markdown("---")
+
+    return scaling_decisions

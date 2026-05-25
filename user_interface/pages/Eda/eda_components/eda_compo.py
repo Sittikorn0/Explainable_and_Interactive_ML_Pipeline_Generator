@@ -325,6 +325,11 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
                 )
                 st.plotly_chart(relationship_line_figure, width="stretch")
                 st.caption(f"ค่าเฉลี่ยของ {target_column} แต่ละ {relationship_datetime_granularity}")
+                st.info(
+                    f"**วิธีอ่านกราฟ:** แกน X คือเวลา ({relationship_datetime_granularity}) แกน Y คือค่าเฉลี่ยของ `{target_column}`\n\n"
+                    f"- เส้นที่มีแนวโน้มขึ้นหรือลงชัดเจน → `{selected_feature}` มีความสัมพันธ์กับ `{target_column}` ตามเวลา (Time Trend)\n"
+                    f"- เส้นที่ขึ้นๆ ลงๆ ไม่มีทิศทาง → ไม่มี Trend ชัดเจน ควรตรวจสอบ Seasonality เพิ่มเติม"
+                )
             else:
                 period_class_counts_dataframe = datetime_subset.groupby(["_period", target_column]).size().reset_index(name="count")
                 period_class_counts_dataframe.columns = [selected_feature, target_column, "count"]
@@ -339,6 +344,11 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
                 relationship_line_figure.update_layout(template="plotly_dark", height=380)
                 st.plotly_chart(relationship_line_figure, width="stretch")
                 st.caption(f"จำนวนแถวแต่ละ {target_column} class ตาม {relationship_datetime_granularity}")
+                st.info(
+                    f"**วิธีอ่านกราฟ:** แต่ละเส้นแทนหนึ่ง class ของ `{target_column}` แกน Y คือจำนวน records\n\n"
+                    f"- เส้นที่แยกออกจากกันชัด → สัดส่วน class เปลี่ยนแปลงตามเวลา (Class Shift)\n"
+                    f"- เส้นที่ขนานกัน → สัดส่วน class คงที่ตลอดช่วงเวลา"
+                )
 
         elif is_feature_numeric and is_target_numeric:
             relationship_scatter_figure = px.scatter(
@@ -352,6 +362,16 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
             )
             relationship_scatter_figure.update_layout(template="plotly_dark", height=380)
             st.plotly_chart(relationship_scatter_figure, width="stretch")
+            corr_val = dataframe[[selected_feature, target_column]].dropna().corr().iloc[0, 1]
+            corr_abs = abs(corr_val)
+            corr_strength = "สูง (Strong)" if corr_abs >= 0.7 else "ปานกลาง (Moderate)" if corr_abs >= 0.4 else "ต่ำ (Weak)"
+            corr_dir = "เชิงบวก (ขึ้นพร้อมกัน)" if corr_val >= 0 else "เชิงลบ (ค่าหนึ่งขึ้น อีกค่าลง)"
+            st.info(
+                f"**วิธีอ่านกราฟ:** Scatter plot แสดงความสัมพันธ์ระหว่าง `{selected_feature}` (แกน X) กับ `{target_column}` (แกน Y)\n\n"
+                f"- **เส้นสีแดง** = Trend line (OLS) ช่วยให้เห็นทิศทางความสัมพันธ์\n"
+                f"- **Pearson r = {corr_val:.3f}** → ความสัมพันธ์ {corr_strength} {corr_dir}\n"
+                f"- จุดที่กระจายรอบเส้นแน่น → ความสัมพันธ์แข็งแกร่ง | กระจายกว้าง → ความสัมพันธ์อ่อน"
+            )
         elif is_feature_numeric and is_target_categorical:
             median_ordering = (
                 dataframe.groupby(target_column)[selected_feature]
@@ -369,6 +389,15 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
             )
             relationship_box_figure.update_layout(template="plotly_dark", height=380, showlegend=False)
             st.plotly_chart(relationship_box_figure, width="stretch")
+            medians = dataframe.groupby(target_column)[selected_feature].median()
+            med_min_class = medians.idxmin()
+            med_max_class = medians.idxmax()
+            st.info(
+                f"**วิธีอ่านกราฟ:** Box plot แสดงการกระจายของ `{selected_feature}` แยกตาม class ของ `{target_column}`\n\n"
+                f"- **เส้นกลางกล่อง** = Median | **กล่อง** = 25th–75th percentile | **หนวด** = min/max (ไม่รวม outlier)\n"
+                f"- class ที่มี median ต่ำสุด: **{med_min_class}** | สูงสุด: **{med_max_class}**\n"
+                f"- กล่องของแต่ละ class ที่ไม่ทับกัน → `{selected_feature}` ช่วยแยก class ได้ดี (Feature มีประโยชน์สูง)"
+            )
         elif not is_feature_numeric and is_target_numeric:
             number_of_feature_categories = dataframe[selected_feature].nunique()
             plotting_dataframe = dataframe if number_of_feature_categories <= 20 else dataframe[dataframe[selected_feature].isin(
@@ -392,6 +421,13 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
             if number_of_feature_categories > 20:
                 st.caption("แสดงแค่ 20 categories ที่พบมากสุด")
             st.plotly_chart(relationship_box_figure, width="stretch")
+            grp_medians = plotting_dataframe.groupby(selected_feature)[target_column].median()
+            st.info(
+                f"**วิธีอ่านกราฟ:** Box plot แสดงการกระจายของ `{target_column}` แยกตามกลุ่มใน `{selected_feature}`\n\n"
+                f"- กลุ่มที่มี median สูงสุด: **{grp_medians.idxmax()}** ({grp_medians.max():.2f}) | ต่ำสุด: **{grp_medians.idxmin()}** ({grp_medians.min():.2f})\n"
+                f"- กล่องที่สูงและแคบ → ค่า target ในกลุ่มนั้นกระจุกตัว | กล่องกว้าง → ค่าต่างกันมาก\n"
+                f"- ถ้า median ต่างกันมากระหว่างกลุ่ม → `{selected_feature}` มีผลต่อ `{target_column}` สูง"
+            )
         else:
             number_of_feature_categories = dataframe[selected_feature].nunique()
             plotting_dataframe = dataframe if number_of_feature_categories <= 15 else dataframe[dataframe[selected_feature].isin(
@@ -412,6 +448,12 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
             if number_of_feature_categories > 15:
                 st.caption("แสดงแค่ 15 categories ที่พบมากสุด")
             st.plotly_chart(relationship_bar_figure, width="stretch")
+            st.info(
+                f"**วิธีอ่านกราฟ:** Grouped bar chart แสดงจำนวน records แยกตาม `{selected_feature}` และ `{target_column}`\n\n"
+                f"- แต่ละกลุ่มแท่งในแกน X = หนึ่งค่าของ `{selected_feature}` | สีแต่ละสี = class ของ `{target_column}`\n"
+                f"- ถ้าแต่ละกลุ่มมีสัดส่วนสีต่างกัน → `{selected_feature}` สัมพันธ์กับ `{target_column}`\n"
+                f"- ถ้าสัดส่วนสีเหมือนกันทุกกลุ่ม → feature นี้อาจไม่ช่วยแยก class"
+            )
     else:
         st.info("ไม่มี Feature columns ให้แสดง")
 
@@ -517,6 +559,9 @@ def render_relationships_tab(dataframe: pd.DataFrame, target_column: str):
             if number_of_numeric_columns > 15:
                 st.caption(f"มี {number_of_numeric_columns} numeric columns ซ่อนตัวเลขในตาราง hover เพื่ออ่านค่า")
             st.plotly_chart(heatmap_figure, width="stretch")
+            st.caption(
+                "**วิธีอ่าน Heatmap:** สีแดงเข้ม = สัมพันธ์บวกสูง (+1) | สีน้ำเงินเข้ม = สัมพันธ์ลบสูง (−1) | สีขาว/จาง = ไม่สัมพันธ์กัน (≈0)"
+            )
 
             # Detect High Correlation
             highly_correlated_pairs = []

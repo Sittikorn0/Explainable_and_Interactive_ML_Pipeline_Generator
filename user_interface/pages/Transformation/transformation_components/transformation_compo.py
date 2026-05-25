@@ -11,8 +11,17 @@ def render_summary_view(dataframe: pd.DataFrame, transformed_dataframe: pd.DataF
                     summary_dict: dict, target_column: str):
     st.markdown('<div class="section-header">รายงานสรุปการแปลงข้อมูล (SUMMARY REPORT)</div>', unsafe_allow_html=True)
 
-    method_label = SCALING_LABELS.get(summary_dict["scaling_method"], summary_dict["scaling_method"]).upper()
-    
+    scaling_decisions = summary_dict.get("scaling_decisions", {})
+    scaling_method    = summary_dict.get("scaling_method", "per_column")
+    if scaling_decisions:
+        methods_used = set(scaling_decisions.values())
+        if len(methods_used) == 1:
+            method_label = SCALING_LABELS.get(next(iter(methods_used)), "Per-Column").upper()
+        else:
+            method_label = f"PER-COLUMN ({len(methods_used)} METHODS)"
+    else:
+        method_label = SCALING_LABELS.get(scaling_method, scaling_method).upper()
+
     st.markdown(f"""
 <div style="display: flex; justify-content: space-around; background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 20px; margin-bottom: 24px;">
     <div style="text-align: center;">
@@ -29,17 +38,20 @@ def render_summary_view(dataframe: pd.DataFrame, transformed_dataframe: pd.DataF
     </div>
     <div style="text-align: center;">
         <div style="color: #94A3B8; font-size: 0.85rem; font-family: monospace; margin-bottom: 4px;">เทคนิคปรับสเกล</div>
-        <div style="color: #F59E0B; font-size: 1.25rem; font-weight: bold; line-height: 1.5; margin-top: 6px;">{method_label}</div>
+        <div style="color: #F59E0B; font-size: 1.1rem; font-weight: bold; line-height: 1.5; margin-top: 6px;">{method_label}</div>
     </div>
 </div>
 """, unsafe_allow_html=True)
+
+    if scaling_decisions and len(set(scaling_decisions.values())) > 1:
+        with st.expander("รายละเอียด Per-Column Scaling"):
+            rows = [{"Column": col, "Method": SCALING_LABELS.get(m, m)} for col, m in scaling_decisions.items()]
+            st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
 
     with st.expander("ตัวอย่างข้อมูลหลังการแปลง (DATA PREVIEW)"):
         st.info(f"**ข้อมูล:** การปรับสเกล ({method_label}) จะถูกคำนวณและใช้งานจริงในขั้นตอน ML เพื่อความแม่นยำสูงสุดและป้องกันข้อมูลรั่วไหล")
         st.dataframe(transformed_dataframe.head(5), width="stretch")
 
-
-    # Success message minimal style
     st.success(f"**[ READY ]** การแปลงข้อมูลเสร็จสมบูรณ์ ระบบพร้อมนำไปสอนโมเดลในขั้นตอนถัดไปโดยใช้เทคนิค **{method_label}**")
 
 def apply_encoding(dataset: pd.DataFrame, encoding_decisions: dict, target_column: str) -> pd.DataFrame:
@@ -78,7 +90,8 @@ def apply_feature_selection(dataset: pd.DataFrame, columns_to_drop: list, target
     return dataset.drop(columns=safe_columns_to_drop)
 
 
-def apply_all(dataset: pd.DataFrame, encoding_decisions: dict, scaling_method: str,
+def apply_all(dataset: pd.DataFrame, encoding_decisions: dict,
+              scaling_decisions: dict | str,
               columns_to_drop: list, target_column: str,
               scaling_analysis: dict | None = None,
               encoding_analysis: list | None = None) -> tuple:
@@ -138,17 +151,26 @@ def apply_all(dataset: pd.DataFrame, encoding_decisions: dict, scaling_method: s
                     "rule_id":    info.get("rule_id", ""),
                 }
 
+    # สรุป scaling: ถ้าเป็น dict เก็บแบบ per-column, ถ้าเป็น str เก็บแบบ global
+    if isinstance(scaling_decisions, dict):
+        _scaling_method  = "per_column"
+        _scaling_dict    = scaling_decisions
+    else:
+        _scaling_method  = scaling_decisions or "standard_scaler"
+        _scaling_dict    = {}
+
     transformation_summary = {
         "original_rows":      dataset.shape[0],
         "original_cols":      dataset.shape[1],
         "dropped_cols":       len(all_drops),
         "encoded_cols":       len(encoding_decisions),
         "final_cols":         transformed_dataset.shape[1],
-        "scaling_method":     scaling_method,
+        "scaling_method":     _scaling_method,
+        "scaling_decisions":  _scaling_dict,
         "task_type":          task_type,
         "encoding_decisions": encoding_decisions,
         # ── rule engine metadata ──
-        "scaling_rule_id":    scaling_analysis.get("rule_id", "")    if scaling_analysis else "",
+        "scaling_rule_id":    "",
         "enc_rule_refs":      enc_rule_refs,
     }
 

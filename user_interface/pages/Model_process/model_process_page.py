@@ -207,13 +207,86 @@ def render_model_process():
         st.download_button("Leaderboard CSV", leaderboard_csv, file_name=f"leaderboard_{best_model_label}.csv", mime="text/csv")
 
     with tab_evaluation:
-        st.caption(f"ผลลัพธ์จาก **{best_model_label}** บน Test set ที่ยังไม่เคยเห็น")
+        # ── Model Selector ──
+        competition_data = competition_result["competition"]
+        valid_models = {k: v for k, v in competition_data.items() if v["cv_score"] is not None}
+        model_options = list(valid_models.keys())
+        model_labels  = {k: v["label"] for k, v in valid_models.items()}
+
+        saved_eval_key = st.session_state.get("eval_model_key", best_model_key)
+        if saved_eval_key not in model_options:
+            saved_eval_key = best_model_key
+
+        selected_key = st.selectbox(
+            "เลือก Model สำหรับ Evaluation",
+            options=model_options,
+            format_func=lambda k: f"{model_labels[k]}{'(Best)' if k == best_model_key else ''}",
+            index=model_options.index(saved_eval_key),
+            key="eval_model_key",
+        )
+
+        # ── ถ้าเลือก best model ใช้ผลเดิม ถ้าเลือกตัวอื่น refit + predict ──
+        if selected_key == best_model_key:
+            eval_y_pred   = competition_result["y_pred"]
+            eval_y_test   = competition_result["y_test"]
+            eval_metrics  = evaluation_metrics
+            eval_label    = best_model_label
+        else:
+            cache_key = f"_eval_cache_{selected_key}"
+            if st.session_state.get(cache_key) is None:
+                with st.spinner(f"กำลัง refit {model_labels[selected_key]}..."):
+                    try:
+                        transformation_summary = st.session_state.get("trans_summary", {})
+                        scaling_decisions = transformation_summary.get("scaling_decisions") or None
+                        scaling_method    = transformation_summary.get("scaling_method", "standard_scaler")
+                        encoding_decisions = transformation_summary.get("encoding_decisions") or None
+                        X_tr, X_te, y_tr, y_te, _ = preprocess(
+                            dataframe, target_column,
+                            scaling_method=scaling_method,
+                            scaling_decisions=scaling_decisions,
+                            missing_rules=st.session_state.get("missing_rules"),
+                            outlier_rules=st.session_state.get("outlier_rules"),
+                            encoding_decisions=encoding_decisions,
+                        )
+                        sel_model = get_model_map()[selected_key]()
+                        sel_params = competition_data[selected_key].get("best_params", {})
+                        if sel_params:
+                            try:
+                                sel_model.set_params(**sel_params)
+                            except Exception:
+                                pass
+                        from sklearn.utils.class_weight import compute_sample_weight
+                        fit_kw = {}
+                        if task_type == "classification" and selected_key in ("gradient_boosting", "xgboost"):
+                            fit_kw["sample_weight"] = compute_sample_weight("balanced", y_tr)
+                        sel_model.fit(X_tr, y_tr, **fit_kw)
+                        sel_pred = sel_model.predict(X_te)
+
+                        from sklearn.preprocessing import LabelEncoder
+                        if task_type == "classification":
+                            le = LabelEncoder()
+                            le.fit(y_tr)
+                            sel_pred = le.inverse_transform(sel_pred) if hasattr(le, "classes_") else sel_pred
+
+                        sel_metrics = get_metrics(y_te, sel_pred, task_type)
+                        st.session_state[cache_key] = {"y_pred": sel_pred, "y_test": y_te, "metrics": sel_metrics}
+                    except Exception as err:
+                        st.error(f"Refit ล้มเหลว: {err}")
+                        st.stop()
+
+            cached = st.session_state[cache_key]
+            eval_y_pred  = cached["y_pred"]
+            eval_y_test  = cached["y_test"]
+            eval_metrics = cached["metrics"]
+            eval_label   = model_labels[selected_key]
+
+        st.caption(f"ผลลัพธ์จาก **{eval_label}** บน Test set ที่ยังไม่เคยเห็น")
         # 1.0 Guard - Perfect Metrics Warning
         is_suspiciously_perfect = False
         if task_type == "classification":
-            is_suspiciously_perfect = all(v >= 0.9999 for v in evaluation_metrics.values() if isinstance(v, (int, float)))
+            is_suspiciously_perfect = all(v >= 0.9999 for v in eval_metrics.values() if isinstance(v, (int, float)))
         else:
-            r2 = evaluation_metrics.get("R² Score", 0)
+            r2 = eval_metrics.get("R² Score", 0)
             is_suspiciously_perfect = r2 >= 0.9999
 
         if is_suspiciously_perfect:
@@ -254,21 +327,21 @@ def render_model_process():
                 f'</div>',
                 unsafe_allow_html=True,
             )
-        show_metrics(evaluation_metrics)
-        render_metrics_explain(evaluation_metrics, task_type)
+        show_metrics(eval_metrics)
+        render_metrics_explain(eval_metrics, task_type)
         st.divider()
         if task_type == "classification":
-            show_confusion_matrix(competition_result["y_test"], competition_result["y_pred"])
-            render_cm_explain(competition_result["y_test"], competition_result["y_pred"])
+            show_confusion_matrix(eval_y_test, eval_y_pred)
+            render_cm_explain(eval_y_test, eval_y_pred)
         else:
             ev_col1, ev_col2 = st.columns(2)
             with ev_col1:
                 st.markdown("**Actual vs Predicted**")
-                show_pred_vs_actual(competition_result["y_test"].values, competition_result["y_pred"])
+                show_pred_vs_actual(eval_y_test.values, eval_y_pred)
                 render_scatter_explain()
             with ev_col2:
                 st.markdown("**Residual Plot (ความคลาดเคลื่อน)**")
-                show_residual_plot(competition_result["y_test"].values, competition_result["y_pred"])
+                show_residual_plot(eval_y_test.values, eval_y_pred)
                 st.markdown("""
                 <div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
                 padding: 16px 20px; margin: 12px 0; font-size: 0.9rem; color: #94A3B8; line-height: 1.8">
@@ -277,19 +350,19 @@ def render_model_process():
                   • จุดควรกระจายรอบเส้น 0 แบบไม่มีรูปแบบ (Random)<br>
                   • ถ้าจุดมีรูปแบบชัดเจน (เช่น เป็นรูปกรวย) แปลว่า model ยังมีจุดอ่อนบางพื้นที่
                 </div>""", unsafe_allow_html=True)
-            
+
             st.divider()
             st.markdown("**Error Distribution (การกระจายตัวของความผิดพลาด)**")
-            show_error_dist(competition_result["y_test"].values, competition_result["y_pred"])
+            show_error_dist(eval_y_test.values, eval_y_pred)
             st.markdown("""
             <div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
             padding: 16px 20px; margin: 12px 0; font-size: 0.9rem; color: #94A3B8; line-height: 1.8">
               • กราฟนี้แสดงว่า model มักทำนายผิดพลาดในช่วงไหนมากที่สุด<br>
               • <b style="color: #BB9AF7;">รูประฆังคว่ำ (Normal)</b> ที่จุด 0 หมายถึง model มีความแม่นยำสูงสม่ำเสมอ
             </div>""", unsafe_allow_html=True)
-        predictions_csv = build_predictions_df(competition_result["y_test"], competition_result["y_pred"], task_type).to_csv(index=False).encode("utf-8-sig")
+        predictions_csv = build_predictions_df(eval_y_test, eval_y_pred, task_type).to_csv(index=False).encode("utf-8-sig")
         st.markdown('<div style="margin-top:24px"></div>', unsafe_allow_html=True)
-        st.download_button("Predictions CSV", predictions_csv, file_name=f"predictions_{best_model_label}.csv", mime="text/csv")
+        st.download_button("Predictions CSV", predictions_csv, file_name=f"predictions_{eval_label}.csv", mime="text/csv")
 
 
     render_nav(competition_result)

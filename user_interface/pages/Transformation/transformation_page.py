@@ -71,9 +71,9 @@ def render_transformation():
     feature_selection_analysis = analysis_result["feature_selection"]
 
     # Render sections
-    encoding_decisions  = render_ml_encoding(dataframe, target_column, encoding_analysis)
-    chosen_scaling_method = render_ml_scaling(dataframe, target_column, scaling_analysis)
-    leakage_drops_list  = render_leakage_check(leakage_analysis)
+    encoding_decisions    = render_ml_encoding(dataframe, target_column, encoding_analysis)
+    chosen_scaling_decisions = render_ml_scaling(dataframe, target_column, scaling_analysis)
+    leakage_drops_list    = render_leakage_check(leakage_analysis)
     
     # เรียงลำดับเพื่อให้การเปรียบเทียบใน Choice Tracker เสถียร (ป้องกันลำดับสลับไปมาใน set)
     dropped_columns      = sorted(list(set(render_ml_feature_selection(dataframe, target_column, feature_selection_analysis) + leakage_drops_list)))
@@ -83,41 +83,42 @@ def render_transformation():
     if st.button("Apply Transformation",  type="primary", width="stretch"):
         with st.spinner("กำลังประมวลผล Transformation..."):
             try:
-                # [Fail-safe] ดึงค่าตรงจาก Session State ของ Widget
-                final_scaling_method = st.session_state.get("scaling_method", chosen_scaling_method)
-                
+                # [Fail-safe] ดึง per-column decisions จาก widget keys
+                final_scaling_decisions = {
+                    col: st.session_state.get(f"scl_{col}", dec["recommended"])
+                    for dec in scaling_analysis.get("column_decisions", [])
+                    for col in [dec["col"]]
+                } or chosen_scaling_decisions
+
                 transformed_dataframe, transformation_summary = apply_all(
-                    dataframe, encoding_decisions, final_scaling_method, dropped_columns, target_column,
+                    dataframe, encoding_decisions, final_scaling_decisions, dropped_columns, target_column,
                     scaling_analysis=scaling_analysis,
                     encoding_analysis=encoding_analysis,
                 )
-                
-                # [Force Update] มั่นใจว่า summary เก็บค่าที่เราเลือกจริงๆ
-                transformation_summary["scaling_method"] = final_scaling_method
-                
+
                 st.session_state["transformed_df"]      = transformed_dataframe
                 st.session_state["_trans_target_saved"] = target_column
                 st.session_state["trans_summary"]       = transformation_summary
                 st.session_state["trans_confirmed"]     = True
-                
+
                 # [Persistence] Save data and metadata immediately
                 save_transformed_df(transformed_dataframe)
                 save_trans_metadata(transformation_summary, target_column)
-                
+
                 # ลบผล ML เก่าออกเพื่อให้ต้องเริ่มใหม่
                 for key_to_remove in ["ml_result", "ml_metrics", "_fi_data", "ml_task_type"]:
                     st.session_state.pop(key_to_remove, None)
-        
+
                 enc_reasons = {info["col"]: info["reason"] for info in encoding_analysis}
                 log_transformation(
-                    transformation_summary, encoding_decisions, final_scaling_method, dropped_columns,
-                    scaling_reason=scaling_analysis.get("reason", ""),
+                    transformation_summary, encoding_decisions, final_scaling_decisions, dropped_columns,
                     enc_reasons=enc_reasons,
                 )
-                
+
                 commit_step("transformation", transformation_summary)
-                
-                method_label = SCALING_LABELS.get(final_scaling_method, final_scaling_method)
+
+                methods_used = set(final_scaling_decisions.values())
+                method_label = ", ".join(SCALING_LABELS.get(m, m) for m in methods_used) if methods_used else "Per-Column"
                 st.toast(f"Apply สำเร็จ! ใช้ {method_label}", icon="✅")
                 
             except Exception as error:

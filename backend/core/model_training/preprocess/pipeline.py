@@ -38,7 +38,9 @@ def sample_data(features: pd.DataFrame, target: pd.Series, max_sample_rows: int,
     sampled_target = target.iloc[sampled_indices].reset_index(drop=True)
     return sampled_features, sampled_target
 
-def preprocess(dataset: pd.DataFrame, target_column: str, scaling_method: str = "standard_scaler",
+def preprocess(dataset: pd.DataFrame, target_column: str,
+               scaling_method: str = "standard_scaler",
+               scaling_decisions: dict | None = None,
                missing_rules: dict = None, outlier_rules: dict = None,
                encoding_decisions: dict | None = None) -> tuple:
     """
@@ -96,7 +98,8 @@ def preprocess(dataset: pd.DataFrame, target_column: str, scaling_method: str = 
     # 4. Encoding  fit บน train เท่านั้น ป้องกัน Data Leakage (categorical ไม่มี NaN แล้ว)
     features_train, features_test = encode_fit_transform(features_train, features_test, encoding_decisions)
 
-    # 5. Scaling
-    features_train, features_test = scale_data(features_train, features_test, scaling_method)
+    # 5. Scaling — ใช้ per-column decisions ถ้ามี ไม่งั้น fallback เป็น global method
+    _scaling_arg = scaling_decisions if scaling_decisions else scaling_method
+    features_train, features_test = scale_data(features_train, features_test, _scaling_arg)
 
     return features_train, features_test, target_train, target_test, task_type

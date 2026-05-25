@@ -220,20 +220,52 @@ def render_viz(df: pd.DataFrame):
     if sel_col in num_cols:
         fig = px.histogram(df, x=sel_col, color=color_col, marginal="box", nbins=30,
                            color_discrete_sequence=px.colors.qualitative.Set2)
+        fig.update_layout(template="plotly_dark", height=360, showlegend=bool(color_col),
+                          margin=dict(t=20, b=20))
+        st.plotly_chart(fig, width="stretch")
+        col_data = df[sel_col].dropna()
+        if len(col_data) >= 2 and col_data.nunique() > 1:
+            from scipy.stats import skew as _skew
+            sk = float(_skew(col_data))
+            sk_label = "สมมาตร" if abs(sk) < 0.5 else ("เบ้เล็กน้อย" if abs(sk) < 1 else "เบ้มาก")
+            sk_dir = " (หางยาวขวา)" if sk > 0.5 else (" (หางยาวซ้าย)" if sk < -0.5 else "")
+            extra = " — ข้อมูลนี้ผ่าน Scaling/Transform มาแล้ว ค่าที่เห็นคือค่าหลัง preprocess" if abs(sk) >= 1 else ""
+            st.caption(
+                f"**{sel_col}** — mean: {col_data.mean():.3f} | median: {col_data.median():.3f} | "
+                f"skewness: {sk:+.2f} ({sk_label}{sk_dir}){extra}"
+            )
     else:
         counts = df[sel_col].value_counts().reset_index()
         counts.columns = [sel_col, "count"]
         fig = px.bar(counts.head(20), x=sel_col, y="count", color_discrete_sequence=["#58a6ff"])
-    fig.update_layout(template="plotly_dark", height=360, showlegend=bool(color_col),
-                      margin=dict(t=20, b=20))
-    st.plotly_chart(fig, width="stretch")
+        fig.update_layout(template="plotly_dark", height=360, showlegend=False,
+                          margin=dict(t=20, b=20))
+        st.plotly_chart(fig, width="stretch")
+        top_val = counts.iloc[0][sel_col] if len(counts) > 0 else "-"
+        top_pct = counts.iloc[0]["count"] / len(df) * 100 if len(counts) > 0 else 0
+        st.caption(
+            f"**{sel_col}** — {df[sel_col].nunique()} กลุ่มที่ไม่ซ้ำ | "
+            f"กลุ่มที่พบมากสุด: **{top_val}** ({top_pct:.1f}%)"
+        )
 
     if len(num_cols) >= 2:
         st.divider()
-        fig2 = px.imshow(df[num_cols].corr(), text_auto=".2f",
+        st.caption("**Correlation Heatmap (หลัง Transformation)** — สีแดงเข้ม = บวกสูง (+1) | สีน้ำเงินเข้ม = ลบสูง (−1) | สีจาง = ไม่สัมพันธ์กัน (≈0)")
+        corr_matrix = df[num_cols].corr()
+        show_text = ".2f" if len(num_cols) <= 15 else False
+        fig2 = px.imshow(corr_matrix, text_auto=show_text,
                          color_continuous_scale="RdBu_r", range_color=[-1, 1], aspect="auto")
         fig2.update_layout(template="plotly_dark", height=380, margin=dict(t=20, b=20))
         st.plotly_chart(fig2, width="stretch")
+        high_corr = [
+            (corr_matrix.columns[i], corr_matrix.columns[j], round(corr_matrix.iloc[i, j], 2))
+            for i in range(len(corr_matrix.columns))
+            for j in range(i + 1, len(corr_matrix.columns))
+            if abs(corr_matrix.iloc[i, j]) > 0.8
+        ]
+        if high_corr:
+            pairs_text = " | ".join(f"`{a}` & `{b}` (r={r})" for a, b, r in high_corr[:5])
+            st.warning(f"พบ Feature ที่มีความสัมพันธ์กันสูง (|r| > 0.8): {pairs_text} — อาจเกิด Multicollinearity กับ Linear-based models")
 
 
 def render_metric_cards(metrics_dict: dict):
