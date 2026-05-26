@@ -291,23 +291,23 @@ MODEL_CHARACTERISTICS = {
     # Classification
     "logistic_regression":         {"tags": ["interpretable", "fast"], "pros": ["อธิบายได้ง่ายด้วย coefficients", "train เร็ว ใช้ memory น้อย", "เหมาะกับ binary classification"], "cons": ["สมมติว่าความสัมพันธ์เป็นเชิงเส้น", "อ่อนไหวต่อ outlier และ correlated features"]},
     "decision_tree":               {"tags": ["interpretable", "fast"], "pros": ["อ่านเหมือน flowchart เข้าใจง่ายที่สุด", "ไม่ต้อง scaling", "จัดการ non-linear ได้"], "cons": ["Overfit ง่ายถ้าไม่ prune", "ผลลัพธ์ไม่ stable เมื่อข้อมูลเปลี่ยนเล็กน้อย"]},
-    "random_forest":               {"tags": ["accurate", "stable"], "pros": ["แม่นยำสูง ทนต่อ outlier", "ไม่ต้อง scaling", "บอก feature importance ได้"], "cons": ["อธิบายได้ยากกว่า single tree", "ใช้ memory และเวลา train มากกว่า"]},
+    "random_forest":               {"tags": ["basic"], "pros": ["แม่นยำสูง ทนต่อ outlier", "ไม่ต้อง scaling", "บอก feature importance ได้"], "cons": ["อธิบายได้ยากกว่า single tree", "ใช้ memory และเวลา train มากกว่า"]},
     "gradient_boosting":           {"tags": ["accurate", "stable"], "pros": ["แม่นยำสูงมาก จัดการ pattern ซับซ้อนได้", "ทนต่อ noise ได้ดี"], "cons": ["Train ช้ากว่า Random Forest", "ต้องปรับ hyperparameter หลายตัว"]},
     "svm":                         {"tags": ["accurate"], "pros": ["ทำงานได้ดีใน high-dimensional space", "ทนต่อ outlier ปานกลาง"], "cons": ["Train ช้ามากกับข้อมูลขนาดใหญ่", "ต้องทำ scaling ก่อนเสมอ", "อธิบายผลได้ยาก"]},
     "knn":                         {"tags": ["interpretable", "fast"], "pros": ["ง่าย ไม่มี training phase จริงๆ", "เข้าใจง่าย: ทำนายจากเพื่อนบ้านที่ใกล้ที่สุด"], "cons": ["ช้ามากกับข้อมูลขนาดใหญ่", "อ่อนไหวต่อ scale และ noise"]},
     "naive_bayes":                 {"tags": ["fast", "interpretable"], "pros": ["Train และ predict เร็วมาก", "ทำงานได้ดีกับข้อมูลน้อย"], "cons": ["สมมติว่า features เป็นอิสระต่อกัน (ซึ่งมักไม่จริง)", "แม่นยำต่ำกว่า ensemble methods"]},
     "xgboost":                     {"tags": ["accurate", "stable"], "pros": ["แม่นยำสูงมาก มี regularization ในตัว", "จัดการ missing values ได้เอง"], "cons": ["ต้องปรับ hyperparameter ค่อนข้างเยอะ", "อธิบายผลได้ยาก"]},
     "lightgbm":                    {"tags": ["accurate", "fast"], "pros": ["Train เร็วมาก รองรับข้อมูลขนาดใหญ่", "แม่นยำสูงใกล้เคียง XGBoost"], "cons": ["อาจ overfit กับข้อมูลขนาดเล็ก", "parameter มีผลต่อ performance มาก"]},
-    "catboost":                    {"tags": ["accurate", "stable"], "pros": ["จัดการ categorical features ได้เองโดยไม่ต้อง encoding", "ทนต่อ overfitting"], "cons": ["Train ช้ากว่า LightGBM", "ใช้ memory มาก"]},
+    "catboost":                    {"tags": ["easy"], "pros": ["จัดการ categorical features ได้เองโดยไม่ต้อง encoding", "ทนต่อ overfitting"], "cons": ["Train ช้ากว่า LightGBM", "ใช้ memory มาก"]},
     # Regression
     "linear_regression":           {"tags": ["interpretable", "fast"], "pros": ["อธิบายได้ด้วย coefficients ชัดเจน", "Train เร็วมาก", "เหมาะกับความสัมพันธ์เชิงเส้น"], "cons": ["ใช้ได้เฉพาะ linear relationship", "อ่อนไหวต่อ outlier"]},
     "decision_tree_regressor":     {"tags": ["interpretable", "fast"], "pros": ["อ่านผลง่าย ไม่ต้อง scaling", "จัดการ non-linear ได้"], "cons": ["Overfit ง่าย", "ผลไม่ smooth"]},
-    "random_forest_regressor":     {"tags": ["accurate", "stable"], "pros": ["แม่นยำสูง ทนต่อ noise", "ไม่ต้อง scaling"], "cons": ["ใช้ memory มาก", "ช้ากว่า single model"]},
+    "random_forest_regressor":     {"tags": ["basic"], "pros": ["แม่นยำสูง ทนต่อ noise", "ไม่ต้อง scaling"], "cons": ["ใช้ memory มาก", "ช้ากว่า single model"]},
     "gradient_boosting_regressor": {"tags": ["accurate", "stable"], "pros": ["แม่นยำสูงมาก จัดการ pattern ซับซ้อน"], "cons": ["Train ช้า ต้องปรับ hyperparameter"]},
     "knn_regressor":               {"tags": ["interpretable", "fast"], "pros": ["ง่าย เข้าใจง่าย"], "cons": ["ช้ากับข้อมูลใหญ่ อ่อนไหวต่อ scale"]},
     "xgboost_regressor":           {"tags": ["accurate", "stable"], "pros": ["แม่นยำสูง มี regularization"], "cons": ["ต้องปรับ hyperparameter เยอะ"]},
     "lightgbm_regressor":          {"tags": ["accurate", "fast"], "pros": ["Train เร็ว รองรับข้อมูลใหญ่"], "cons": ["อาจ overfit กับข้อมูลเล็ก"]},
-    "catboost_regressor":          {"tags": ["accurate", "stable"], "pros": ["จัดการ categorical ได้เอง ทนต่อ overfitting"], "cons": ["Train ช้า ใช้ memory มาก"]},
+    "catboost_regressor":          {"tags": ["easy"], "pros": ["จัดการ categorical ได้เอง ทนต่อ overfitting"], "cons": ["Train ช้า ใช้ memory มาก"]},
 }
 
 TAG_META = {
@@ -315,14 +315,215 @@ TAG_META = {
     "accurate":      {"label": "แม่นยำสูง",   "color": "#7AA2F7", "desc": "CV Score สูงสุดในกลุ่ม"},
     "fast":          {"label": "เร็ว/เบา",     "color": "#E0AF68", "desc": "Train และ predict เร็ว เหมาะกับ production"},
     "stable":        {"label": "เสถียร",       "color": "#BB9AF7", "desc": "±Std ต่ำ ให้ผลสม่ำเสมอ"},
+    "easy":          {"label": "ใช้งานง่าย",   "color": "#FF9F1C", "desc": "ใช้งานง่าย ไม่ซับซ้อน ไม่ต้องแปลงข้อมูลมาก"},
+    "basic":         {"label": "พื้นฐาน",     "color": "#9CA3AF", "desc": "โมเดลพื้นฐาน เข้าใจง่าย"},
 }
 
 
+@st.dialog(" ")
+def show_model_explanation_dialog(model_label: str):
+    """แสดง Popup อธิบายโมเดลเลียนแบบแท็บ Model Guide"""
+    from backend.core.insight.model_guide.guide import MODEL_GUIDE_INFO
+    
+    # ค้นหาคำอธิบายที่ตรงกันในคู่มือฐานข้อมูล
+    model_guide = None
+    for key, val in MODEL_GUIDE_INFO.items():
+        if key.lower() in model_label.lower() or model_label.lower() in key.lower():
+            model_guide = val
+            break
+            
+    if model_guide:
+        # Determine the model category
+        lbl_lower = model_label.lower()
+        if "lightgbm" in lbl_lower:
+            category = "GRADIENT BOOSTING"
+        elif "xgboost" in lbl_lower:
+            category = "GRADIENT BOOSTING"
+        elif "catboost" in lbl_lower:
+            category = "GRADIENT BOOSTING"
+        elif "gradient boosting" in lbl_lower or "gbt" in lbl_lower:
+            category = "GRADIENT BOOSTING"
+        elif "random forest" in lbl_lower or "rf" in lbl_lower:
+            category = "ENSEMBLE LEARNING"
+        elif "decision tree" in lbl_lower or "dt" in lbl_lower:
+            category = "DECISION TREE"
+        elif "logistic" in lbl_lower or "linear regression" in lbl_lower or "lasso" in lbl_lower or "ridge" in lbl_lower or "linear" in lbl_lower:
+            category = "LINEAR MODEL"
+        elif "knn" in lbl_lower or "k-nearest" in lbl_lower or "nearest neighbor" in lbl_lower:
+            category = "NEIGHBOR MODEL"
+        elif "svm" in lbl_lower or "support vector" in lbl_lower or "svc" in lbl_lower or "svr" in lbl_lower:
+            category = "SUPPORT VECTOR MACHINE"
+        elif "naive bayes" in lbl_lower or "gaussiannb" in lbl_lower:
+            category = "PROBABILISTIC MODEL"
+        else:
+            category = "MACHINE LEARNING"
+
+        # Inject CSS style overrides for premium aesthetic matching the mockup
+        st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap');
+
+/* Apply clean fonts to everything inside the dialog */
+div[role="dialog"] * {
+    font-family: 'Outfit', 'Inter', 'Sarabun', sans-serif !important;
+}
+
+/* Hide default dialog header title but keep close button */
+[data-testid="stDialogHeader"] h2,
+div[role="dialog"] h2 {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Style default close button to match premium mockup */
+[data-testid="stDialogHeader"] button {
+    background-color: #0E1420 !important;
+    border: 1px solid #1E293B !important;
+    border-radius: 6px !important;
+    color: #9CA3AF !important;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+    position: absolute !important;
+    right: 24px !important;
+    top: 24px !important;
+    z-index: 1000 !important;
+}
+[data-testid="stDialogHeader"] button:hover {
+    border-color: #3B82F6 !important;
+    color: #FFFFFF !important;
+    background-color: #1E293B !important;
+}
+
+/* Style Streamlit secondary buttons inside dialog (e.g., footer button) */
+div[role="dialog"] button[kind="secondary"] {
+    background-color: #0E1420 !important;
+    color: #94A3B8 !important;
+    border: 1px solid #1E293B !important;
+    border-radius: 6px !important;
+    font-size: 0.9rem !important;
+    padding: 8px 24px !important;
+    transition: all 0.2s ease !important;
+}
+div[role="dialog"] button[kind="secondary"]:hover {
+    border-color: #3B82F6 !important;
+    color: #FFFFFF !important;
+    background-color: #1E293B !important;
+}
+
+/* Custom cards with left-border accent and subtle background gradient */
+.card-principle {
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.08) 0%, rgba(17, 24, 39, 0) 100%), #111827 !important;
+    border: 1px solid #1E293B !important;
+    border-left: 5px solid #3B82F6 !important;
+    border-radius: 6px !important;
+    padding: 18px 20px !important;
+    margin-bottom: 16px !important;
+    font-family: sans-serif !important;
+}
+.card-strengths {
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.08) 0%, rgba(17, 24, 39, 0) 100%), #111827 !important;
+    border: 1px solid #1E293B !important;
+    border-left: 5px solid #10B981 !important;
+    border-radius: 6px !important;
+    padding: 18px 20px !important;
+    margin-bottom: 16px !important;
+    font-family: sans-serif !important;
+}
+.card-weaknesses {
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.08) 0%, rgba(17, 24, 39, 0) 100%), #111827 !important;
+    border: 1px solid #1E293B !important;
+    border-left: 5px solid #EF4444 !important;
+    border-radius: 6px !important;
+    padding: 18px 20px !important;
+    margin-bottom: 24px !important;
+    font-family: sans-serif !important;
+}
+
+/* Header highlight text colors inside cards */
+.card-principle .card-header {
+    color: #3B82F6 !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    margin-bottom: 8px !important;
+    text-transform: uppercase !important;
+}
+.card-strengths .card-header {
+    color: #10B981 !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    margin-bottom: 8px !important;
+    text-transform: uppercase !important;
+}
+.card-weaknesses .card-header {
+    color: #EF4444 !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    margin-bottom: 8px !important;
+    text-transform: uppercase !important;
+}
+
+.card-body {
+    color: #E2E8F0 !important;
+    font-size: 0.95rem !important;
+    line-height: 1.6 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+        # Dialog Header Section
+        st.markdown(f"""
+<div style="margin-bottom: 24px; font-family: sans-serif;">
+    <div style="color: #64748B; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px;">MODEL INSIGHT</div>
+    <div style="color: #FFFFFF; font-size: 1.5rem; font-weight: 700; line-height: 1.3; margin-bottom: 20px;">คำอธิบายและแนวคิดการทำงานของโมเดล</div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="color: #00E676; font-size: 1.8rem; font-weight: 700; font-family: sans-serif; letter-spacing: -0.02em;">{model_label}</span>
+        <span style="border: 1px solid #334155; border-radius: 4px; padding: 4px 10px; font-size: 0.7rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.08em; background-color: rgba(30, 41, 59, 0.4);">{category}</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+        # Content Cards (Principle, Strengths, Weaknesses)
+        st.markdown(f"""
+<div class="card-principle">
+    <div class="card-header">PRINCIPLE • หลักการทำงาน</div>
+    <div class="card-body">{model_guide["simple"]}</div>
+</div>
+<div class="card-strengths">
+    <div class="card-header">STRENGTHS • จุดแข็ง</div>
+    <div class="card-body">{model_guide["strength"]}</div>
+</div>
+<div class="card-weaknesses">
+    <div class="card-header">WEAKNESSES • จุดอ่อน</div>
+    <div class="card-body">{model_guide["weakness"]}</div>
+</div>
+<div style="border-bottom: 1px solid #1E293B; margin-bottom: 20px;"></div>
+""", unsafe_allow_html=True)
+    else:
+        st.warning(f"ไม่พบข้อมูลอธิบายทางเทคนิคสำหรับโมเดล '{model_label}'")
+        
+    col1, col2 = st.columns([3.5, 1.2])
+    with col2:
+        if st.button("ปิดหน้าต่าง", key="close_guide_dialog", use_container_width=True):
+            st.rerun()
+
+
 def render_leaderboard_insight(competition_result: dict):
-    """Leaderboard พร้อม Filter ตาม Characteristic และ Card จุดเด่น-จุดอ่อน"""
+    """Leaderboard พร้อม Filter ตาม Characteristic และกล่องแสดง Popup ความรู้"""
     competition = competition_result["competition"]
     best_key    = competition_result["best_key"]
     task_type   = competition_result["task_type"]
+    metric_name = "F1-Macro" if task_type == "classification" else "R² Score"
 
     ranked = sorted(
         [(k, v) for k, v in competition.items() if v["cv_score"] is not None],
@@ -334,60 +535,215 @@ def render_leaderboard_insight(competition_result: dict):
 
     render_section_header(
         "Model Leaderboard",
-        "เปรียบเทียบโมเดลทั้งหมด และเลือกโมเดลที่เหมาะกับความต้องการของคุณ",
+        "เปรียบเทียบโมเดลทั้งหมด และคลิกดูแนวคิดจุดเด่นจุดอ่อนของแต่ละโมเดลเชิงลึก",
     )
 
-    # ── Leaderboard Table ──
+    # ── กรองข้อมูลล่วงหน้าเพื่อทำตาราง Grid หรือ Stack ──
+    filtered_ranked = list(ranked)
+
+    # ── สไตล์ชีต CSS ขั้นสูงสำหรับประกอบการ์ด HTML และปุ่มลิงก์มินิมอล ──
+    st.markdown("""
+    <style>
+    /* ดึงตัวกล่อง Element Container ทั้งหมดของปุ่มขึ้นไปซ้อนทับในการ์ดหลัก (ทำงานระดับ Block-level ป้องกัน CSS flexbox block) */
+    div[data-testid="column"]:has(.minimal-btn-trigger) .element-container:has(div.stButton),
+    div[data-testid="column"]:has(.minimal-btn-trigger) div.stButton,
+    div[data-testid="column"]:has(.minimal-btn-trigger) div:has(> div.stButton) {
+        margin-top: -40px !important; /* ดึงขึ้นมาระดับ 40px เพื่อความกึ่งกลางที่สมมาตร */
+        margin-bottom: 16px !important; /* เพิ่มระยะห่างแนวตั้งระหว่างแถวที่สวยสมบูรณ์แบบ */
+        display: flex !important;
+        justify-content: flex-start !important; /* บังคับตัวครอบแม่ชั้นนอกสุดให้จัดวางแบบชิดซ้าย */
+        width: 100% !important;
+    }
+    .element-container:has(.minimal-btn-trigger) + .element-container {
+        margin-top: -40px !important;
+        margin-bottom: 16px !important;
+        display: flex !important;
+        justify-content: flex-start !important;
+        width: 100% !important;
+    }
+    
+    /* ปรับปุ่ม st.button ให้กลายเป็นลิงก์ข้อความมินิมอลฝังตัวในการ์ด */
+    div[data-testid="column"]:has(.minimal-btn-trigger) div.stButton > button,
+    .element-container:has(.minimal-btn-trigger) + .element-container div.stButton > button,
+    .minimal-btn-trigger + div div.stButton > button {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        color: #768390 !important;
+        font-size: 0.85rem !important;
+        text-align: left !important;
+        display: inline-flex !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        box-shadow: none !important;
+        margin-top: 0 !important; /* เปลี่ยนเป็น 0 เพื่อป้องกันการดึงทับซ้อน (Compounding Margin) ที่ทำให้ปุ่มเกยแถบสี */
+        margin-left: 24px !important;
+        position: relative !important;
+        z-index: 10 !important;
+        min-height: unset !important;
+        line-height: 1.2 !important;
+        font-weight: 500 !important;
+        transition: color 0.2s ease, transform 0.2s ease !important;
+        width: auto !important; /* บังคับขนาดให้กะทัดรัดพอดีกับข้อความ ไม่ยืดเต็ม 100% ของความกว้าง เพื่อเลี่ยงปัญหากลาง */
+    }
+    
+    /* บังคับเนื้อหาด้านในปุ่มทุกตัวให้ชิดซ้าย 100% เพื่อล้างสไตล์การจัดกึ่งกลางของ Streamlit */
+    div[data-testid="column"]:has(.minimal-btn-trigger) div.stButton > button * {
+        text-align: left !important;
+        justify-content: flex-start !important;
+        margin-left: 0 !important;
+        margin-right: auto !important;
+    }
+    div[data-testid="column"]:has(.minimal-btn-trigger) div.stButton > button:hover,
+    .element-container:has(.minimal-btn-trigger) + .element-container div.stButton > button:hover,
+    .minimal-btn-trigger + div div.stButton > button:hover {
+        background: transparent !important;
+        text-decoration: underline !important;
+        transform: translateX(3px) !important;
+    }
+    div[data-testid="column"]:has(.rank-btn-01) div.stButton > button:hover,
+    .element-container:has(.rank-btn-01) + .element-container div.stButton > button:hover,
+    .rank-btn-01 + div div.stButton > button:hover {
+        color: #00E676 !important;
+    }
+    div[data-testid="column"]:has(.rank-btn-02) div.stButton > button:hover,
+    .element-container:has(.rank-btn-02) + .element-container div.stButton > button:hover,
+    .rank-btn-02 + div div.stButton > button:hover {
+        color: #7AA2F7 !important;
+    }
+    div[data-testid="column"]:has(.rank-btn-03) div.stButton > button:hover,
+    .element-container:has(.rank-btn-03) + .element-container div.stButton > button:hover,
+    .rank-btn-03 + div div.stButton > button:hover {
+        color: #FF9F1C !important;
+    }
+    div[data-testid="column"]:has(.rank-btn-default) div.stButton > button:hover,
+    .element-container:has(.rank-btn-default) + .element-container div.stButton > button:hover,
+    .rank-btn-default + div div.stButton > button:hover {
+        color: #94A3B8 !important;
+    }
+    div[data-testid="column"]:has(.minimal-btn-trigger) div.stButton > button:active,
+    .element-container:has(.minimal-btn-trigger) + .element-container div.stButton > button:active,
+    .minimal-btn-trigger + div div.stButton > button:active {
+        background: transparent !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # ── Leaderboard Table Stack (Vertical Stack matching Mockup, centered using columns) ──
+    st.markdown("<br>", unsafe_allow_html=True)
     best_score = ranked[0][1]["cv_score"]
-    for rank_i, (key, val) in enumerate(ranked):
-        chars = MODEL_CHARACTERISTICS.get(key, {})
-        model_tags = chars.get("tags", [])
+    
+    col_left, col_mid, col_right = st.columns([0.4, 9.2, 0.4])
+    with col_mid:
+        for row_idx in range(0, len(filtered_ranked), 2):
+            grid_cols = st.columns(2)
+            for col_offset in range(2):
+                item_idx = row_idx + col_offset
+                if item_idx >= len(filtered_ranked):
+                    break
+                
+                key, val = filtered_ranked[item_idx]
+                is_best   = key == best_key
+                score_pct = val["cv_score"] / (best_score + 1e-9) * 100
+                bar_width = max(10, int(score_pct))
 
-        is_best   = key == best_key
-        score_pct = val["cv_score"] / (best_score + 1e-9) * 100
-        bar_width = max(10, int(score_pct))
+                chars = MODEL_CHARACTERISTICS.get(key, {})
+                model_tags = chars.get("tags", [])
 
-        tag_badges = "".join(
-            f'<span style="background:{TAG_META[t]["color"]}22;color:{TAG_META[t]["color"]};'
-            f'border:1px solid {TAG_META[t]["color"]}44;font-size:0.7rem;font-weight:700;'
-            f'padding:1px 7px;border-radius:4px;margin-right:4px;">{TAG_META[t]["label"]}</span>'
-            for t in model_tags if t in TAG_META
-        )
-        best_badge = (
-            '<span style="background:#10B98122;color:#10B981;border:1px solid #10B98144;'
-            'font-size:0.7rem;font-weight:700;padding:1px 7px;border-radius:4px;margin-right:4px;">BEST</span>'
-            if is_best else ""
-        )
-        border_color = "#10B981" if is_best else "#414868"
-        rank_color   = "#E0AF68" if rank_i == 0 else ("#94A3B8" if rank_i == 1 else "#CD7F32" if rank_i == 2 else "#475569")
+                # กำหนดตัวประเมินประสิทธิภาพใน Test Set
+                eval_key = "F1(Mac)" if task_type == "classification" else "R² Score"
+                evaluation_metrics = st.session_state.get("ml_metrics", {})
+                if key == best_key:
+                    test_score_val = evaluation_metrics.get(eval_key, None)
+                    if test_score_val is not None:
+                        test_score_str = f"{test_score_val:.4f}"
+                    else:
+                        test_score_str = "—"
+                else:
+                    test_score_str = "—"
 
-        st.markdown(f"""
-<div style="background:#1e2030;border:1px solid {border_color};border-radius:8px;padding:16px 20px;margin-bottom:10px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="display:flex;align-items:center;gap:12px;">
-      <span style="color:{rank_color};font-weight:800;font-size:1.1rem;font-family:monospace;min-width:36px;white-space:nowrap;">#{rank_i+1}</span>
-      <span style="color:#E2E8F0;font-weight:700;font-size:1.05rem;">{val["label"]}</span>
-      <span style="margin-left:4px;">{best_badge}{tag_badges}</span>
-    </div>
-    <div style="text-align:right;">
-      <span style="color:#7AA2F7;font-size:1.1rem;font-weight:800;font-family:monospace;">{val["cv_score"]:.4f}</span>
-      <span style="color:#475569;font-size:0.85rem;margin-left:6px;">±{val["cv_std"]:.4f}</span>
-    </div>
-  </div>
-  <div style="background:#0d1117;border-radius:4px;height:6px;margin-bottom:12px;">
-    <div style="background:{"#10B981" if is_best else "#7AA2F7"};width:{bar_width}%;height:6px;border-radius:4px;"></div>
-  </div>
-  <div style="display:flex;gap:24px;">
-    <div style="flex:1;">
-      <div style="color:#9ECE6A;font-size:0.75rem;font-weight:700;margin-bottom:4px;letter-spacing:0.08em;">จุดเด่น</div>
-      {"".join(f'<div style="color:#C9D1D9;font-size:0.85rem;line-height:1.7;">• {p}</div>' for p in chars.get("pros", ["-"]))}
-    </div>
-    <div style="flex:1;">
-      <div style="color:#F7768E;font-size:0.75rem;font-weight:700;margin-bottom:4px;letter-spacing:0.08em;">จุดอ่อน</div>
-      {"".join(f'<div style="color:#C9D1D9;font-size:0.85rem;line-height:1.7;">• {c}</div>' for c in chars.get("cons", ["-"]))}
-    </div>
-  </div>
+                # ค้นหาอันดับเดิมในรายการ ranked เพื่อระบุชุดโทเค็นสีและการจัดวาง
+                original_rank_i = next(i for i, (k, _) in enumerate(ranked) if k == key)
+                
+                # ชุดธีมสีตามลำดับลีดเดอร์บอร์ด (สีสันพรีเมียมตาม Mockup)
+                if original_rank_i == 0:
+                    rank_color = "#00E676"  # Neon green
+                    bar_color = "#00E676"
+                    border_style = "border: 1.5px solid #00E676; box-shadow: 0 0 20px rgba(0, 230, 118, 0.15);"
+                    card_bg = "#0A101C"     # Deep premium dark navy
+                    btn_class = "rank-btn-01"
+                    bar_style = f"background: #00E676; width: {score_pct}%; height: 8px; border-radius: 6px; box-shadow: 0 0 8px #00E676;"
+                elif original_rank_i == 1:
+                    rank_color = "#4F6B94"  # Elegant slate blue
+                    bar_color = "#4F6B94"
+                    border_style = "border: 1px solid #1E293B;"
+                    card_bg = "#0A101C"
+                    btn_class = "rank-btn-02"
+                    bar_style = f"background: #4F6B94; width: {score_pct}%; height: 8px; border-radius: 6px;"
+                elif original_rank_i == 2:
+                    rank_color = "#FF9F1C"  # Vibrant warm orange
+                    bar_color = "#FF9F1C"
+                    border_style = "border: 1px solid #1E293B;"
+                    card_bg = "#0A101C"
+                    btn_class = "rank-btn-03"
+                    bar_style = f"background: #FF9F1C; width: {score_pct}%; height: 8px; border-radius: 6px;"
+                else:
+                    rank_color = "#475569"  # Muted grey
+                    bar_color = "#334155"
+                    border_style = "border: 1px solid #161B22;"
+                    card_bg = "#060B14"
+                    btn_class = "rank-btn-default"
+                    bar_style = f"background: #334155; width: {score_pct}%; height: 8px; border-radius: 6px;"
+
+                # กำหนดสีป้าย Badge ตามสีของ Rank เพื่อความสวยงามคุมโทนเหมือน Mockup
+                tag_badges = "".join(
+                    f'<span style="background:transparent; color:{rank_color}; '
+                    f'border:1px solid {rank_color}66; font-size:0.8rem; font-weight:500; '
+                    f'padding:4px 12px; border-radius:8px; margin-right:8px; white-space:nowrap;">{TAG_META[t]["label"]}</span>'
+                    for t in model_tags if t in TAG_META
+                )
+                
+                best_badge = (
+                    f'<span style="background:#00E676; color:#06150D; font-weight:800; '
+                    f'font-size:0.7rem; padding:2px 8px; border-radius:4px; margin-left:8px; '
+                    f'letter-spacing:0.05em; vertical-align:middle; line-height:1;">BEST</span>'
+                    if is_best else ""
+                )
+
+                with grid_cols[col_offset]:
+                    # แสดงกล่องการ์ด HTML โครงสร้างกล่องเดี่ยวไร้รอยต่อ (เขียนแบบชิดซ้ายเพื่อป้องกัน Markdown Parse Error)
+                    st.markdown(f"""<div style="background: {card_bg}; {border_style} border-radius: 16px; padding: 24px 24px 24px 24px; margin-bottom: 0;">
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+<div style="display:flex; align-items:center; gap:16px;">
+<span style="color:{rank_color}; font-weight:700; font-size:2rem; font-family:monospace; line-height:1;">{original_rank_i+1:02d}</span>
+<div style="display:flex; align-items:center;">
+<span style="color:#FFFFFF; font-weight:600; font-size:1.35rem; letter-spacing:-0.02em;">{val["label"]}</span>
+{best_badge}
+</div>
+</div>
+<div style="text-align: right; line-height: 1.4;">
+<div style="color: #E2E8F0; font-size: 0.95rem; font-family: monospace; font-weight: 500;">
+<span style="color: #768390; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; font-family: sans-serif;">CV Score:</span> 
+{val["cv_score"]:.4f} <span style="color: #768390; font-size: 0.72rem;">&plusmn;{val["cv_std"]:.4f}</span>
+</div>
+<div style="color: {rank_color if key == best_key else '#768390'}; font-size: 0.95rem; font-family: monospace; font-weight: 600; margin-top: 4px;">
+<span style="color: #768390; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; font-family: sans-serif;">{metric_name}:</span> 
+{test_score_str}
+</div>
+</div>
+</div>
+<div style="margin-bottom:16px; margin-top:8px; display:flex; gap:2px; flex-wrap:wrap; align-items:center;">
+{tag_badges}
+</div>
+<div style="background:#121824; border-radius:6px; height:8px; margin-bottom:18px; overflow:hidden;">
+<div style="{bar_style}"></div>
+</div>
+<div class="minimal-btn-trigger {btn_class}" style="height: 20px; margin-bottom: 0;"></div>
 </div>""", unsafe_allow_html=True)
+                    
+                    # ปุ่มที่ถูกดักแปลงรูปทรงด้วย CSS Sibling Selector ให้ขยับขึ้นไปซ้อนทับอยู่ในฐานการ์ดแบบไร้รอยต่อ
+                    if st.button("คำอธิบายการทำงาน →", key=f"guide_btn_{key}", use_container_width=True):
+                        show_model_explanation_dialog(val["label"])
 
     # ── Failed models ──
     failed = [(k, v) for k, v in competition.items() if v["cv_score"] is None]
