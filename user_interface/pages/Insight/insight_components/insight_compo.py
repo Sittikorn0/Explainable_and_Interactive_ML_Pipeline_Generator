@@ -337,37 +337,11 @@ def render_leaderboard_insight(competition_result: dict):
         "เปรียบเทียบโมเดลทั้งหมด และเลือกโมเดลที่เหมาะกับความต้องการของคุณ",
     )
 
-    # ── Filter ──
-    st.markdown('<div style="font-size:0.8rem;color:#94A3B8;font-family:monospace;letter-spacing:0.1em;margin-bottom:8px;">FILTER BY CHARACTERISTIC</div>', unsafe_allow_html=True)
-    tag_cols = st.columns(len(TAG_META) + 1)
-    selected_tags = []
-    with tag_cols[0]:
-        if st.button("ทั้งหมด", key="lb_tag_all", use_container_width=True):
-            st.session_state["_lb_tags"] = []
-    for i, (tag, meta) in enumerate(TAG_META.items()):
-        with tag_cols[i + 1]:
-            active = tag in st.session_state.get("_lb_tags", [])
-            if st.button(meta["label"], key=f"lb_tag_{tag}", use_container_width=True,
-                         type="primary" if active else "secondary"):
-                tags = list(st.session_state.get("_lb_tags", []))
-                if tag in tags:
-                    tags.remove(tag)
-                else:
-                    tags.append(tag)
-                st.session_state["_lb_tags"] = tags
-                st.rerun()
-
-    active_tags = st.session_state.get("_lb_tags", [])
-
     # ── Leaderboard Table ──
-    st.markdown("<br>", unsafe_allow_html=True)
     best_score = ranked[0][1]["cv_score"]
     for rank_i, (key, val) in enumerate(ranked):
         chars = MODEL_CHARACTERISTICS.get(key, {})
         model_tags = chars.get("tags", [])
-
-        if active_tags and not any(t in model_tags for t in active_tags):
-            continue
 
         is_best   = key == best_key
         score_pct = val["cv_score"] / (best_score + 1e-9) * 100

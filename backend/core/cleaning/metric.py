@@ -240,15 +240,39 @@ def render_missing_values(working_dataframe: pd.DataFrame, missing_columns_dict:
                 compatible_strategies = determine_missing_compatible(actual_type(dataframe_work[col_name]))
                 selected_strategy = global_missing_strategy if global_missing_strategy in compatible_strategies else compatible_strategies[0]
                 strategies_to_apply_dict[col_name] = selected_strategy
-                
+
             dataframe_work = use_missing_strategy_bulk(dataframe_work, strategies_to_apply_dict)
             for col_name, applied_strategy in strategies_to_apply_dict.items():
                 track_cleaning("missing", col_name, applied_strategy)
                 st.session_state.setdefault("missing_rules", {})[col_name] = applied_strategy
-                
+
             st.session_state["working_df"] = dataframe_work
             st.session_state["cleaning_confirmed"] = False
             st.rerun()
+
+    _, rec_btn_col = st.columns([4, 2])
+    with rec_btn_col:
+        if st.button("Apply All (Recommend)", key="miss_apply_recommend", type="primary", width="stretch"):
+            dataframe_work = st.session_state["working_df"]
+            strategies_to_apply_dict = {}
+            explanations_dict = {}
+            for col_name, missing_count in missing_columns_dict.items():
+                rec_strategy, _, rec_explanation = _suggest_missing_strategy(dataframe_work, col_name, missing_count)
+                if rec_strategy is None:
+                    compatible_strategies = determine_missing_compatible(actual_type(dataframe_work[col_name]))
+                    rec_strategy = compatible_strategies[0]
+                strategies_to_apply_dict[col_name] = rec_strategy
+                explanations_dict[col_name] = rec_explanation
+
+            dataframe_work = use_missing_strategy_bulk(dataframe_work, strategies_to_apply_dict)
+            for col_name, applied_strategy in strategies_to_apply_dict.items():
+                track_cleaning("missing", col_name, applied_strategy, explanations_dict.get(col_name, ""))
+                st.session_state.setdefault("missing_rules", {})[col_name] = applied_strategy
+
+            st.session_state["working_df"] = dataframe_work
+            st.session_state["cleaning_confirmed"] = False
+            st.rerun()
+
     st.caption(MISSING_STRATEGY_INFO.get(global_missing_strategy, ""))
     st.markdown(HORIZONTAL_RULE_HTML, unsafe_allow_html=True)
 
@@ -352,19 +376,44 @@ def render_outliers(working_dataframe: pd.DataFrame, outlier_columns_dict: dict,
             strategies_to_apply_dict = {}
             for col_name, outlier_bounds in outlier_columns_dict.items():
                 strategies_to_apply_dict[col_name] = {"strategy": global_outlier_strategy, "lower": outlier_bounds["Lower"], "upper": outlier_bounds["Upper"]}
-                
+
             dataframe_work = use_outlier_strategy_bulk(dataframe_work, strategies_to_apply_dict)
-            
+
             treated_outliers = st.session_state.setdefault("treated_outlier_cols", {})
             for col_name in outlier_columns_dict:
                 track_cleaning("outlier", col_name, global_outlier_strategy)
                 treated_outliers[col_name] = global_outlier_strategy
                 outlier_bounds = outlier_columns_dict[col_name]
                 st.session_state.setdefault("outlier_rules", {})[col_name] = {"strategy": global_outlier_strategy, "lower": outlier_bounds["Lower"], "upper": outlier_bounds["Upper"]}
-                
+
             st.session_state["working_df"] = dataframe_work
             st.session_state["cleaning_confirmed"] = False
             st.rerun()
+
+    _, rec_btn_col = st.columns([4, 2])
+    with rec_btn_col:
+        if st.button("Apply All (Recommend)", key="out_apply_recommend", type="primary", width="stretch"):
+            dataframe_work = st.session_state["working_df"]
+            strategies_to_apply_dict = {}
+            explanations_dict = {}
+            for col_name, outlier_bounds in outlier_columns_dict.items():
+                rec_strategy, _, rec_explanation = _suggest_outlier_strategy(outlier_bounds["Outliers"], len(dataframe_work))
+                strategies_to_apply_dict[col_name] = {"strategy": rec_strategy, "lower": outlier_bounds["Lower"], "upper": outlier_bounds["Upper"]}
+                explanations_dict[col_name] = rec_explanation
+
+            dataframe_work = use_outlier_strategy_bulk(dataframe_work, strategies_to_apply_dict)
+
+            treated_outliers = st.session_state.setdefault("treated_outlier_cols", {})
+            for col_name, outlier_bounds in outlier_columns_dict.items():
+                rec_strategy = strategies_to_apply_dict[col_name]["strategy"]
+                track_cleaning("outlier", col_name, rec_strategy, explanations_dict.get(col_name, ""))
+                treated_outliers[col_name] = rec_strategy
+                st.session_state.setdefault("outlier_rules", {})[col_name] = {"strategy": rec_strategy, "lower": outlier_bounds["Lower"], "upper": outlier_bounds["Upper"]}
+
+            st.session_state["working_df"] = dataframe_work
+            st.session_state["cleaning_confirmed"] = False
+            st.rerun()
+
     st.caption(OUTLIER_STRATEGY_INFO.get(global_outlier_strategy, ""))
     st.markdown(HORIZONTAL_RULE_HTML, unsafe_allow_html=True)
 
