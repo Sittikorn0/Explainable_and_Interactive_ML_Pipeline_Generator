@@ -523,7 +523,7 @@ def render_leaderboard_insight(competition_result: dict):
     competition = competition_result["competition"]
     best_key    = competition_result["best_key"]
     task_type   = competition_result["task_type"]
-    metric_name = "F1-Macro" if task_type == "classification" else "R² Score"
+    metric_name = "Accuracy" if task_type == "classification" else "R² Score"
 
     ranked = sorted(
         [(k, v) for k, v in competition.items() if v["cv_score"] is not None],
@@ -532,6 +532,68 @@ def render_leaderboard_insight(competition_result: dict):
     if not ranked:
         st.info("ยังไม่มีผลการแข่งขัน")
         return
+
+    # ── คำนวณ Holdout Test Metrics เชิงลึกแบบ On-the-fly หากยังไม่ได้คำนวณและแคชไว้ ──
+    missing_eval_keys = [k for k, v in ranked if k != best_key and st.session_state.get(f"_eval_cache_{k}") is None]
+    if missing_eval_keys:
+        dataframe = st.session_state.get("transformed_df", st.session_state.get("main_df"))
+        preset_target = (st.session_state.get("_trans_target_saved") or st.session_state.get("target_col"))
+        if dataframe is not None and preset_target is not None:
+            from backend.core.model_training.trainer.train_model import get_model_map
+            from backend.core.model_training.evaluation.eval import get_metrics
+            from backend.core.model_training.preprocess.pipeline import preprocess
+            from sklearn.utils.class_weight import compute_sample_weight
+            from sklearn.preprocessing import LabelEncoder
+            
+            with st.spinner("กำลังประมวลผลและคำนวณ Holdout Test score ของโมเดลผู้ท้าชิง..."):
+                try:
+                    transformation_summary = st.session_state.get("trans_summary", {})
+                    scaling_decisions = transformation_summary.get("scaling_decisions") or None
+                    scaling_method    = transformation_summary.get("scaling_method", "standard_scaler")
+                    encoding_decisions = transformation_summary.get("encoding_decisions") or None
+                    X_tr, X_te, y_tr, y_te, _ = preprocess(
+                        dataframe, preset_target,
+                        scaling_method=scaling_method,
+                        scaling_decisions=scaling_decisions,
+                        missing_rules=st.session_state.get("missing_rules"),
+                        outlier_rules=st.session_state.get("outlier_rules"),
+                        encoding_decisions=encoding_decisions,
+                    )
+                    
+                    model_map = get_model_map()
+                    for m_key in missing_eval_keys:
+                        try:
+                            if m_key in model_map:
+                                sel_model = model_map[m_key]()
+                                sel_params = competition[m_key].get("best_params", {})
+                                if sel_params:
+                                    try:
+                                        sel_model.set_params(**sel_params)
+                                    except Exception:
+                                        pass
+                                
+                                fit_kw = {}
+                                if task_type == "classification" and m_key in ("gradient_boosting", "xgboost"):
+                                    fit_kw["sample_weight"] = compute_sample_weight("balanced", y_tr)
+                                sel_model.fit(X_tr, y_tr, **fit_kw)
+                                sel_pred = sel_model.predict(X_te)
+                                
+                                if task_type == "classification":
+                                    le = LabelEncoder()
+                                    le.fit(y_tr)
+                                    if hasattr(le, "classes_"):
+                                        sel_pred = le.inverse_transform(sel_pred)
+                                        
+                                sel_metrics = get_metrics(y_te, sel_pred, task_type)
+                                st.session_state[f"_eval_cache_{m_key}"] = {
+                                    "y_pred": sel_pred,
+                                    "y_test": y_te,
+                                    "metrics": sel_metrics
+                                }
+                        except Exception as e:
+                            pass
+                except Exception as err:
+                    pass
 
     render_section_header(
         "Model Leaderboard",
@@ -651,14 +713,18 @@ def render_leaderboard_insight(competition_result: dict):
                 model_tags = chars.get("tags", [])
 
                 # กำหนดตัวประเมินประสิทธิภาพใน Test Set
-                eval_key = "F1(Mac)" if task_type == "classification" else "R² Score"
+                eval_key = "Accuracy" if task_type == "classification" else "R² Score"
                 evaluation_metrics = st.session_state.get("ml_metrics", {})
-                if key == best_key:
+                
+                cache_key = f"_eval_cache_{key}"
+                test_score_val = None
+                if st.session_state.get(cache_key) is not None:
+                    test_score_val = st.session_state[cache_key]["metrics"].get(eval_key, None)
+                elif key == best_key:
                     test_score_val = evaluation_metrics.get(eval_key, None)
-                    if test_score_val is not None:
-                        test_score_str = f"{test_score_val:.4f}"
-                    else:
-                        test_score_str = "—"
+
+                if test_score_val is not None:
+                    test_score_str = f"{test_score_val:.4f}"
                 else:
                     test_score_str = "—"
 
@@ -724,9 +790,9 @@ def render_leaderboard_insight(competition_result: dict):
 <div style="text-align: right; line-height: 1.4;">
 <div style="color: #E2E8F0; font-size: 0.95rem; font-family: monospace; font-weight: 500;">
 <span style="color: #768390; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; font-family: sans-serif;">CV Score:</span> 
-{val["cv_score"]:.4f} <span style="color: #768390; font-size: 0.72rem;">&plusmn;{val["cv_std"]:.4f}</span>
+{val["cv_score"]:.4f}
 </div>
-<div style="color: {rank_color if key == best_key else '#768390'}; font-size: 0.95rem; font-family: monospace; font-weight: 600; margin-top: 4px;">
+<div style="color: {rank_color if is_best else '#E2E8F0'}; font-size: 0.95rem; font-family: monospace; font-weight: 600; margin-top: 4px;">
 <span style="color: #768390; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; font-family: sans-serif;">{metric_name}:</span> 
 {test_score_str}
 </div>
