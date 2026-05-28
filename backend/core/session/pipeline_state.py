@@ -223,3 +223,9 @@ def clear_comparison():
 def has_comparison() -> bool:
     pipeline = get_pipeline()
     return pipeline.get("prev_snapshots") is not None
+    pipeline["rollback_from"] = None
+
+
+def has_comparison() -> bool:
+    pipeline = get_pipeline()
+    return pipeline.get("prev_snapshots") is not None

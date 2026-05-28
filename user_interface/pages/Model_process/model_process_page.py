@@ -83,8 +83,9 @@ def render_model_process():
         st.session_state.pop("_ml_scaling_used", None)
         st.session_state.pop("_ml_leakage_warnings", None)
         
-        for key in [k for k in st.session_state.keys() if k.startswith("_xai_")]:
-            st.session_state.pop(key, None)
+        for key in list(st.session_state.keys()):
+            if key.startswith("_xai_") or key.startswith("_eval_cache_"):
+                st.session_state.pop(key, None)
 
         with st.spinner("กำลัง preprocess..."):
             try:
